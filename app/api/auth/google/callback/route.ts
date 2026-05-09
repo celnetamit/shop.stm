@@ -8,6 +8,7 @@ import { roleForEmail } from "@/lib/auth/admin-emails";
 
 export async function GET(req: NextRequest) {
   try {
+    const appBase = (process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin).replace(/\/$/, "");
     const url = new URL(req.url);
     const code = url.searchParams.get("code");
     const state = url.searchParams.get("state");
@@ -18,7 +19,7 @@ export async function GET(req: NextRequest) {
       .filter(Boolean);
 
     if (!code || !state || !validStates.includes(state)) {
-      return NextResponse.redirect(new URL("/login?error=google_state", req.url));
+      return NextResponse.redirect(`${appBase}/login?error=google_state`);
     }
 
     const origin = new URL(req.url).origin;
@@ -46,7 +47,7 @@ export async function GET(req: NextRequest) {
 
     const token = await signSession({ sub: user.id, email: user.email, role });
 
-    const res = NextResponse.redirect(new URL(role === "ADMIN" ? "/admin" : "/", req.url));
+    const res = NextResponse.redirect(`${appBase}${role === "ADMIN" ? "/admin" : "/"}`);
     res.cookies.set(AUTH_COOKIE_NAME, token, {
       httpOnly: true,
       sameSite: "lax",
@@ -63,6 +64,7 @@ export async function GET(req: NextRequest) {
     });
     return res;
   } catch {
-    return NextResponse.redirect(new URL("/login?error=google_auth", req.url));
+    const appBase = (process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin).replace(/\/$/, "");
+    return NextResponse.redirect(`${appBase}/login?error=google_auth`);
   }
 }
