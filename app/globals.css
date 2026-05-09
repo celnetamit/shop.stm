@@ -1882,6 +1882,358 @@ a {
   border-radius: 8px;
 }
 
+/* ===== Modern Theme Refresh ===== */
+:root {
+  --bg: #f4f6f8;
+  --surface: #ffffff;
+  --surface-soft: #f8fafc;
+  --text: #182230;
+  --muted: #5f6b7a;
+  --line: #d8dee6;
+  --brand: #1f4ea3;
+  --brand-strong: #173d81;
+  --accent: #e9742a;
+  --radius: 14px;
+  --shadow-sm: 0 4px 14px rgba(16, 28, 44, 0.06);
+  --shadow-md: 0 12px 30px rgba(18, 33, 54, 0.1);
+}
+
+html,
+body {
+  font-family: "Segoe UI", "Helvetica Neue", "Trebuchet MS", Arial, sans-serif;
+  color: var(--text);
+  background: linear-gradient(180deg, #f7f9fb 0%, #f1f4f8 100%);
+}
+
+a {
+  color: var(--brand);
+}
+
+.site-header {
+  border-bottom: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(6px);
+}
+
+.site-main-header {
+  box-shadow: var(--shadow-sm);
+}
+
+.site-topbar,
+.site-header-inner {
+  max-width: 1240px;
+}
+
+.site-brand {
+  letter-spacing: 0.02em;
+}
+
+.site-search input {
+  border-color: #cfd7e3;
+  background: #fcfdff;
+}
+
+.site-search button {
+  background: linear-gradient(135deg, var(--brand), #2d63c8);
+}
+
+.site-utils a,
+.site-nav a {
+  color: #25364e;
+  font-weight: 600;
+}
+
+.site-nav a:hover {
+  color: var(--brand);
+}
+
+.site-disciplines-dropdown,
+.site-account-dropdown {
+  border-radius: var(--radius);
+  border-color: #d6ddeb;
+  box-shadow: var(--shadow-md);
+}
+
+.site-footer {
+  background: #fff;
+  border-top: 1px solid var(--line);
+}
+
+.home-page-v3 {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 18px 16px 34px;
+}
+
+.home-v3-hero {
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 84% 20%, rgba(233, 116, 42, 0.18), transparent 38%),
+    linear-gradient(135deg, #0f2755 0%, #1d4388 65%, #2a5cb4 100%);
+  color: #fff;
+  padding: 30px;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  box-shadow: var(--shadow-md);
+}
+
+.home-v3-kicker {
+  margin: 0 0 10px;
+  color: #c8d8ff;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+
+.home-v3-hero h1 {
+  margin: 0 0 12px;
+  font-size: clamp(30px, 4vw, 46px);
+  line-height: 1.08;
+}
+
+.home-v3-hero p {
+  margin: 0;
+  color: #e3ebff;
+  max-width: 680px;
+}
+
+.home-v3-hero-actions {
+  margin-top: 18px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.home-v3-hero-actions a {
+  color: #fff;
+  text-decoration: none;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  font-weight: 700;
+}
+
+.home-v3-hero-actions a:first-child {
+  background: #fff;
+  color: #173f86;
+  border-color: #fff;
+}
+
+.home-v3-hero-stats {
+  display: grid;
+  gap: 10px;
+}
+
+.home-v3-hero-stats article {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: grid;
+  gap: 4px;
+}
+
+.home-v3-hero-stats strong {
+  font-size: 26px;
+}
+
+.home-v3-hero-stats span {
+  color: #dbe7ff;
+  font-size: 13px;
+}
+
+.home-section-block,
+.agri-card,
+.product-v2-main,
+.product-v2-sidebar,
+.cart-items,
+.cart-summary,
+.contact-info-card,
+.contact-form-card,
+.auth-card,
+.checkout-form,
+.admin-page-section,
+.admin-overview-card {
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.home-section-block {
+  background: var(--surface);
+}
+
+.home-section-block h2 {
+  font-size: 26px;
+  color: #1b2f4b;
+}
+
+.home-discipline-grid a,
+.product-v2-domain-list a {
+  border-color: #d8e0ec;
+  color: #2a3f5f;
+}
+
+.home-trend-card {
+  border-color: #d7dfeb;
+  border-radius: 16px;
+}
+
+.home-trend-card h3 {
+  font-size: 20px;
+}
+
+.home-trend-card button,
+.agri-card button,
+.product-v2-cart-actions button,
+.cart-checkout-btn,
+.contact-form button,
+.auth-btn,
+.proforma-cta {
+  background: linear-gradient(135deg, var(--brand), #2d63c8);
+  border: none;
+  color: #fff;
+  font-weight: 700;
+  border-radius: 10px;
+}
+
+input,
+select,
+textarea {
+  border: 1px solid #cdd6e3;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--text);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid rgba(31, 78, 163, 0.2);
+  border-color: var(--brand);
+}
+
+.product-v2-page,
+.cart-page,
+.contact-page,
+.auth-shell,
+.admin-page,
+.catalogues-v2,
+.proforma-page,
+.checkout-page {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 18px 16px 34px;
+}
+
+.auth-shell {
+  min-height: calc(100vh - 160px);
+  display: grid;
+  place-items: center;
+}
+
+.auth-card {
+  width: min(480px, 94vw);
+  padding: 24px;
+}
+
+.contact-grid {
+  gap: 16px;
+}
+
+.product-v2-layout {
+  gap: 16px;
+}
+
+.product-v2-head {
+  gap: 16px;
+}
+
+.product-v2-price-grid div {
+  border: 1px solid #d7e0ee;
+  border-radius: 12px;
+  background: #f9fbff;
+}
+
+.product-v2-price-grid div.active {
+  border-color: #96b4ef;
+  background: #edf3ff;
+}
+
+.product-v2-tabs button {
+  border: 1px solid #cfd9e8;
+  border-radius: 10px;
+  background: #fff;
+  color: #284062;
+}
+
+.product-v2-tabs button.active {
+  background: var(--brand);
+  color: #fff;
+  border-color: var(--brand);
+}
+
+.cart-row {
+  border-bottom: 1px solid #e4e9f2;
+}
+
+.cart-total {
+  font-size: 25px;
+}
+
+.admin-layout {
+  background: #eff3f9;
+}
+
+.admin-sidebar {
+  background: linear-gradient(180deg, #102447 0%, #17325f 100%);
+}
+
+.admin-sidebar-nav a.active,
+.admin-sidebar-nav a:hover {
+  background: #2f5898;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table th,
+.admin-table td {
+  border-bottom: 1px solid #e3e8f2;
+  padding: 10px 10px;
+  text-align: left;
+  font-size: 13px;
+}
+
+.admin-table th {
+  background: #f6f9ff;
+}
+
+@media (max-width: 980px) {
+  .site-topbar {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .site-utils {
+    justify-content: flex-start;
+  }
+
+  .home-v3-hero {
+    grid-template-columns: 1fr;
+    padding: 24px;
+  }
+
+  .admin-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
 .home-sections {
   max-width: 1240px;
   margin: 22px auto 36px;
