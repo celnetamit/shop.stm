@@ -186,6 +186,21 @@ export async function getClonedPath(pathInput: string, forceRefresh = false) {
     } catch (dbError) {
       if (!isDbUnavailable(dbError)) throw dbError;
     }
-    throw error;
+    const now = new Date();
+    return {
+      id: `fallback:${path}`,
+      path,
+      sourceUrl: toAbsoluteUrl(path),
+      title: "STM Journals",
+      htmlContent:
+        `<section style="padding:2rem;max-width:960px;margin:0 auto;font-family:Arial,sans-serif;">` +
+        `<h1 style="margin:0 0 0.75rem;">STM Journals</h1>` +
+        `<p style="margin:0 0 1rem;">We are updating content right now. Please refresh in a moment.</p>` +
+        `<p style="margin:0;color:#555;font-size:14px;">Source sync is temporarily unavailable.</p>` +
+        `</section>`,
+      updatedAt: now,
+      createdAt: now,
+      cached: false
+    } satisfies ClonedPageResult;
   }
 }
