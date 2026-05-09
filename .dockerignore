@@ -1,0 +1,13 @@
+node_modules
+.next
+.next_broken_20260508_1015
+.git
+.gitignore
+Dockerfile
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env
+.env.*
+*.md
+*.tsbuildinfo
