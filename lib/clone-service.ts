@@ -78,6 +78,12 @@ function rewriteHtml(html: string): string {
   return $.html();
 }
 
+function looksLikeSelfMirroredHtml(html: string): boolean {
+  const lower = html.toLowerCase();
+  const mirroredMentions = (lower.match(/mirrored from/g) || []).length;
+  return lower.includes("clone-wrapper") || mirroredMentions >= 2;
+}
+
 type ClonedPageResult = {
   id: string;
   path: string;
@@ -126,6 +132,11 @@ export async function fetchAndCachePath(pathInput: string) {
   }
 
   const html = await response.text();
+  if (looksLikeSelfMirroredHtml(html)) {
+    throw new Error(
+      `Source URL appears to be pointing to this same deployed app (${sourceUrl}). Check SOURCE_SITE_URL.`
+    );
+  }
   const rewritten = rewriteHtml(html);
   const titleMatch = html.match(/<title>(.*?)<\/title>/i);
   const title = titleMatch?.[1]?.trim() || null;
