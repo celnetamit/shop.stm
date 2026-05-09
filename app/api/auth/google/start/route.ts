@@ -5,7 +5,7 @@ import { getGoogleAuthUrl } from "@/lib/auth/google";
 
 export async function GET(req: NextRequest) {
   try {
-    const origin = new URL(req.url).origin;
+    const origin = (process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin).replace(/\/$/, "");
     const state = crypto.randomUUID();
     const url = getGoogleAuthUrl(state, origin);
     const existing = req.cookies.get("google_oauth_state")?.value || "";
