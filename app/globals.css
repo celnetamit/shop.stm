@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
 html, body {
   margin: 0;
   padding: 0;
@@ -1884,29 +1886,58 @@ a {
 
 /* ===== Modern Theme Refresh ===== */
 :root {
-  --bg: #f4f6f8;
+  --bg: #fcf8fa;
   --surface: #ffffff;
-  --surface-soft: #f8fafc;
-  --text: #182230;
-  --muted: #5f6b7a;
-  --line: #d8dee6;
-  --brand: #1f4ea3;
-  --brand-strong: #173d81;
-  --accent: #e9742a;
-  --radius: 14px;
-  --shadow-sm: 0 4px 14px rgba(16, 28, 44, 0.06);
-  --shadow-md: 0 12px 30px rgba(18, 33, 54, 0.1);
+  --surface-soft: #f6f3f5;
+  --text: #1b1b1d;
+  --muted: #45464d;
+  --line: #e2e8f0;
+  --brand: #0f172a; /* Midnight Slate */
+  --brand-strong: #000000;
+  --accent: #f59e0b; /* Soft Saffron */
+  --radius: 4px; /* Crisp Rounding */
+  --shadow-sm: 0 4px 12px rgba(15, 23, 42, 0.03);
+  --shadow-md: 0 10px 20px rgba(15, 23, 42, 0.04);
 }
 
 html,
 body {
-  font-family: "Segoe UI", "Helvetica Neue", "Trebuchet MS", Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   color: var(--text);
-  background: linear-gradient(180deg, #f7f9fb 0%, #f1f4f8 100%);
+  background: var(--bg);
+}
+
+h1, h2, h3, h4, .font-serif {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }
 
 a {
   color: var(--brand);
+  transition: all 0.2s ease-in-out;
+}
+a:hover {
+  color: var(--accent);
+}
+
+/* Custom premium utilities */
+.transition-smooth {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.card-hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
+}
+
+.dotted-circle-badge {
+  border: 1px dotted #ef4444;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .site-header {
