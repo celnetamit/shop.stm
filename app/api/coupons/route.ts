@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentSession } from "@/lib/auth/session";
@@ -13,7 +15,7 @@ const fallbackCoupon = { id: "fallback-manish10", code: "MANISH10", discount: 10
 export async function GET() {
   try {
     const rows = await prisma.coupon.findMany({ orderBy: { createdAt: "desc" } });
-    const hasFallback = rows.some((r) => r.code.toUpperCase() === "MANISH10");
+    const hasFallback = rows.some((r: { code: string }) => r.code.toUpperCase() === "MANISH10");
     return NextResponse.json({ ok: true, coupons: hasFallback ? rows : [fallbackCoupon, ...rows] });
   } catch (error) {
     if (!missingCouponTable(error)) {

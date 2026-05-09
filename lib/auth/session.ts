@@ -39,8 +39,12 @@ export async function verifySession(token: string): Promise<SessionPayload | nul
 }
 
 export async function getCurrentSession(): Promise<SessionPayload | null> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(AUTH_COOKIE_NAME)?.value;
-  if (!token) return null;
-  return verifySession(token);
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get(AUTH_COOKIE_NAME)?.value;
+    if (!token) return null;
+    return verifySession(token);
+  } catch {
+    return null;
+  }
 }

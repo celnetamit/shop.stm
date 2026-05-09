@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { NextRequest, NextResponse } from "next/server";
 import { exchangeGoogleCodeForOrigin, fetchGoogleProfile } from "@/lib/auth/google";
 import { prisma } from "@/lib/prisma";

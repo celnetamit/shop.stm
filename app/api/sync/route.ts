@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { NextRequest, NextResponse } from "next/server";
 import { getClonedPath } from "@/lib/clone-service";
 import { getCurrentSession } from "@/lib/auth/session";

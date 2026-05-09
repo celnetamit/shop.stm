@@ -1,9 +1,19 @@
 import { getCurrentSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 
+type ContactEntryRow = {
+  id: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  status: string;
+  createdAt: Date;
+};
+
 export default async function AdminHomePage() {
   const session = await getCurrentSession();
-  const recentContacts = await prisma.contactEntry.findMany({ orderBy: { createdAt: "desc" }, take: 10 }).catch(() => []);
+  const recentContacts: ContactEntryRow[] = await prisma.contactEntry.findMany({ orderBy: { createdAt: "desc" }, take: 10 }).catch(() => []);
 
   return (
     <section className="admin-page">
