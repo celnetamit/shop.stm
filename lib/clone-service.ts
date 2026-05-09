@@ -169,7 +169,7 @@ export async function getClonedPath(pathInput: string, forceRefresh = false) {
   if (!forceRefresh) {
     try {
       const cached = await prisma.clonedPage.findUnique({ where: { path } });
-      if (cached) {
+      if (cached && !looksLikeSelfMirroredHtml(cached.htmlContent)) {
         return {
           ...cached,
           htmlContent: normalizeCatalogueCurrencyLinks(cached.htmlContent),
@@ -187,7 +187,7 @@ export async function getClonedPath(pathInput: string, forceRefresh = false) {
     // If live fetch fails, serve stale cache when available.
     try {
       const cached = await prisma.clonedPage.findUnique({ where: { path } });
-      if (cached) {
+      if (cached && !looksLikeSelfMirroredHtml(cached.htmlContent)) {
         return {
           ...cached,
           htmlContent: normalizeCatalogueCurrencyLinks(cached.htmlContent),
