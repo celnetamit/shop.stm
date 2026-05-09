@@ -18,9 +18,9 @@ COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/package-lock.json ./package-lock.json
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/journal-price.json ./journal-price.json
 COPY --from=builder /app/journals_entry.csv ./journals_entry.csv
+RUN mkdir -p /app/public
 EXPOSE 3000
 CMD ["sh", "-c", "npx prisma db push && npm run start:prod"]
