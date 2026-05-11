@@ -122,15 +122,14 @@ export default function HomeSections({ domains, journals }: { domains: DomainLin
                 }}
               >
                 {/* Image Frame */}
-                <Link href={`/product/${j.slug}`} style={{ display: "block", marginBottom: "14px", overflow: "hidden", borderRadius: "2px" }}>
+                <Link href={`/product/${j.slug}`} style={{ display: "block", marginBottom: "12px", overflow: "hidden", borderRadius: "2px", background: "#f8fafc", height: "180px" }}>
                   <img
                     src={j.imageUrl || "https://dummyimage.com/360x460/eaf0ff/17366f.png&text=STM+Journal"}
                     alt={j.journalName}
                     style={{
                       width: "100%",
-                      height: "240px",
+                      height: "100%",
                       objectFit: "contain",
-                      background: "#f8fafc",
                       transition: "transform 0.5s ease"
                     }}
                     onMouseEnter={(e) => {
@@ -143,36 +142,36 @@ export default function HomeSections({ domains, journals }: { domains: DomainLin
                 </Link>
 
                 {/* Info */}
-                <h3 style={{
-                  margin: "0 0 6px 0",
-                  fontSize: "14px",
-                  fontWeight: "700",
-                  lineHeight: "1.4",
-                  minHeight: "40px",
-                  display: "-webkit-box",
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: "vertical",
-                  overflow: "hidden",
-                  fontFamily: "Outfit, sans-serif"
-                }}>
-                  <Link href={`/product/${j.slug}`} style={{ color: "#0F172A", textDecoration: "none" }}>{j.journalName}</Link>
-                </h3>
-                <p style={{
-                  margin: "0 0 12px 0",
-                  fontSize: "12px",
-                  color: "#64748b",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  fontFamily: "Outfit, sans-serif"
-                }}>
-                  {j.subject}
-                  {j.issn ? ` | ISSN ${j.issn}` : ""}
-                </p>
+                <div style={{ flexGrow: 1, marginBottom: "10px" }}>
+                  <h3 style={{
+                    margin: "0 0 4px 0",
+                    fontSize: "13px",
+                    fontWeight: "700",
+                    lineHeight: "1.4",
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                    fontFamily: "Outfit, sans-serif"
+                  }}>
+                    <Link href={`/product/${j.slug}`} style={{ color: "#0F172A", textDecoration: "none" }}>{j.journalName}</Link>
+                  </h3>
+                  <p style={{
+                    margin: "0",
+                    fontSize: "11px",
+                    color: "#64748b",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    fontFamily: "Outfit, sans-serif"
+                  }}>
+                    {j.subject}
+                    {j.issn ? ` | ISSN ${j.issn}` : ""}
+                  </p>
+                </div>
 
-                {/* Selection Dropdown */}
-                <div style={{ marginBottom: "14px", display: "grid", gap: "6px" }}>
-                  <label style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", color: "#64748b", fontFamily: "Outfit, sans-serif" }}>Format</label>
+                {/* Selector and Price row inline like screenshot */}
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
                   <select
                     value={plan}
                     onChange={(e) =>
@@ -182,46 +181,25 @@ export default function HomeSections({ domains, journals }: { domains: DomainLin
                       }))
                     }
                     style={{
-                      width: "100%",
+                      flex: 1,
                       fontSize: "13px",
-                      padding: "6px 10px",
-                      borderRadius: "4px",
-                      borderColor: "#E2E8F0",
-                      background: "#F8FAFC",
+                      padding: "6px 8px",
+                      borderRadius: "8px",
+                      border: "1px solid #CBD5E1",
+                      background: "#ffffff",
                       cursor: "pointer",
-                      fontFamily: "Outfit, sans-serif"
+                      fontFamily: "Outfit, sans-serif",
+                      minWidth: "0"
                     }}
                   >
-                    <option value="PRINT">Print Edition</option>
-                    <option value="ONLINE">Online Access</option>
-                    <option value="PRINT_ONLINE">Print + Online</option>
+                    <option value="PRINT">Print</option>
+                    <option value="ONLINE">Online</option>
+                    <option value="PRINT_ONLINE">Combined</option>
                   </select>
+                  <strong style={{ fontSize: "15px", color: "#0d3cb1", fontWeight: "800", whiteSpace: "nowrap" }}>₹{price.toLocaleString("en-IN")}</strong>
                 </div>
 
-                {/* Price tag with mock discount */}
-                <div style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  marginBottom: "16px",
-                  flexWrap: "wrap",
-                  fontFamily: "Outfit, sans-serif"
-                }}>
-                  <span style={{ fontSize: "13px", color: "#94a3b8", textDecoration: "line-through" }}>₹{originalPrice.toLocaleString("en-IN")}</span>
-                  <strong style={{ fontSize: "16px", color: "#0F172A", fontWeight: "700" }}>₹{price.toLocaleString("en-IN")}</strong>
-                  <span style={{
-                    fontSize: "11px",
-                    fontWeight: "700",
-                    background: "rgba(34, 197, 94, 0.12)",
-                    color: "#22C55E",
-                    borderRadius: "4px",
-                    padding: "2px 6px"
-                  }}>
-                    ₹{savings.toLocaleString("en-IN")} Off
-                  </span>
-                </div>
-
-                {/* Elegant Full-width Saffron Yellow Button with Icon */}
+                {/* Solid Blue Add To Cart Button */}
                 <button
                   type="button"
                   className="transition-smooth"
@@ -238,33 +216,25 @@ export default function HomeSections({ domains, journals }: { domains: DomainLin
                     })
                   }
                   style={{
-                    marginTop: "auto",
                     width: "100%",
-                    background: "#FFD13B",
+                    background: "#2563EB",
                     border: "none",
-                    color: "#0F172A",
-                    borderRadius: "4px",
-                    padding: "10px 14px",
-                    fontWeight: "600",
+                    color: "#ffffff",
+                    borderRadius: "8px",
+                    padding: "10px",
+                    fontWeight: "700",
                     fontSize: "13px",
                     cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "8px",
-                    boxShadow: "0 2px 4px rgba(0,0,0,0.02)"
+                    boxShadow: "0 2px 6px rgba(37, 99, 235, 0.1)"
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "#F59E0B";
+                    e.currentTarget.style.background = "#1d4ed8";
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "#FFD13B";
+                    e.currentTarget.style.background = "#2563EB";
                   }}
                 >
-                  <svg style={{ width: "16px", height: "16px" }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                  </svg>
-                  Add to Bag
+                  Add to Cart
                 </button>
               </article>
             );
