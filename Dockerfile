@@ -20,7 +20,7 @@ COPY . .
 # Explicitly mark build phase to bypass runtime database calls if necessary
 ENV NEXT_TELEMETRY_DISABLED 1
 
-RUN npx prisma generate && npm run build
+RUN npx prisma@6 generate && npm run build
 
 # Production image, copy all the files and run next
 FROM base AS runner
@@ -54,4 +54,4 @@ ENV PORT 3000
 # set hostname to localhost
 ENV HOSTNAME "0.0.0.0"
 
-CMD ["sh", "-c", "npx prisma db push && node server.js"]
+CMD ["sh", "-c", "npx prisma@6 db push && node server.js"]
