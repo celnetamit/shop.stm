@@ -32,6 +32,9 @@ ENV NEXT_TELEMETRY_DISABLED 1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
+# Pre-install prisma globally into the image to avoid dynamic runtime downloads
+RUN npm install -g prisma@6.8.2
+
 COPY --from=builder /app/public ./public
 
 # Automatically leverage output traces to reduce image size
@@ -54,4 +57,4 @@ ENV PORT 3000
 # set hostname to localhost
 ENV HOSTNAME "0.0.0.0"
 
-CMD ["sh", "-c", "npx prisma@6 db push && node server.js"]
+CMD ["sh", "-c", "prisma db push && node server.js"]
