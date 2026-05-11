@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client"; // Force re-init cache sync
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined };
 const fallbackDatabaseUrl = "postgresql://postgres:postgres@127.0.0.1:5432/postgres?schema=public";
