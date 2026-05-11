@@ -44,6 +44,7 @@ export default async function AdminHomePage() {
         <a className="admin-overview-card" href="/admin/orders"><h3>Manage Orders</h3><p>Track and update order statuses.</p></a>
         <a className="admin-overview-card" href="/admin/proforma"><h3>Proforma Invoices</h3><p>Review and manage user quote entries.</p></a>
         <a className="admin-overview-card" href="/admin/contact-entries"><h3>Contact Entries</h3><p>Handle website contact submissions.</p></a>
+        <a className="admin-overview-card" href="/admin/agency-queries"><h3>Agency Queries</h3><p>Review institutional collaboration proposals.</p></a>
         <a className="admin-overview-card" href="/admin/users"><h3>Users</h3><p>Promote or demote users by role.</p></a>
         <a className="admin-overview-card" href="/admin/coupons"><h3>Coupons</h3><p>Create, activate, and disable coupons.</p></a>
       </div>

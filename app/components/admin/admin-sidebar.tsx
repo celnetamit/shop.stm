@@ -7,6 +7,7 @@ const links = [
   { href: "/admin/orders", label: "Orders" },
   { href: "/admin/proforma", label: "Proforma Quotes" },
   { href: "/admin/contact-entries", label: "Contact Entries" },
+  { href: "/admin/agency-queries", label: "Agency Queries" },
   { href: "/admin/users", label: "Users" },
   { href: "/admin/coupons", label: "Coupons" }
 ];
