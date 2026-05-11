@@ -10,16 +10,17 @@ export default async function HomePage() {
   const totalJournals = allJournals.length;
 
   return (
-    <main className="home-page-v3">
+    <>
       {/* 1 & 2. Elegant Hero Banner & Connecting 120+ Countries Pill */}
       <section className="home-v3-hero" style={{
         background: "linear-gradient(135deg, #0a192f 0%, #172554 100%)",
         position: "relative",
         overflow: "hidden",
         border: "none",
-        borderRadius: "8px",
+        borderRadius: "0",
         gridTemplateColumns: "1fr",
-        padding: "40px"
+        padding: "80px 20px",
+        width: "100%"
       }}>
         <div className="home-v3-hero-content" style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", maxWidth: "800px", margin: "0 auto" }}>
           <div style={{
@@ -57,7 +58,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 3. Core Trust Indicators Pill Banner Underneath Hero */}
+      <main className="home-page-v3" style={{ paddingTop: "0" }}>
+        {/* 3. Core Trust Indicators Pill Banner Underneath Hero */}
       <div className="trust-pill-banner" style={{
         background: "#ffffff",
         border: "1px solid #E2E8F0",
@@ -225,6 +227,7 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-    </main>
+      </main>
+    </>
   );
 }

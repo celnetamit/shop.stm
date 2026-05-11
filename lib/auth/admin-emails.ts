@@ -1,5 +1,5 @@
 function loadAdminEmails(): Set<string> {
-  const configured = process.env.ADMIN_EMAILS || "";
+  const configured = (process.env.ADMIN_EMAILS || "").replace(/^"|"$/g, "");
   const fromEnv = configured
     .split(",")
     .map((e) => e.trim().toLowerCase())

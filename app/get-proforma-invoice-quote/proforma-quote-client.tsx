@@ -98,6 +98,34 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
     return j.printUsd;
   }
 
+  async function handlePincodeLookup(val: string, isShipping: boolean) {
+    if (isShipping) setShippingPincode(val); else setPincode(val);
+    const pin = val.trim();
+    if (pin.length !== 6 || !/^\d+$/.test(pin)) return;
+
+    try {
+      const response = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+      const data = await response.json();
+      if (Array.isArray(data) && data[0]?.Status === "Success" && data[0]?.PostOffice?.length > 0) {
+        const postOffice = data[0].PostOffice[0];
+        const resolvedCity = postOffice.District;
+        const resolvedState = postOffice.State;
+
+        if (isShipping) {
+          setShippingCity(resolvedCity);
+          setShippingState(resolvedState);
+          setShippingCountry("India");
+        } else {
+          setCity(resolvedCity);
+          setStateName(resolvedState);
+          setCountry("India");
+        }
+      }
+    } catch (e) {
+      console.warn("PIN code lookup failed: ", e);
+    }
+  }
+
   const subtotal = useMemo(
     () => selectedRows.reduce((sum, row) => sum + getPrice(row, plans[row.serialNo] || "PRINT"), 0),
     [selectedRows, plans, currency]
@@ -240,64 +268,9 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
   }
 
   function onDownloadInvoicePdf() {
-    const doc = new jsPDF();
-    doc.setFillColor(245, 248, 255);
-    doc.roundedRect(10, 10, 190, 277, 4, 4, "F");
-    doc.setDrawColor(210, 220, 235);
-    doc.setFillColor(255, 255, 255);
-    doc.roundedRect(15, 15, 180, 35, 3, 3, "FD");
-    doc.setFontSize(9);
-    doc.setTextColor(89, 111, 150);
-    doc.text("QUOTATION NUMBER", 20, 23);
-    doc.setFontSize(11);
-    doc.setTextColor(22, 52, 104);
-    doc.text(quoteId || "DRAFT", 20, 29);
-    doc.setFontSize(9);
-    doc.setTextColor(89, 111, 150);
-    doc.text("ISSUE DATE", 20, 36);
-    doc.text(new Date().toLocaleDateString("en-IN"), 20, 41);
-    doc.text("BANK DETAILS", 90, 23);
-    doc.setTextColor(22, 52, 104);
-    doc.text("HDFC BANK LTD | IFSC: HDFC0000549", 90, 30);
-    doc.text("A/C: 639400000000153", 90, 36);
-    doc.text("LEGAL IDENTIFIERS", 145, 23);
-    doc.text("GSTIN: 09AAACC...", 145, 30);
-    doc.text("PAN: AAACC...", 145, 36);
-
-    doc.setFontSize(16);
-    doc.setTextColor(16, 35, 73);
-    doc.text("PROFORMA INVOICE", 15, 59);
-    doc.setFontSize(11);
-    doc.setTextColor(71, 90, 122);
-    doc.text(`Receiver: ${contactName}`, 15, 66);
-    doc.text(`${institutionName || organization}`, 15, 72);
-
-    autoTable(doc, {
-      startY: 80,
-      head: [["SR.NO", "DEPARTMENT", "DURATION", "BASE PRICE"]],
-      body: selectedRows.map((row, idx) => {
-        const plan = plans[row.serialNo] || "PRINT";
-        const price = getPrice(row, plan);
-        return [idx + 1, row.journalName, plan === "PRINT_ONLINE" ? "Yearly" : plan === "ONLINE" ? "Digital" : "Yearly", fmt(price)];
-      }),
-      styles: { fontSize: 9, cellPadding: 2.5 },
-      headStyles: { fillColor: [14, 34, 76], textColor: [255, 255, 255] }
-    });
-
-    const finalY = (doc as unknown as { lastAutoTable?: { finalY?: number } }).lastAutoTable?.finalY || 80;
-    doc.setFontSize(10);
-    doc.setTextColor(67, 88, 120);
-    doc.text(`Subtotal (Base Price Total): ${fmt(subtotal)}`, 120, finalY + 12);
-    doc.text(`Total GST (18%): ${fmt(gst)}`, 120, finalY + 18);
-    doc.text(`Discount ${appliedCouponCode ? `(${appliedCouponCode})` : ""}: ${fmt(discount)}`, 120, finalY + 24);
-    doc.setFontSize(13);
-    doc.setTextColor(11, 48, 145);
-    doc.text(`GRAND TOTAL: ${fmt(grandTotal)}`, 120, finalY + 33);
-    doc.setFontSize(10);
-    doc.setTextColor(31, 47, 79);
-    doc.text(`Amount in words: ${amountInWords(grandTotal)} ${currency === "INR" ? "Rupees Only" : "US Dollars Only"}`, 15, finalY + 44);
-
-    doc.save(`proforma-invoice-${quoteId || "draft"}.pdf`);
+    // Utilize standard high-quality window.print() which now utilizes @media print styles
+    // designed in globals.css to flawlessly save the exact HTML Preview as PDF.
+    window.print();
   }
 
   return (
@@ -384,7 +357,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
             <input value={designation} onChange={(e) => setDesignation(e.target.value)} placeholder="Designation" />
             <input value={organization} onChange={(e) => setOrganization(e.target.value)} placeholder="Organization" />
             <textarea value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Billing Address *" required className="proforma-full" />
-            <input value={pincode} onChange={(e) => setPincode(e.target.value)} placeholder="Pincode" />
+            <input value={pincode} onChange={(e) => handlePincodeLookup(e.target.value, false)} placeholder="Pincode (Auto-fills City/State)" maxLength={6} />
             <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" />
             <input value={stateName} onChange={(e) => setStateName(e.target.value)} placeholder="State" />
             <input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Country" />
@@ -423,8 +396,9 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
                 />
                 <input
                   value={shippingPincode}
-                  onChange={(e) => setShippingPincode(e.target.value)}
-                  placeholder="Pincode"
+                  onChange={(e) => handlePincodeLookup(e.target.value, true)}
+                  placeholder="Pincode (Auto-fills)"
+                  maxLength={6}
                 />
                 <input
                   value={shippingCity}

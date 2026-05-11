@@ -26,9 +26,11 @@ type AgencyQueryRow = {
 
 export default async function AdminHomePage() {
   const session = await getCurrentSession();
-  const [recentContacts, recentAgencies] = await Promise.all([
-    prisma.contactEntry.findMany({ orderBy: { createdAt: "desc" }, take: 10 }).catch(() => [] as ContactEntryRow[]),
-    prisma.agencyQuery.findMany({ orderBy: { createdAt: "desc" }, take: 10 }).catch(() => [] as AgencyQueryRow[])
+  const [recentContacts, recentAgencies, recentProformas, recentOrders] = await Promise.all([
+    prisma.contactEntry.findMany({ orderBy: { createdAt: "desc" }, take: 5 }).catch(() => [] as ContactEntryRow[]),
+    prisma.agencyQuery.findMany({ orderBy: { createdAt: "desc" }, take: 5 }).catch(() => [] as AgencyQueryRow[]),
+    prisma.proformaQuote.findMany({ orderBy: { createdAt: "desc" }, take: 5 }).catch(() => []),
+    prisma.order.findMany({ orderBy: { createdAt: "desc" }, take: 5 }).catch(() => [])
   ]);
 
   return (
@@ -103,6 +105,74 @@ export default async function AdminHomePage() {
                     <td><span className="badge-specialization" style={{ background: "#F1F5F9", color: "#334155", padding: "2px 8px", borderRadius: "9999px", fontSize: "11px", fontWeight: "600" }}>{query.specialization}</span></td>
                     <td>{query.message || "-"}</td>
                     <td>{new Date(query.createdAt).toLocaleString()}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="admin-page-section" style={{ marginBottom: "40px" }}>
+        <h2>Recent Proforma Quotes</h2>
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Organization</th>
+                <th>Contact</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Country</th>
+                <th>Status</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recentProformas.length === 0 ? (
+                <tr><td colSpan={7}>No proforma quotes found.</td></tr>
+              ) : (
+                recentProformas.map((quote: any) => (
+                  <tr key={quote.id}>
+                    <td><strong>{quote.organization}</strong></td>
+                    <td>{quote.contactName}</td>
+                    <td><a href={`mailto:${quote.email}`}>{quote.email}</a></td>
+                    <td>{quote.phone}</td>
+                    <td>{quote.country}</td>
+                    <td>{quote.status}</td>
+                    <td>{new Date(quote.createdAt).toLocaleString()}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="admin-page-section">
+        <h2>Recent Orders</h2>
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Email</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recentOrders.length === 0 ? (
+                <tr><td colSpan={5}>No orders found.</td></tr>
+              ) : (
+                recentOrders.map((order: any) => (
+                  <tr key={order.id}>
+                    <td><strong>{order.customerName}</strong></td>
+                    <td><a href={`mailto:${order.email}`}>{order.email}</a></td>
+                    <td>{order.currency} {order.total}</td>
+                    <td>{order.status}</td>
+                    <td>{new Date(order.createdAt).toLocaleString()}</td>
                   </tr>
                 ))
               )}
