@@ -1,15 +1,25 @@
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 import { prisma } from "./prisma";
 
-const sesClient = new SESClient({
-  region: process.env.AWS_REGION || "us-east-1",
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
-  },
-});
+let _sesClient: SESClient | null = null;
 
-const FROM_EMAIL = process.env.AWS_FROM_EMAIL || "noreply@stmjournals.in";
+function getSesClient() {
+  if (!_sesClient) {
+    _sesClient = new SESClient({
+      region: process.env.AWS_REGION || "us-west-2",
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
+      },
+    });
+  }
+  return _sesClient;
+}
+
+function getFromEmail() {
+  return process.env.AWS_FROM_EMAIL || "noreply@stmjournals.in";
+}
+
 
 // Helper to replace templates variables like {{name}} with values in object
 function replaceTemplate(str: string, data: Record<string, string>) {
@@ -44,10 +54,10 @@ export async function sendTemplatedEmail(key: string, to: string, data: Record<s
         Body: { Html: { Charset: "UTF-8", Data: finalBody } },
         Subject: { Charset: "UTF-8", Data: finalSubject },
       },
-      Source: FROM_EMAIL,
+      Source: getFromEmail(),
     });
 
-    await sesClient.send(command);
+    await getSesClient().send(command);
     console.log(`✅ SES Sent -> ${key} to ${to}`);
     return true;
   } catch (error) {
