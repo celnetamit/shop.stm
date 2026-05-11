@@ -28,6 +28,14 @@ export async function POST(req: NextRequest) {
       data: { name, email, passwordHash, provider: "credentials", role }
     });
 
+    // Async dispatch emails silently, don't block registration flow if SES lags
+    (async () => {
+      const { sendTemplatedEmail, sendAdminNotification } = await import("@/lib/email");
+      const data = { name: name || "User", email };
+      await sendTemplatedEmail("USER_WELCOME", email, data);
+      await sendAdminNotification("USER_WELCOME_ADMIN", data);
+    })().catch(e => console.error("Auth Email Fail", e));
+
     const token = await signSession({ sub: user.id, email: user.email, role });
     const res = NextResponse.json({ ok: true, user: { id: user.id, email: user.email, role } });
     res.cookies.set(AUTH_COOKIE_NAME, token, {

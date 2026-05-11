@@ -74,6 +74,20 @@ export async function POST(req: NextRequest) {
       }
     });
 
+    (async () => {
+      try {
+        const { sendTemplatedEmail, sendAdminNotification } = await import("@/lib/email");
+        const d = { 
+          orderId: order.id, 
+          name: order.customerName, 
+          total: String(order.total), 
+          currency: order.currency 
+        };
+        await sendTemplatedEmail("ORDER_CONFIRMED", order.email, d);
+        await sendAdminNotification("ORDER_CONFIRMED_ADMIN", d);
+      } catch (e) { console.error("Order Email Err", e); }
+    })();
+
     return NextResponse.json({ ok: true, order });
   } catch (error) {
     return NextResponse.json(

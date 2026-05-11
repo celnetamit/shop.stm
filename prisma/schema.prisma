@@ -174,3 +174,14 @@ model AgencyQuery {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
+
+model EmailTemplate {
+  id          String   @id @default(cuid())
+  key         String   @unique // e.g., USER_WELCOME, ORDER_CONFIRMED_ADMIN
+  subject     String
+  body        String   @db.Text
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+

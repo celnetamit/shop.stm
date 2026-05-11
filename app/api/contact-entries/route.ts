@@ -27,6 +27,13 @@ export async function POST(req: NextRequest) {
       }
     });
 
+    (async () => {
+      const { sendTemplatedEmail, sendAdminNotification } = await import("@/lib/email");
+      const d = { name: entry.name, email: entry.email, subject: entry.subject, message: entry.message };
+      await sendTemplatedEmail("CONTACT_RECEIVED", entry.email, d);
+      await sendAdminNotification("CONTACT_RECEIVED_ADMIN", d);
+    })().catch(console.error);
+
     return NextResponse.json({ ok: true, entry });
   } catch (error) {
     return NextResponse.json(
