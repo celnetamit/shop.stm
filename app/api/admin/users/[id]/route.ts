@@ -23,3 +23,25 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ ok: false, error: error instanceof Error ? error.message : "Failed" }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await getCurrentSession();
+  if (!session || session.role !== "ADMIN") {
+    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const { id } = await params;
+
+    // Prevent self-deletion
+    if (id === session.sub) {
+      return NextResponse.json({ ok: false, error: "Cannot delete your own administrator account." }, { status: 400 });
+    }
+
+    await prisma.user.delete({ where: { id } });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    return NextResponse.json({ ok: false, error: error instanceof Error ? error.message : "Deletion Failed" }, { status: 500 });
+  }
+}
+

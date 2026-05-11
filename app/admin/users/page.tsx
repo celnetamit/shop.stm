@@ -49,6 +49,7 @@ export default function AdminUsersPage() {
                   <th style={{ padding: "16px 24px", fontSize: "13px", fontWeight: "600", color: "#475569", textTransform: "uppercase", letterSpacing: "0.05em" }}>User Details</th>
                   <th style={{ padding: "16px 24px", fontSize: "13px", fontWeight: "600", color: "#475569", textTransform: "uppercase", letterSpacing: "0.05em" }}>Role Authorization</th>
                   <th style={{ padding: "16px 24px", fontSize: "13px", fontWeight: "600", color: "#475569", textTransform: "uppercase", letterSpacing: "0.05em" }}>Registration Date</th>
+                  <th style={{ padding: "16px 24px", fontSize: "13px", fontWeight: "600", color: "#475569", textTransform: "uppercase", letterSpacing: "0.05em" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -94,16 +95,37 @@ export default function AdminUsersPage() {
                       {new Date(r.createdAt).toLocaleDateString('en-US', { 
                         year: 'numeric', 
                         month: 'short', 
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
+                        day: 'numeric'
                       })}
+                    </td>
+                    <td style={{ padding: "20px 24px" }}>
+                      <button
+                        onClick={async () => {
+                          if (!confirm(`Permanently delete user ${r.email}?`)) return;
+                          const res = await fetch(`/api/admin/users/${r.id}`, { method: "DELETE" });
+                          const j = await res.json();
+                          if (!j.ok) alert(j.error || "Deletion Failed");
+                          await load();
+                        }}
+                        style={{
+                          background: "#FEF2F2",
+                          color: "#EF4444",
+                          border: "1px solid #FEE2E2",
+                          padding: "6px 12px",
+                          borderRadius: "8px",
+                          fontSize: "12px",
+                          fontWeight: "600",
+                          cursor: "pointer"
+                        }}
+                      >
+                        🗑️ Delete
+                      </button>
                     </td>
                   </tr>
                 ))}
                 {rows.length === 0 && (
                   <tr>
-                    <td colSpan={3} style={{ padding: "48px", textAlign: "center", color: "#94A3B8", fontSize: "15px" }}>
+                    <td colSpan={4} style={{ padding: "48px", textAlign: "center", color: "#94A3B8", fontSize: "15px" }}>
                       No registered users found.
                     </td>
                   </tr>
