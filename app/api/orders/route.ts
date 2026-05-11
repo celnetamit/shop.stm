@@ -74,19 +74,20 @@ export async function POST(req: NextRequest) {
       }
     });
 
-    (async () => {
-      try {
-        const { sendTemplatedEmail, sendAdminNotification } = await import("@/lib/email");
-        const d = { 
-          orderId: order.id, 
-          name: order.customerName, 
-          total: String(order.total), 
-          currency: order.currency 
-        };
-        await sendTemplatedEmail("ORDER_CONFIRMED", order.email, d);
-        await sendAdminNotification("ORDER_CONFIRMED_ADMIN", d);
-      } catch (e) { console.error("Order Email Err", e); }
-    })();
+    try {
+      const { sendTemplatedEmail, sendAdminNotification } = await import("@/lib/email");
+      const d = {
+        name: order.customerName,
+        email: order.email,
+        orderId: order.id,
+        currency: order.currency,
+        total: order.total.toString()
+      };
+      await sendTemplatedEmail("ORDER_CONFIRMED", order.email, d);
+      await sendAdminNotification("ORDER_CONFIRMED_ADMIN", d);
+    } catch (e) {
+      console.error("Order Notify Error", e);
+    }
 
     return NextResponse.json({ ok: true, order });
   } catch (error) {

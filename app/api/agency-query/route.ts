@@ -23,22 +23,15 @@ export async function POST(request: Request) {
       }
     });
 
-    // Fire async email cascade
-    (async () => {
-      try {
-        const { sendTemplatedEmail, sendAdminNotification } = await import("@/lib/email");
-        const d = {
-          agencyName: query.agencyName,
-          name: query.contactPerson,
-          email: query.email,
-          specialization: query.specialization
-        };
-        await sendTemplatedEmail("AGENCY_RECEIVED", query.email, d);
-        await sendAdminNotification("AGENCY_RECEIVED_ADMIN", d);
-      } catch (err) {
-        console.error("Agency Email Trigger Error:", err);
-      }
-    })();
+    const { sendTemplatedEmail, sendAdminNotification } = await import("@/lib/email");
+    const d = {
+      agencyName: query.agencyName,
+      name: query.contactPerson,
+      email: query.email,
+      specialization: query.specialization
+    };
+    await sendTemplatedEmail("AGENCY_RECEIVED", query.email, d);
+    await sendAdminNotification("AGENCY_RECEIVED_ADMIN", d);
 
     return NextResponse.json({ success: true, data: query });
   } catch (error: any) {

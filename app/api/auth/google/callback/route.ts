@@ -42,12 +42,14 @@ export async function GET(req: NextRequest) {
       });
       
       // Trigger transactional email workflows only for first-time Google registrations
-      (async () => {
+      try {
         const { sendTemplatedEmail, sendAdminNotification } = await import("@/lib/email");
         const data = { name: profile.name || "User", email: normalizedEmail };
         await sendTemplatedEmail("USER_WELCOME", normalizedEmail, data);
         await sendAdminNotification("USER_WELCOME_ADMIN", data);
-      })().catch(e => console.error("Google Auth Email Fail", e));
+      } catch (e) {
+        console.error("Google Auth Email Fail", e);
+      }
     } else {
       user = await prisma.user.update({
         where: { email: normalizedEmail },
