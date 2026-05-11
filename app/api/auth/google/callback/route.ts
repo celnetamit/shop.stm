@@ -27,22 +27,38 @@ export async function GET(req: NextRequest) {
     const normalizedEmail = profile.email.toLowerCase();
     const role = roleForEmail(normalizedEmail);
 
-    const user = await prisma.user.upsert({
-      where: { email: normalizedEmail },
-      update: {
-        name: profile.name,
-        role,
-        provider: "google",
-        providerId: profile.id
-      },
-      create: {
-        email: normalizedEmail,
-        name: profile.name,
-        role,
-        provider: "google",
-        providerId: profile.id
-      }
-    });
+    let user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+    const isNew = !user;
+
+    if (isNew) {
+      user = await prisma.user.create({
+        data: {
+          email: normalizedEmail,
+          name: profile.name,
+          role,
+          provider: "google",
+          providerId: profile.id
+        }
+      });
+      
+      // Trigger transactional email workflows only for first-time Google registrations
+      (async () => {
+        const { sendTemplatedEmail, sendAdminNotification } = await import("@/lib/email");
+        const data = { name: profile.name || "User", email: normalizedEmail };
+        await sendTemplatedEmail("USER_WELCOME", normalizedEmail, data);
+        await sendAdminNotification("USER_WELCOME_ADMIN", data);
+      })().catch(e => console.error("Google Auth Email Fail", e));
+    } else {
+      user = await prisma.user.update({
+        where: { email: normalizedEmail },
+        data: {
+          name: profile.name,
+          role,
+          provider: "google",
+          providerId: profile.id
+        }
+      });
+    }
 
     const token = await signSession({ sub: user.id, email: user.email, role });
 
