@@ -167,7 +167,7 @@ export async function sendAdminNotification(key: string, data: Record<string, st
   }
 }
 
-async function seedDefaultTemplates() {
+export async function seedDefaultTemplates() {
   const defaults = [
     {
       key: "USER_WELCOME",

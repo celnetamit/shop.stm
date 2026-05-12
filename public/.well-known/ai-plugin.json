@@ -1,0 +1,18 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "STM Journals Marketplace",
+  "name_for_model": "stmj",
+  "description_for_human": "Browse and search premium academic and scholarly journal subscriptions.",
+  "description_for_model": "This plugin helps search academic journals, check pricing and availability, and extract meta-information about peer-reviewed publications stored in STM Journals catalog.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "/openapi.json",
+    "is_user_authenticated": false
+  },
+  "logo_url": "/favicon.ico",
+  "contact_email": "subscriptions@stmjournals.com",
+  "legal_info_url": "/privacy-policy"
+}

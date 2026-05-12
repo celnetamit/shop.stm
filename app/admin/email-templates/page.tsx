@@ -61,9 +61,31 @@ export default function AdminEmailTemplates() {
   return (
     <div style={{ padding: "40px", fontFamily: "Outfit, sans-serif", background: "#F8FAFC", minHeight: "100vh" }}>
       <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-        <div style={{ marginBottom: "32px" }}>
-          <h1 style={{ fontSize: "28px", fontWeight: "800", color: "#0F172A", margin: 0 }}>Communication Templates</h1>
-          <p style={{ color: "#64748B", fontSize: "14px", marginTop: "4px" }}>Customize dynamic subject lines and HTML notification dispatch bodies.</p>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "32px" }}>
+          <div>
+            <h1 style={{ fontSize: "28px", fontWeight: "800", color: "#0F172A", margin: 0 }}>Communication Templates</h1>
+            <p style={{ color: "#64748B", fontSize: "14px", marginTop: "4px" }}>Customize dynamic subject lines and HTML notification dispatch bodies.</p>
+          </div>
+          <button
+            onClick={async () => {
+              if (!confirm("DANGER: This wipes dynamic database definitions and overrides them with pure application source code. Continue?")) return;
+              try {
+                const r = await fetch("/api/admin/email-templates/sync", { method: "POST" });
+                const resJson = await r.json();
+                if (resJson.ok) {
+                  alert("✅ Successfully synchronized codebase to production database.");
+                  await load();
+                } else {
+                  alert("Failed to sync: " + resJson.error);
+                }
+              } catch (e) {
+                alert("Sync request errored out.");
+              }
+            }}
+            style={{ background: "#F1F5F9", color: "#475569", border: "1px solid #E2E8F0", padding: "8px 16px", borderRadius: "8px", fontSize: "13px", fontWeight: "600", cursor: "pointer" }}
+          >
+            🔄 Force Reload from Codebase
+          </button>
         </div>
 
         {error && <div style={{ padding: "12px", background: "#FEF2F2", border: "1px solid #FEE2E2", borderRadius: "8px", color: "#991B1B", marginBottom: "20px" }}>{error}</div>}
