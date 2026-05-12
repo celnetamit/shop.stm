@@ -133,8 +133,9 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
     [selectedRows, plans, currency]
   );
   const discount = Math.round((subtotal * appliedDiscountPercent) / 100);
-  const gst = currency === "INR" ? Math.round(subtotal * 0.18) : 0;
-  const grandTotal = subtotal - discount + gst;
+  const taxable = subtotal - discount;
+  const gst = currency === "INR" ? Math.round(taxable * 0.18) : 0;
+  const grandTotal = taxable + gst;
 
   function fmt(amount: number) {
     return currency === "INR" ? `₹${amount.toLocaleString("en-IN")}` : `$${amount.toLocaleString("en-US")}`;
@@ -613,7 +614,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
             <div className="proforma-totals">
               <p><span>Subtotal</span><strong>{fmt(subtotal)}</strong></p>
               <p><span>Discount {appliedCouponCode ? `(${appliedCouponCode})` : ""}</span><strong>{fmt(discount)}</strong></p>
-              <p><span>Taxable Value</span><strong>{fmt(subtotal - discount)}</strong></p>
+              <p><span>Taxable Value</span><strong>{fmt(taxable)}</strong></p>
               <p><span>GST +18%</span><strong>{fmt(gst)}</strong></p>
               <p className="grand"><span>Grand Total</span><strong>{fmt(grandTotal)}</strong></p>
             </div>
