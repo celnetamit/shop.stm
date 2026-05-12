@@ -283,7 +283,13 @@ async function seedDefaultTemplates() {
             </td>
           </tr>
         </table>
-        <p style="margin-top:16px; text-align:center;"><a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://shop.stmjournals.in'}/checkout?quoteId={{quoteId}}" style="display:inline-block; background-color:#1e40af; color:white; padding:12px 24px; text-decoration:none; border-radius:6px; font-weight:bold;">Proceed to Secure Checkout →</a></p>
+
+        <h3 style="margin: 25px 0 10px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">Selected Subscriptions</h3>
+        {{itemsTableHtml}}
+        
+        {{financialsHtml}}
+
+        <p style="margin-top:24px; text-align:center;"><a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://shop.stmjournals.in'}/checkout?quoteId={{quoteId}}" style="display:inline-block; background-color:#1e40af; color:white; padding:14px 30px; text-decoration:none; border-radius:6px; font-weight:bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">Proceed to Secure Checkout →</a></p>
       `,
       description: "Sent to users when their institutional quote setup completes."
     },
@@ -301,12 +307,15 @@ async function seedDefaultTemplates() {
           <strong>Phone:</strong> {{phone}}
         </div>
         
-        <table style="width:100%; border:1px solid #e2e8f0; border-radius:8px;" cellpadding="12">
-          <tr style="background-color:#f8fafc;">
-            <td style="font-weight:bold; width:120px;">Quote ID</td>
-            <td>{{quoteId}}</td>
-          </tr>
-        </table>
+        <h3 style="margin: 20px 0 8px; color: #0f172a;">Quote Reference: {{quoteId}}</h3>
+        
+        {{itemsTableHtml}}
+        
+        {{financialsHtml}}
+        
+        <p style="margin-top: 20px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 12px;">
+          Admin action requested: Track potential follow-up or review against ledger.
+        </p>
       `,
       description: "Alert sent to backend administration when new quotes are submitted."
     }
