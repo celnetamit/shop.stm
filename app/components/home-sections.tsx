@@ -27,7 +27,7 @@ export default function HomeSections({ domains, journals }: { domains: DomainLin
   return (
     <section className="home-sections" style={{ marginTop: "30px", display: "grid", gap: "40px" }}>
       {/* Browse by Discipline */}
-      <div className="home-section-block" style={{
+      <div className="home-section-block hide-on-mobile" style={{
         background: "#ffffff",
         border: "1px solid #E2E8F0",
         borderRadius: "4px",

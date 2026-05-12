@@ -12,11 +12,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   try {
     const { id } = await params;
-    const body = (await req.json()) as { status?: "DRAFT" | "SUBMITTED" };
-    if (!body.status) {
-      return NextResponse.json({ ok: false, error: "Status is required" }, { status: 400 });
-    }
-    const quote = await prisma.proformaQuote.update({ where: { id }, data: { status: body.status } });
+    const body = (await req.json()) as { status?: "DRAFT" | "SUBMITTED" | "PAID"; adminRemarks?: string };
+    
+    const data: any = {};
+    if (body.status !== undefined) data.status = body.status;
+    if (body.adminRemarks !== undefined) data.adminRemarks = body.adminRemarks;
+
+    const quote = await prisma.proformaQuote.update({ where: { id }, data });
     return NextResponse.json({ ok: true, quote });
   } catch (error) {
     return NextResponse.json({ ok: false, error: error instanceof Error ? error.message : "Failed" }, { status: 500 });

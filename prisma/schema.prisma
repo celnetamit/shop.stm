@@ -15,6 +15,7 @@ enum UserRole {
 enum QuoteStatus {
   DRAFT
   SUBMITTED
+  PAID
 }
 
 enum SubscriptionPlan {
@@ -78,6 +79,8 @@ model ProformaQuote {
   items         ProformaQuoteItem[]
   couponCode    String?
   couponPercent Int                @default(0)
+  hasVisitedCheckout Boolean       @default(false)
+  adminRemarks  String?            @db.Text
   createdByUserId String?
   createdBy     User?              @relation("ProformaCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
   createdAt     DateTime           @default(now())
@@ -129,6 +132,10 @@ model Order {
   couponCode     String?
   status         OrderStatus @default(PENDING)
   items          OrderItem[]
+  razorpayOrderId String?
+  razorpayPaymentId String?
+  razorpaySignature String?
+  adminRemarks   String?           @db.Text
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 }

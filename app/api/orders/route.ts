@@ -33,10 +33,28 @@ export async function POST(req: NextRequest) {
         unitPrice: number;
         qty: number;
       }>;
+      razorpayOrderId?: string;
+      razorpayPaymentId?: string;
+      razorpaySignature?: string;
     };
 
     if (!body.customerName || !body.email || !body.address || !body.state || !body.pincode || !Number.isFinite(body.total)) {
-      return NextResponse.json({ ok: false, error: "Missing required fields" }, { status: 400 });
+      return NextResponse.json({ ok: false, error: "Missing required contact/total fields" }, { status: 400 });
+    }
+
+    // Cryptographically Verify the Razorpay Payment Authenticity
+    if (!body.razorpayOrderId || !body.razorpayPaymentId || !body.razorpaySignature) {
+      return NextResponse.json({ ok: false, error: "Missing secure payment tokens." }, { status: 400 });
+    }
+
+    const crypto = await import("crypto");
+    const generated_signature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET || "")
+      .update(body.razorpayOrderId + "|" + body.razorpayPaymentId)
+      .digest("hex");
+
+    if (generated_signature !== body.razorpaySignature) {
+      return NextResponse.json({ ok: false, error: "Critical: Payment signature verification failed!" }, { status: 400 });
     }
 
     const session = await getCurrentSession();
@@ -58,6 +76,10 @@ export async function POST(req: NextRequest) {
         sgst: Math.max(0, Number(body.sgst || 0)),
         total: Math.max(0, Number(body.total || 0)),
         couponCode: body.couponCode?.trim().toUpperCase() || null,
+        status: "PAID", // Verification success explicitly authorizes state promotion to PAID
+        razorpayOrderId: body.razorpayOrderId,
+        razorpayPaymentId: body.razorpayPaymentId,
+        razorpaySignature: body.razorpaySignature,
         items: {
           create: (body.items || []).map((it) => ({
             journalName: it.journalName,
@@ -81,7 +103,8 @@ export async function POST(req: NextRequest) {
         email: order.email,
         orderId: order.id,
         currency: order.currency,
-        total: order.total.toString()
+        total: order.total.toString(),
+        couponCode: order.couponCode || "None"
       };
       await sendTemplatedEmail("ORDER_CONFIRMED", order.email, d);
       await sendAdminNotification("ORDER_CONFIRMED_ADMIN", d);

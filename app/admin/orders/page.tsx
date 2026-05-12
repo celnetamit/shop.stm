@@ -10,6 +10,7 @@ type Order = {
   total: number;
   currency: "INR" | "USD";
   status: "PENDING" | "PAID" | "CANCELLED";
+  adminRemarks: string | null;
   createdAt: string;
   user: { id: string; email: string } | null;
   items: OrderItem[];
@@ -18,6 +19,7 @@ type Order = {
 export default function AdminOrdersPage() {
   const [rows, setRows] = useState<Order[]>([]);
   const [error, setError] = useState("");
+  const [editingRemarks, setEditingRemarks] = useState<Record<string, string>>({});
 
   async function load() {
     const res = await fetch("/api/admin/orders", { cache: "no-store" });
@@ -34,30 +36,78 @@ export default function AdminOrdersPage() {
     await load();
   }
 
+  async function updateRemark(id: string) {
+    const remark = editingRemarks[id];
+    await fetch(`/api/admin/orders/${id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ adminRemarks: remark }) });
+    await load();
+  }
+
   return (
-    <section className="admin-page">
-      <h1>Orders</h1>
-      {error ? <p className="auth-error">{error}</p> : null}
-      <div className="admin-table-wrap">
-        <table className="admin-table">
-          <thead><tr><th>Customer</th><th>Created By User</th><th>Total</th><th>Status</th><th>Item Details</th><th>Created</th></tr></thead>
+    <section className="admin-page" style={{maxWidth: "1200px", margin: "0 auto", padding: "20px"}}>
+      <h1 style={{marginBottom:"20px", borderBottom:"2px solid #f1f5f9", paddingBottom:"10px"}}>🛒 Master Orders</h1>
+      {error ? <p className="auth-error" style={{color:"red"}}>{error}</p> : null}
+      <div className="admin-table-wrap" style={{overflowX:"auto"}}>
+        <table className="admin-table" style={{width:"100%", borderCollapse:"collapse"}}>
+          <thead>
+            <tr style={{background:"#f8fafc", textAlign:"left"}}>
+              <th style={{padding:"12px"}}>Customer</th>
+              <th style={{padding:"12px"}}>Payment Status</th>
+              <th style={{padding:"12px"}}>Action Override</th>
+              <th style={{padding:"12px"}}>Admin Remarks</th>
+              <th style={{padding:"12px"}}>Total</th>
+              <th style={{padding:"12px"}}>Items</th>
+            </tr>
+          </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.id}>
-                <td><strong>{r.customerName}</strong><br />{r.email}</td>
-                <td>{r.user?.email || "Guest/Unknown"}</td>
-                <td>{r.currency} {r.total}</td>
-                <td>
-                  <select value={r.status} onChange={(e) => void updateStatus(r.id, e.target.value as Order["status"])}>
-                    <option value="PENDING">PENDING</option><option value="PAID">PAID</option><option value="CANCELLED">CANCELLED</option>
+              <tr key={r.id} style={{borderBottom:"1px solid #e2e8f0"}}>
+                <td style={{padding:"12px"}}>
+                  <strong>{r.customerName}</strong><br />
+                  <span style={{fontSize:"12px", color:"#64748b"}}>{r.email}</span>
+                </td>
+                <td style={{padding:"12px"}}>
+                  {r.status === "PAID" ? (
+                    <span style={{background:"#dcfce7", color:"#166534", padding:"4px 8px", borderRadius:"4px", fontSize:"11px", fontWeight:"bold"}}>RECEIVED ✅</span>
+                  ) : r.status === "CANCELLED" ? (
+                    <span style={{background:"#fee2e2", color:"#991b1b", padding:"4px 8px", borderRadius:"4px", fontSize:"11px", fontWeight:"bold"}}>CANCELLED</span>
+                  ) : (
+                    <span style={{background:"#fef9c3", color:"#854d0e", padding:"4px 8px", borderRadius:"4px", fontSize:"11px", fontWeight:"bold"}}>PENDING</span>
+                  )}
+                </td>
+                <td style={{padding:"12px"}}>
+                  <select 
+                    value={r.status} 
+                    onChange={(e) => void updateStatus(r.id, e.target.value as Order["status"])}
+                    style={{padding:"4px", fontSize:"12px"}}
+                  >
+                    <option value="PENDING">PENDING</option>
+                    <option value="PAID">PAID</option>
+                    <option value="CANCELLED">CANCELLED</option>
                   </select>
                 </td>
-                <td>
-                  {r.items.length === 0 ? "No item rows" : r.items.map((it) => (
-                    <div key={it.id}>{it.journalName} | {it.selectedPlan} | Year {it.year}{it.issue ? ` | Issue ${it.issue}` : ""} | Qty {it.qty} | ₹{it.unitPrice}</div>
+                <td style={{padding:"12px"}}>
+                  <div style={{display:"flex", gap:"5px"}}>
+                    <input 
+                      type="text" 
+                      placeholder="Add note..." 
+                      defaultValue={r.adminRemarks || ""}
+                      onChange={(e) => setEditingRemarks(prev => ({ ...prev, [r.id]: e.target.value }))}
+                      style={{fontSize:"12px", padding:"4px", width:"150px"}}
+                    />
+                    <button 
+                      onClick={() => updateRemark(r.id)}
+                      style={{fontSize:"10px", background:"#0f2a57", color:"white", border:"none", padding:"4px 8px", borderRadius:"3px", cursor:"pointer"}}
+                    >
+                      Save
+                    </button>
+                  </div>
+                </td>
+                <td style={{padding:"12px", fontWeight:"bold"}}>{r.currency} {r.total}</td>
+                <td style={{padding:"12px", fontSize:"11px"}}>
+                  {r.items.length === 0 ? "—" : r.items.map((it) => (
+                    <div key={it.id} style={{color:"#475569", marginBottom:"2px"}}>{it.journalName} ({it.selectedPlan}) x{it.qty}</div>
                   ))}
                 </td>
-                <td>{new Date(r.createdAt).toLocaleString()}</td>
               </tr>
             ))}
           </tbody>

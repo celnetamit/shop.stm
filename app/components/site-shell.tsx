@@ -103,10 +103,11 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
             maxWidth: "1300px",
             margin: "0 auto",
             padding: "16px 20px",
-            display: "grid",
-            gridTemplateColumns: "auto 1fr auto",
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "space-between",
             alignItems: "center",
-            gap: "40px"
+            gap: "20px"
           }}>
             <Link href="/" className="site-brand" style={{
               fontFamily: "'Playfair Display', Georgia, serif",
@@ -119,14 +120,10 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
               alignItems: "center",
               gap: "8px"
             }}>
-              <span style={{ 
-                background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)", 
-                WebkitBackgroundClip: "text", 
-                WebkitTextFillColor: "transparent" 
-              }}>STM</span> JOURNALS
+              <img src="/stmlogo.png" alt="STM Journals" style={{ height: "65px", width: "auto", objectFit: "contain" }} />
             </Link>
             
-            <div className="site-search" style={{ position: "relative", maxWidth: "500px", width: "100%", justifySelf: "center" }}>
+            <div className="site-search" style={{ position: "relative", flex: "1 1 400px", maxWidth: "600px", minWidth: "280px", margin: "0 auto" }}>
               <input
                 type="text"
                 placeholder="Search Journal, Book or ISSN..."
@@ -281,15 +278,8 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
             
             {/* Column 1: Company Info */}
             <div>
-              <Link href="/" style={{
-                fontWeight: "700",
-                fontSize: "20px",
-                color: "#ffffff",
-                textDecoration: "none",
-                display: "inline-block",
-                marginBottom: "4px"
-              }}>
-                <span style={{ color: "#ffffff" }}>STM</span> <span style={{ color: "#3B82F6" }}>JOURNALS</span>
+              <Link href="/" style={{ display: "block", marginBottom: "12px" }}>
+                <img src="/stmlogo.png" alt="STM Journals" style={{ height: "38px", filter: "brightness(0) invert(1)", objectFit: "contain" }} />
               </Link>
               <div style={{ color: "#8b9ebd", fontSize: "12px", marginBottom: "20px", display: "flex", alignItems: "center", gap: "4px" }}>
                 <span style={{ color: "#f97316", letterSpacing: "1px" }}>----</span> Scientific <span style={{ color: "#f97316" }}>•</span> Technical <span style={{ color: "#f97316" }}>•</span> Medical
@@ -316,11 +306,11 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
             <div>
               <h3 style={{ fontSize: "12px", fontWeight: "700", color: "#3B82F6", marginBottom: "20px", textTransform: "uppercase", borderBottom: "1px solid #1E293B", paddingBottom: "10px" }}>EDITORIAL & INSTITUTIONAL</h3>
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "14px" }}>
-                <li><Link href="/" style={{ color: "#8b9ebd", textDecoration: "none", fontSize: "12px", display: "flex", alignItems: "center", gap: "10px" }}><span>📚</span> Recommend to Library</Link></li>
+                <li><Link href="/for-authors" style={{ color: "#8b9ebd", textDecoration: "none", fontSize: "12px", display: "flex", alignItems: "center", gap: "10px" }}><span>📝</span> For Authors</Link></li>
+                <li><Link href="/for-reviewers" style={{ color: "#8b9ebd", textDecoration: "none", fontSize: "12px", display: "flex", alignItems: "center", gap: "10px" }}><span>✅</span> For Reviewers</Link></li>
                 <li><Link href="/for-librarians" style={{ color: "#8b9ebd", textDecoration: "none", fontSize: "12px", display: "flex", alignItems: "center", gap: "10px" }}><span>🏛️</span> Information for Librarians</Link></li>
                 <li><Link href="/for-agencies" style={{ color: "#8b9ebd", textDecoration: "none", fontSize: "12px", display: "flex", alignItems: "center", gap: "10px" }}><span>🤝</span> Agency Partnership</Link></li>
                 <li><Link href="/catalogues-list" style={{ color: "#8b9ebd", textDecoration: "none", fontSize: "12px", display: "flex", alignItems: "center", gap: "10px" }}><span>📄</span> Download catalogue</Link></li>
-                <li><Link href="/get-proforma-invoice-quote" style={{ color: "#8b9ebd", textDecoration: "none", fontSize: "12px", display: "flex", alignItems: "center", gap: "10px" }}><span>🧾</span> Request a Quote</Link></li>
               </ul>
             </div>
 
@@ -331,8 +321,8 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
                 <li><Link href="/catalogues-list" style={{ color: "#8b9ebd", textDecoration: "none", fontSize: "12px", display: "flex", alignItems: "center", gap: "10px" }}><span>🏷️</span> Pricing List (INR)</Link></li>
                 <li><Link href="/catalogues-list" style={{ color: "#8b9ebd", textDecoration: "none", fontSize: "12px", display: "flex", alignItems: "center", gap: "10px" }}><span>🌐</span> International Pricing (USD)</Link></li>
                 <li><Link href="/contact-us" style={{ color: "#8b9ebd", textDecoration: "none", fontSize: "12px", display: "flex", alignItems: "center", gap: "10px" }}><span>💬</span> Contact Support</Link></li>
-                <li><Link href="/contact-us" style={{ color: "#8b9ebd", textDecoration: "none", fontSize: "12px", display: "flex", alignItems: "center", gap: "10px" }}><span>⏱️</span> FAQ Center</Link></li>
-                <li><Link href="/" style={{ color: "#8b9ebd", textDecoration: "none", fontSize: "12px", display: "flex", alignItems: "center", gap: "10px" }}><span>🚚</span> Shipping & Delivery</Link></li>
+                <li><Link href="/faq" style={{ color: "#8b9ebd", textDecoration: "none", fontSize: "12px", display: "flex", alignItems: "center", gap: "10px" }}><span>⏱️</span> FAQ Center</Link></li>
+                <li><Link href="/policies" style={{ color: "#8b9ebd", textDecoration: "none", fontSize: "12px", display: "flex", alignItems: "center", gap: "10px" }}><span>🚚</span> Shipping & Policies</Link></li>
                 <li><Link href="/terms-and-conditions" style={{ color: "#8b9ebd", textDecoration: "none", fontSize: "12px", display: "flex", alignItems: "center", gap: "10px" }}><span>🏛️</span> Terms of Service</Link></li>
               </ul>
             </div>

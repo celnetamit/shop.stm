@@ -14,34 +14,45 @@ export const metadata: Metadata = {
   },
   description:
     "Browse STM journal subscriptions, domain-wise catalogues, and request institutional proforma invoices online.",
+  keywords: ["STM Journals", "Academic Publishing", "Peer-reviewed journals", "Scientific journals", "Medical research journals", "Library subscriptions", "Scholarly marketplace"],
+  authors: [{ name: "Consortium eLearning Network Pvt. Ltd." }],
   alternates: {
     canonical: "/"
   },
   openGraph: {
     type: "website",
     url: siteUrl,
-    title: "STM Journals",
+    title: "STM Journals | Scholarly Publishing Marketplace",
     description:
-      "Journal subscriptions, catalogues, and institutional proforma quote management.",
-    siteName: "STM Journals"
+      "Access premium peer-reviewed journal subscriptions, catalogues, and institutional proforma quote management in Science, Technology, and Medicine.",
+    siteName: "STM Journals",
+    locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
     title: "STM Journals",
     description:
-      "Journal subscriptions, catalogues, and institutional proforma quote management."
+      "Browse peer-reviewed scholarly journal subscriptions and institutional catalogs."
   },
   robots: {
     index: true,
     follow: true,
+    nocache: false,
     googleBot: {
       index: true,
       follow: true,
+      noimageindex: false,
       "max-image-preview": "large",
-      "max-video-preview": -1,
-      "max-snippet": -1
+      "max-snippet": -1,
+      "max-video-preview": -1
     }
   }
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

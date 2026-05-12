@@ -33,6 +33,8 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
   const [quoteId, setQuoteId] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailSuccessMsg, setEmailSuccessMsg] = useState("");
   const [error, setError] = useState("");
 
   const [organization, setOrganization] = useState("");
@@ -273,6 +275,27 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
     window.print();
   }
 
+  async function onSendEmailNotification() {
+    if (!quoteId || quoteId.startsWith("draft-")) return;
+    setSendingEmail(true);
+    setEmailSuccessMsg("");
+    setError("");
+
+    try {
+      const response = await fetch(`/api/proforma/${quoteId}/notify`, { method: "POST" });
+      const result = await response.json();
+      if (result.ok) {
+        setEmailSuccessMsg("Successfully dispatched emails to users and admins.");
+      } else {
+        setError(result.error || "Dispatched failed.");
+      }
+    } catch (e) {
+      setError("Failed to connect to mail dispatcher.");
+    } finally {
+      setSendingEmail(false);
+    }
+  }
+
   return (
     <main className="proforma-page">
       <h1 className="proforma-title">Institutional Proforma System</h1>
@@ -505,6 +528,10 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
       {step === 3 ? (
         <section className="proforma-preview-wrap">
           <article className="proforma-invoice">
+            <div className="proforma-top-brand-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "2px solid #1e40af", paddingBottom: "12px", marginBottom: "16px" }}>
+              <img src="/stmlogo.png" alt="Logo" style={{ height: "48px", objectFit: "contain" }} />
+              <h1 style={{ margin: 0, fontSize: "26px", fontWeight: 800, textTransform: "uppercase", color: "#111", letterSpacing: "0.5px" }}>Proforma Invoice</h1>
+            </div>
             <section className="proforma-quote-meta">
               <div>
                 <h5>Quotation Number</h5>
@@ -606,7 +633,13 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
             <div className="proforma-preview-actions">
             <button className="catalogues-ghost" onClick={() => setStep(2)}>← Edit</button>
             <button className="catalogues-primary" onClick={onDownloadInvoicePdf}>⬇ Download PDF</button>
-            <button className="catalogues-ghost" onClick={() => alert("Email integration can be connected next.")}>✉ Send Email</button>
+            <button 
+              className="catalogues-ghost" 
+              onClick={onSendEmailNotification} 
+              disabled={sendingEmail || !quoteId || quoteId.startsWith("draft-")}
+            >
+              {sendingEmail ? "✉ Dispatching..." : "✉ Send Email"}
+            </button>
             <button
               className="catalogues-primary"
               onClick={() =>
@@ -618,6 +651,8 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
               ⚡ Pay Now
             </button>
           </div>
+          {emailSuccessMsg ? <p className="auth-success" style={{ textAlign: "center", color: "green", marginTop: "10px" }}>{emailSuccessMsg}</p> : null}
+          {error ? <p className="auth-error" style={{ textAlign: "center", color: "red", marginTop: "10px" }}>{error}</p> : null}
         </section>
       ) : null}
     </main>

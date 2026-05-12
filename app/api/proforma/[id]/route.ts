@@ -3,6 +3,63 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params;
+    if (!id || id.startsWith("draft-")) {
+      return NextResponse.json({ ok: false, error: "Draft quotes lack persistent storage." }, { status: 404 });
+    }
+
+    const quote = await prisma.proformaQuote.findUnique({
+      where: { id },
+      include: { items: true }
+    });
+
+    if (!quote) {
+      return NextResponse.json({ ok: false, error: "Requested document missing." }, { status: 404 });
+    }
+
+    // Automatically track that user engaged the checkout interface
+    try {
+      await prisma.proformaQuote.update({
+        where: { id },
+        data: { hasVisitedCheckout: true }
+      });
+    } catch (e) {
+      // non-blocking background failure
+    }
+
+    const subtotal = quote.items.reduce((sum, i) => sum + i.unitPrice, 0);
+    const discountAmt = Math.round((subtotal * (quote.couponPercent || 0)) / 100);
+    const taxable = subtotal - discountAmt;
+    const cgst = Math.round(taxable * 0.09 * 10) / 10;
+    const sgst = Math.round(taxable * 0.09 * 10) / 10;
+    const total = Math.round((taxable + cgst + sgst) * 10) / 10;
+
+    return NextResponse.json({
+      ok: true,
+      quote: {
+        id: quote.id,
+        organization: quote.organization,
+        contactName: quote.contactName,
+        email: quote.email,
+        address: quote.address || "",
+        country: quote.country,
+        gstNumber: quote.gstNumber || "",
+        subtotal,
+        discount: discountAmt,
+        discountPercent: quote.couponPercent || 0,
+        cgst,
+        sgst,
+        total,
+        currency: quote.currency
+      }
+    });
+  } catch (e) {
+    return NextResponse.json({ ok: false, error: "Failure interrogating storage." }, { status: 500 });
+  }
+}
+
 function isMissingTableError(error: unknown): boolean {
   if (!(error instanceof Error)) return false;
   const msg = error.message.toLowerCase();
@@ -67,6 +124,19 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           }
         })
       ]);
+      
+      // Post-Transaction Async Email Notification
+      try {
+        const { prepareProformaEmailPayload } = await import("@/lib/proforma-email-helper");
+        const d = await prepareProformaEmailPayload(id);
+        if (d) {
+          const { sendTemplatedEmail, sendAdminNotification } = await import("@/lib/email");
+          await sendTemplatedEmail("PROFORMA_CREATED", d.email, d);
+          await sendAdminNotification("PROFORMA_CREATED_ADMIN", d);
+        }
+      } catch (emailErr) {
+        console.error("⚠️ Proforma email triggers failed", emailErr);
+      }
     } catch (dbError) {
       if (!isMissingTableError(dbError)) throw dbError;
       return NextResponse.json({ ok: true, warning: "Draft mode: DB table missing" });
