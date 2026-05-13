@@ -27,56 +27,196 @@ export default function HomeSections({ domains, journals }: { domains: DomainLin
   return (
     <section className="home-sections" style={{ marginTop: "30px", display: "grid", gap: "40px" }}>
       {/* Browse by Discipline */}
-      <div className="home-section-block hide-on-mobile" style={{
+      <div className="home-section-block" style={{
         background: "#ffffff",
         border: "1px solid #E2E8F0",
-        borderRadius: "4px",
-        padding: "30px 24px"
+        borderRadius: "8px",
+        padding: "40px 24px",
+        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
       }}>
-        <h2 style={{
-          fontFamily: "'Playfair Display', serif",
-          fontSize: "24px",
-          color: "#0F172A",
-          marginBottom: "20px",
-          fontWeight: "700",
-          borderLeft: "4px solid #F59E0B",
-          paddingLeft: "12px"
-        }}>Browse by Discipline</h2>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "32px" }}>
+          <h2 style={{
+            fontFamily: "'Playfair Display', serif",
+            fontSize: "30px",
+            color: "#0F172A",
+            fontWeight: "700",
+            margin: 0
+          }}>Browse by Discipline</h2>
+          <p style={{
+            fontFamily: "Outfit, sans-serif",
+            fontSize: "15px",
+            color: "#64748B",
+            margin: 0
+          }}>Explore top research categories shaping the future.</p>
+        </div>
+        
         <div className="home-discipline-grid" style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "10px"
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+          gap: "28px"
         }}>
-          {domains.map((d) => (
-            <a
-              key={d.domain}
-              href={`/product-category/journals/${encodeURIComponent(d.domain)}`}
-              className="transition-smooth"
-              style={{
-                background: "#F8FAFC",
-                border: "1px solid #E2E8F0",
-                color: "#334155",
-                borderRadius: "9999px",
-                padding: "8px 18px",
-                fontSize: "13px",
-                fontWeight: "500",
-                textDecoration: "none",
-                display: "inline-block"
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "rgba(245, 158, 11, 0.08)";
-                e.currentTarget.style.borderColor = "#F59E0B";
-                e.currentTarget.style.color = "#F59E0B";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "#F8FAFC";
-                e.currentTarget.style.borderColor = "#E2E8F0";
-                e.currentTarget.style.color = "#334155";
-              }}
+          {[
+            {
+              key: "Computer/IT",
+              displayName: "Computer/IT",
+              image: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=600&q=80",
+              quote: "Driving global innovation in Generative AI, Cybersecurity, and Quantum Computing architectures."
+            },
+            {
+              key: "Medical Sciences",
+              displayName: "Medical",
+              image: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=600&q=80",
+              quote: "Advancing patient care, disease prevention, and groundbreaking clinical methodologies globally."
+            },
+            {
+              key: "Civil/Construction Engineering",
+              displayName: "Civil/Construction Engineering",
+              image: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=600&q=80",
+              quote: "Designing sustainable infrastructures, smart materials, and future-ready urban ecosystems."
+            },
+            {
+              key: "Mechanical Engineering",
+              displayName: "Mechanical Engineering",
+              image: "https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&w=600&q=80",
+              quote: "Engineering smart robotics, advanced thermodynamics, and automated industrial solutions."
+            },
+            {
+              key: "Pharmacy",
+              displayName: "Pharmacy",
+              image: "https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2?auto=format&fit=crop&w=600&q=80",
+              quote: "Pioneering drug discovery, pharmaceutical chemistry, and modern clinical therapeutics."
+            },
+            {
+              key: "Bio Technology",
+              displayName: "Bio Technology",
+              image: "https://images.unsplash.com/photo-1530213786676-41ad9f7736f6?auto=format&fit=crop&w=600&q=80",
+              quote: "Harnessing genetic research, molecular biology, and cutting-edge life science innovations."
+            }
+          ].map((item) => {
+            const count = domains.find((d) => d.domain === item.key)?.count || 0;
+            return (
+              <div key={item.key} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                <a 
+                  href={`/product-category/journals/${encodeURIComponent(item.key)}`} 
+                  style={{
+                    position: "relative",
+                    borderRadius: "10px",
+                    overflow: "hidden",
+                    aspectRatio: "16/10",
+                    display: "block",
+                    boxShadow: "0 4px 12px rgba(15, 23, 42, 0.06)"
+                  }}
+                >
+                  <img 
+                    src={item.image} 
+                    alt={item.displayName} 
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      transition: "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)"
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.08)"}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
+                  />
+                  <div style={{
+                    position: "absolute",
+                    inset: 0,
+                    background: "linear-gradient(to top, rgba(15, 23, 42, 0.8) 0%, rgba(15, 23, 42, 0.35) 40%, rgba(15, 23, 42, 0.1) 100%)",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "flex-end",
+                    padding: "20px",
+                    pointerEvents: "none"
+                  }}>
+                    <h3 style={{
+                      color: "#ffffff",
+                      fontSize: "19px",
+                      fontWeight: "700",
+                      margin: 0,
+                      fontFamily: "Outfit, sans-serif",
+                      letterSpacing: "0.01em"
+                    }}>{item.displayName}</h3>
+                    <span style={{
+                      color: "rgba(255, 255, 255, 0.85)",
+                      fontSize: "12.5px",
+                      fontWeight: "500",
+                      marginTop: "3px",
+                      fontFamily: "Outfit, sans-serif"
+                    }}>{count} Journals</span>
+                  </div>
+                </a>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  <div style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: "6px" }}>
+                      <polygon points="12,3 2,21 22,21" />
+                    </svg>
+                    <p style={{
+                      margin: 0,
+                      fontSize: "13px",
+                      lineHeight: "1.5",
+                      color: "#475569",
+                      fontFamily: "Outfit, sans-serif"
+                    }}>
+                      &ldquo;{item.quote}&rdquo;
+                    </p>
+                  </div>
+                  <a 
+                    href={`/product-category/journals/${encodeURIComponent(item.key)}`}
+                    className="transition-smooth"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      color: "#2563EB",
+                      fontSize: "13.5px",
+                      fontWeight: "700",
+                      textDecoration: "none",
+                      fontFamily: "Outfit, sans-serif",
+                      width: "fit-content"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = "#1D4ED8";
+                      const icon = e.currentTarget.querySelector(".arrow-icon") as HTMLElement;
+                      if (icon) icon.style.transform = "translateX(4px)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = "#2563EB";
+                      const icon = e.currentTarget.querySelector(".arrow-icon") as HTMLElement;
+                      if (icon) icon.style.transform = "translateX(0)";
+                    }}
+                  >
+                    Browse Journals
+                    <svg className="arrow-icon transition-smooth" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transition: "transform 0.2s" }}>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                      <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                  </a>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        
+        {/* Full navigation link below the grid */}
+        <div style={{
+          marginTop: "35px",
+          textAlign: "center",
+          borderTop: "1px dashed #E2E8F0",
+          paddingTop: "20px"
+        }}>
+          <p style={{ fontFamily: "Outfit, sans-serif", fontSize: "13.5px", color: "#64748B", margin: 0 }}>
+            Looking for other academic fields?{" "}
+            <a 
+              href="/catalogues-list" 
+              style={{ color: "#2563EB", fontWeight: "700", textDecoration: "none" }}
+              onMouseEnter={(e) => e.currentTarget.style.textDecoration = "underline"}
+              onMouseLeave={(e) => e.currentTarget.style.textDecoration = "none"}
             >
-              {d.domain} <span style={{ color: "#64748b", fontWeight: "400", marginLeft: "4px" }}>({d.count})</span>
+              Explore all {domains.length} research disciplines &rarr;
             </a>
-          ))}
+          </p>
         </div>
       </div>
 
