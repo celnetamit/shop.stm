@@ -163,10 +163,10 @@ export default async function AdminHomePage() {
       </div>
 
       <AdminDashboardTabs 
-        contacts={recentContacts}
-        agencies={recentAgencies}
-        proformas={recentProformas}
-        orders={recentOrders}
+        contacts={JSON.parse(JSON.stringify(recentContacts))}
+        agencies={JSON.parse(JSON.stringify(recentAgencies))}
+        proformas={JSON.parse(JSON.stringify(recentProformas))}
+        orders={JSON.parse(JSON.stringify(recentOrders))}
       />
 
     </section>

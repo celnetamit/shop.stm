@@ -135,7 +135,7 @@ export default function AdminDashboardTabs({ contacts, agencies, proformas, orde
                       <td style={{ padding: "18px 24px" }}>
                         {renderStatusBadge(o.status)}
                       </td>
-                      <td style={{ padding: "18px 24px", color: "#64748B", fontSize: "13px" }}>
+                      <td style={{ padding: "18px 24px", color: "#64748B", fontSize: "13px" }} suppressHydrationWarning={true}>
                         {new Date(o.createdAt).toLocaleString()}
                       </td>
                     </tr>
@@ -175,7 +175,7 @@ export default function AdminDashboardTabs({ contacts, agencies, proformas, orde
                       <td style={{ padding: "18px 24px" }}>
                         {renderStatusBadge(q.status)}
                       </td>
-                      <td style={{ padding: "18px 24px", color: "#64748B", fontSize: "13px" }}>
+                      <td style={{ padding: "18px 24px", color: "#64748B", fontSize: "13px" }} suppressHydrationWarning={true}>
                         {new Date(q.createdAt).toLocaleString()}
                       </td>
                     </tr>
