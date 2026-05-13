@@ -24,6 +24,13 @@ export default function AgricultureCatalogClient({ journals }: { journals: Journ
   const [query, setQuery] = useState("");
   const [planById, setPlanById] = useState<Record<string, "PRINT" | "ONLINE" | "PRINT_ONLINE">>({});
 
+  const subjectName = useMemo(() => {
+    if (journals && journals.length > 0) {
+      return journals[0].subject;
+    }
+    return "Journals";
+  }, [journals]);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return journals;
@@ -37,9 +44,17 @@ export default function AgricultureCatalogClient({ journals }: { journals: Journ
     <main className="agri-page">
       <section className="agri-hero">
         <div>
-          <p className="agri-breadcrumb">Home / Shop / Journals / Agriculture</p>
-          <h1>Agriculture Journals</h1>
-          <p>Modern catalog UI with fixed annual pricing from local `journal-price.json`.</p>
+          <div className="agri-breadcrumb" style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center", fontSize: "14px", color: "#94A3B8", marginBottom: "16px" }}>
+            <Link href="/" style={{ textDecoration: "none", color: "#cbd5e1" }}>Home</Link>
+            <span>/</span>
+            <Link href="/" style={{ textDecoration: "none", color: "#cbd5e1" }}>Shop</Link>
+            <span>/</span>
+            <Link href="/product-category/journals" style={{ textDecoration: "none", color: "#cbd5e1" }}>Journals</Link>
+            <span>/</span>
+            <span style={{ color: "#60a5fa", fontWeight: "600" }}>{subjectName}</span>
+          </div>
+          <h1>{subjectName} Journals</h1>
+          <p>Modern catalog UI with annual pricing details.</p>
         </div>
         <div className="agri-hero-actions">
           <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search journal, ISSN..." />

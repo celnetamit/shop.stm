@@ -53,7 +53,17 @@ export default function ProductDetailClient({ journal, domains, description, abo
 
   return (
     <main className="product-v2-page">
-      <p className="product-breadcrumb">Home / Shop / {journal.subject} / {journal.journalName}</p>
+      <div className="product-breadcrumb" style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center", marginBottom: "20px", fontSize: "14px", color: "#64748B" }}>
+        <Link href="/" style={{ textDecoration: "none", color: "#64748B" }}>Home</Link>
+        <span style={{ color: "#CBD5E1" }}>/</span>
+        <Link href="/" style={{ textDecoration: "none", color: "#64748B" }}>Shop</Link>
+        <span style={{ color: "#CBD5E1" }}>/</span>
+        <Link href="/product-category/journals" style={{ textDecoration: "none", color: "#64748B" }}>Journals</Link>
+        <span style={{ color: "#CBD5E1" }}>/</span>
+        <Link href={`/product-category/journals/${encodeURIComponent(journal.subject.trim().toLowerCase())}`} style={{ textDecoration: "none", color: "#64748B" }}>{journal.subject}</Link>
+        <span style={{ color: "#CBD5E1" }}>/</span>
+        <span style={{ color: "#2563EB", fontWeight: "600" }}>{journal.journalName}</span>
+      </div>
 
       <div className="product-v2-layout">
         <aside className="product-v2-sidebar">

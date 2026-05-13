@@ -274,27 +274,24 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
 
       {!hideChrome ? (
         <footer className="site-footer" style={{ background: "#060a11", color: "#8b9ebd", paddingTop: "50px", paddingBottom: "20px", marginTop: "40px", fontFamily: "Arial, sans-serif" }}>
-          <div style={{ maxWidth: "1300px", margin: "0 auto", padding: "0 20px", display: "grid", gridTemplateColumns: "1.2fr 1fr 1fr 1fr", gap: "40px" }}>
+          <div style={{ maxWidth: "1300px", margin: "0 auto", padding: "0 20px", display: "grid", gridTemplateColumns: "1.2fr 1fr 1fr", gap: "40px" }}>
             
             {/* Column 1: Company Info */}
-            <div>
-              <Link href="/" style={{ display: "block", marginBottom: "12px" }}>
-                <img src="/stmlogo.png" alt="STM Journals" style={{ height: "38px", filter: "brightness(0) invert(1)", objectFit: "contain" }} />
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
+              <Link href="/" style={{ display: "inline-block", backgroundColor: "#ffffff", padding: "6px 12px", borderRadius: "6px", marginBottom: "16px" }}>
+                <img src="/stmlogo.png" alt="STM Journals" style={{ height: "38px", display: "block", objectFit: "contain" }} />
               </Link>
-              <div style={{ color: "#8b9ebd", fontSize: "12px", marginBottom: "20px", display: "flex", alignItems: "center", gap: "4px" }}>
-                <span style={{ color: "#f97316", letterSpacing: "1px" }}>----</span> Scientific <span style={{ color: "#f97316" }}>•</span> Technical <span style={{ color: "#f97316" }}>•</span> Medical
-              </div>
-              <p style={{ color: "#8b9ebd", fontSize: "12px", lineHeight: "1.6", marginBottom: "20px" }}>
+              <p style={{ color: "#8b9ebd", fontSize: "12px", lineHeight: "1.6", marginBottom: "20px", maxWidth: "320px" }}>
                 A premier global platform for scientific and medical research. An imprint of Consortium eLearning Network Pvt. Ltd. (Est. 2001).
               </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "12px" }}>
-                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "12px", width: "100%" }}>
+                <div style={{ display: "flex", gap: "10px", alignItems: "center", justifyContent: "center" }}>
                   <span style={{ fontSize: "14px" }}>✉️</span>
                   <a href="mailto:subscriptions@stmjournals.com" style={{ color: "#8b9ebd", textDecoration: "none" }}>subscriptions@stmjournals.com</a>
                 </div>
-                <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
+                <div style={{ display: "flex", gap: "10px", alignItems: "flex-start", justifyContent: "center" }}>
                   <span style={{ fontSize: "14px", marginTop: "2px" }}>📞</span>
-                  <div>
+                  <div style={{ textAlign: "left" }}>
                     <a href="tel:+919810078950" style={{ color: "#8b9ebd", textDecoration: "none", display: "block" }}>+91-9810078950 (M)</a>
                     <a href="tel:+911204781200" style={{ color: "#8b9ebd", textDecoration: "none", display: "block", marginTop: "4px" }}>+91-0120-4781200 / 208 (L)</a>
                   </div>
@@ -326,21 +323,6 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
                 <li><Link href="/policies" style={{ color: "#8b9ebd", textDecoration: "none", fontSize: "12px", display: "flex", alignItems: "center", gap: "10px" }}><span>📄</span> Editorial Policies</Link></li>
                 <li><Link href="/terms-and-conditions" style={{ color: "#8b9ebd", textDecoration: "none", fontSize: "12px", display: "flex", alignItems: "center", gap: "10px" }}><span>🏛️</span> Terms of Service</Link></li>
               </ul>
-            </div>
-            
-            {/* Column 4: LATEST RESEARCH BLOG */}
-            <div>
-              <h3 style={{ fontSize: "12px", fontWeight: "700", color: "#3B82F6", marginBottom: "20px", textTransform: "uppercase", borderBottom: "1px solid #1E293B", paddingBottom: "10px" }}>LATEST RESEARCH BLOG</h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                <div>
-                  <Link href="/" style={{ color: "#3B82F6", textDecoration: "none", fontSize: "12px", lineHeight: "1.5", display: "block", marginBottom: "4px" }}>Call for Papers: Current Trends in Information Technology</Link>
-                  <Link href="/" style={{ color: "#8b9ebd", textDecoration: "none", fontSize: "11px" }}>Read More</Link>
-                </div>
-                <div>
-                  <Link href="/" style={{ color: "#3B82F6", textDecoration: "none", fontSize: "12px", lineHeight: "1.5", display: "block", marginBottom: "4px" }}>Call for Papers: Current Trends in Information Technology – Advancing the Future of Information Science</Link>
-                  <Link href="/" style={{ color: "#8b9ebd", textDecoration: "none", fontSize: "11px" }}>Read More</Link>
-                </div>
-              </div>
             </div>
           </div>
           
