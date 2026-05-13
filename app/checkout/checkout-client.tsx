@@ -229,7 +229,11 @@ export default function CheckoutClient() {
 
   return (
     <main className="checkout-page">
-      <Link href="/cart" className="checkout-back">← Back to Cart</Link>
+      {queryQuoteId ? (
+        <Link href={`/account/proforma/${queryQuoteId}`} className="checkout-back">← Back to Proforma Quote</Link>
+      ) : (
+        <Link href="/cart" className="checkout-back">← Back to Cart</Link>
+      )}
       <div className="checkout-grid">
         <section className="checkout-card">
           <h1>Billing Details</h1>

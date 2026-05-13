@@ -128,7 +128,22 @@ export async function sendTemplatedEmail(key: string, to: string, data: Record<s
 
     // 3. Interpolate strings
     const finalSubject = replaceTemplate(template.subject, data);
-    const interpolatedBody = replaceTemplate(template.body, data);
+    let interpolatedBody = replaceTemplate(template.body, data);
+    
+    // Fail-safe injection: Ensure items and financial tables are present in institutional quotes
+    if (key.startsWith("PROFORMA_CREATED")) {
+      const hasItems = interpolatedBody.includes("<table") || interpolatedBody.includes("itemsTableHtml");
+      if (!hasItems && data.itemsTableHtml && data.financialsHtml) {
+        console.log(`[SES] Injecting missing price breakout tables to ${key} body flow.`);
+        interpolatedBody += `
+          <div style="margin-top:30px; padding-top:20px; border-top:2px solid #e2e8f0;">
+            <h3 style="margin-bottom:12px; color:#0f172a;">Selected Subscriptions Detail</h3>
+            ${data.itemsTableHtml}
+            ${data.financialsHtml}
+          </div>
+        `;
+      }
+    }
     
     // 4. Wrap in aesthetic container
     const finalBody = buildModernEmailTemplate(interpolatedBody, finalSubject);
