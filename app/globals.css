@@ -3302,3 +3302,24 @@ input:hover, select:hover, textarea:hover {
 .site-search input {
   padding-left: 48px !important;
 }
+
+/* Admin Quick Action Card Styling */
+.adm-act-card {
+  text-decoration: none;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.03);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.adm-act-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+}
+
