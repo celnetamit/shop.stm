@@ -1,6 +1,8 @@
 import { getCurrentSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 type ContactEntryRow = {
   id: string;
   name: string;

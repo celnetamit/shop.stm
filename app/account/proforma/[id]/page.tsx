@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { getCurrentSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
+
+export const dynamic = "force-dynamic";
 import Link from "next/link";
 import PrintButton from "@/app/components/print-button";
 

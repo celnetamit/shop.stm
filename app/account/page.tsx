@@ -4,6 +4,8 @@ import LogoutButton from "@/app/components/logout-button";
 import UserActivityTabs from "@/app/components/user-activity-tabs";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export default async function AccountPage() {
   const session = await getCurrentSession();
   if (!session) redirect("/login");
