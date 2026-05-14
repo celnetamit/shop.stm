@@ -2948,6 +2948,8 @@ textarea:focus {
   margin: 0 0 10px 0;
   color: #1e3a8a;
   font-size: 16px;
+  font-weight: 700;
+  line-height: 1.4;
 }
 
 /* Indexing Badge Hover Utility */
@@ -2956,9 +2958,6 @@ textarea:focus {
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.07) !important;
   border-color: #cbd5e1 !important;
   background: #f8fafc !important;
-}
-  font-weight: 700;
-  line-height: 1.4;
 }
 
 .product-focus-scope-card div {
