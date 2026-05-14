@@ -137,16 +137,6 @@ export default function CataloguesClient({ journals, initialCurrency = "INR" }: 
 
   return (
     <main className="catalogues-v2">
-      <header className="catalogues-page-header">
-        <div className="catalogues-page-brand">STM Journals</div>
-        <div className="catalogues-page-links">
-          <a href="/">Home</a>
-          <a href="/catalogues-list?currency=INR">Catalogues</a>
-          <a href="/catalogues-list?currency=USD">View USD List (International)</a>
-          <a href="/login">Login</a>
-        </div>
-      </header>
-
       <section className="catalogues-hero">
         <div>
           <h1>Full Price List Catalog - 2026</h1>
