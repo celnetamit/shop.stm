@@ -213,7 +213,7 @@ export async function getJournalCatalog(): Promise<JournalCatalogItem[]> {
       printInr: r["Subscription\n[Print]"],
       onlineInr: r["Subscription\n[Online]"],
       combinedInr: r["Subscription\n[Print+Online]"],
-      imageUrl: csv?.["Journal Image URL"] || null,
+      imageUrl: r.imageUrl || csv?.["Journal Image URL"] || null,
       aboutJournal: csv?.["About Journal"] || null,
       focusAndScope: csv?.["Focus and Scope (Keywords)"] || null,
       abbreviation: abbreviation || null,

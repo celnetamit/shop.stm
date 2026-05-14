@@ -15,6 +15,7 @@ export type JournalRow = {
   issn: string | null;
   frequency: string | null;
   Indexing: string | null;
+  imageUrl?: string | null;
 };
 
 export async function loadJournals(): Promise<JournalRow[]> {
@@ -58,7 +59,8 @@ export async function saveJournal(journal: Partial<JournalRow> & { "Journal Name
       "Subscription\n[Print+Online] USD": journal["Subscription\n[Print+Online] USD"] || 0,
       issn: journal.issn || null,
       frequency: journal.frequency || null,
-      Indexing: journal.Indexing || null
+      Indexing: journal.Indexing || null,
+      imageUrl: journal.imageUrl || null
     };
     all.push(updatedJournal);
   }

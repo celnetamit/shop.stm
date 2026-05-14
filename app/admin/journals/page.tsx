@@ -84,7 +84,8 @@ export default function AdminJournalsPage() {
       "Subscription\n[Print+Online] USD": 0,
       issn: "",
       frequency: "",
-      Indexing: ""
+      Indexing: "",
+      imageUrl: ""
     });
     setIsModalOpen(true);
   };
@@ -646,6 +647,42 @@ export default function AdminJournalsPage() {
                       onChange={(e) => handleFieldChange("Indexing", e.target.value)}
                       placeholder="e.g., Google Scholar, Citefactor, Index Copernicus"
                     />
+                  </div>
+
+                  <div className="form-group form-full">
+                    <label htmlFor="imageUrl">Journal Cover Image URL</label>
+                    <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                      <input 
+                        id="imageUrl"
+                        type="url" 
+                        value={editingJournal.imageUrl || ""}
+                        onChange={(e) => handleFieldChange("imageUrl", e.target.value)}
+                        placeholder="e.g., https://journals.stmjournals.com/wp-content/uploads/cover.jpg"
+                        style={{ flex: 1 }}
+                      />
+                      {editingJournal.imageUrl && (
+                        <div style={{ 
+                          width: "42px", 
+                          height: "56px", 
+                          border: "1.5px solid #e2e8f0", 
+                          borderRadius: "6px", 
+                          overflow: "hidden", 
+                          background: "#f8fafc", 
+                          display: "flex", 
+                          justifyContent: "center", 
+                          alignItems: "center",
+                          boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+                          flexShrink: 0
+                        }}>
+                          <img 
+                            src={editingJournal.imageUrl} 
+                            alt="Preview" 
+                            style={{ width: "100%", height: "100%", objectFit: "cover" }} 
+                            onError={(e) => { (e.target as HTMLImageElement).src = "https://dummyimage.com/42x56/f1f5f9/94a3b8.png&text=X"; }} 
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Domestic Pricing Section */}
