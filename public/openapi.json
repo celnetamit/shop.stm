@@ -1,0 +1,107 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "STM Journals API",
+    "description": "Retrieve and search the academic journals catalog, current subscription pricing, and metadata.",
+    "version": "v1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://shop.stmjournals.in"
+    }
+  ],
+  "paths": {
+    "/api/search": {
+      "get": {
+        "operationId": "searchJournals",
+        "summary": "Search the academic journals catalog",
+        "description": "Performs a substring search against journal titles, subjects, and ISSNs, returning matches and pricing details.",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "The search keyword (minimum 2 characters) targeting titles, disciplines, or ISSN codes.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of matching academic journals.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Journal"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/feed/rss": {
+      "get": {
+        "operationId": "getJournalRssFeed",
+        "summary": "Get machine-readable journal listings",
+        "description": "Fetches the full current catalog structured in standard XML RSS format suitable for LLM parsing.",
+        "responses": {
+          "200": {
+            "description": "An RSS XML payload containing all current publications."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Journal": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "journalName": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "issn": {
+            "type": "string",
+            "nullable": true
+          },
+          "onlineInr": {
+            "type": "number"
+          },
+          "printInr": {
+            "type": "number"
+          },
+          "printOnlineInr": {
+            "type": "number"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "aboutJournal": {
+            "type": "string",
+            "nullable": true
+          },
+          "imageUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      }
+    }
+  }
+}

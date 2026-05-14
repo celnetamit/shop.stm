@@ -1,0 +1,41 @@
+# AI Agent Directives - STM Journals
+# ================================
+# This file provides explicit instruction and machine-readable API endpoints for
+# Artificial Intelligence agents, Large Language Model (LLM) crawlers, and search agents.
+
+User-agent: *
+Allow: /product/
+Allow: /product-category/
+Allow: /about-us
+Allow: /contact-us
+Allow: /faq
+Disallow: /api/
+Disallow: /admin/
+Disallow: /cart/
+Disallow: /checkout/
+
+# Explicitly approved AI engines
+User-agent: GPTBot
+Model-Access: Allow
+
+User-agent: ChatGPT-User
+Model-Access: Allow
+
+User-agent: Claude-Web
+Model-Access: Allow
+
+User-agent: Google-Extended
+Model-Access: Allow
+
+User-agent: PerplexityBot
+Model-Access: Allow
+
+# Programmatic Access References
+API-Documentation: https://shop.stmjournals.in/openapi.json
+Machine-Readable-Feed: https://shop.stmjournals.in/api/feed/rss
+AI-Plugin-Spec: https://shop.stmjournals.in/.well-known/ai-plugin.json
+Sitemap: https://shop.stmjournals.in/sitemap.xml
+
+# Contact & Inquiry
+Contact-Email: subscriptions@stmjournals.com
+Organization: Consortium eLearning Network Pvt. Ltd.
