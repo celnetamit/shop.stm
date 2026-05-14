@@ -1,0 +1,122 @@
+[
+  {
+    "id": "b1",
+    "title": "First Aid Services and Impact of Nanotechnology on Environment, Health & Safety",
+    "category": "Nanotechnology Books",
+    "isbn": "978-81-9607-1",
+    "originalPriceInr": 1000,
+    "salePriceInr": 650,
+    "imageUrl": "https://dummyimage.com/360x460/dbeafe/1e3a8a.png&text=Nano+EHS",
+    "description": "Detailed assessment of standard safety operating practices for nanomaterials with emphasis on emergency response and community health hazards."
+  },
+  {
+    "id": "b2",
+    "title": "Methods and Tools for Measuring Bio-Nano Properties",
+    "category": "Nanotechnology Books",
+    "isbn": "978-81-9607-2",
+    "originalPriceInr": 1000,
+    "salePriceInr": 650,
+    "imageUrl": "https://dummyimage.com/360x460/e0e7ff/312e81.png&text=Bio-Nano+Props",
+    "description": "Authoritative guide for characterizing mechanical, optical, and electrical attributes of nanostructured biological targets."
+  },
+  {
+    "id": "b3",
+    "title": "Bio-Nanomedical Technology Application: Innovations in Nanomedicine",
+    "category": "Nanotechnology Books",
+    "isbn": "978-81-9607-3",
+    "originalPriceInr": 1000,
+    "salePriceInr": 650,
+    "imageUrl": "https://dummyimage.com/360x460/dbeafe/1e3a8a.png&text=Nanomedicine",
+    "description": "Explore targeted delivery systems, magnetic resonance enhancement, and therapeutic nanotechnology interventions across medical specialities."
+  },
+  {
+    "id": "b4",
+    "title": "Bio-Nanomaterials Concepts Fundamentals | Complete Guide",
+    "category": "Nanotechnology Books",
+    "isbn": "978-81-9607-4",
+    "originalPriceInr": 1000,
+    "salePriceInr": 650,
+    "imageUrl": "https://dummyimage.com/360x460/e0e7ff/312e81.png&text=Bio-Nano+Guide",
+    "description": "Foundational material covering the synthesis, structure, properties, and emerging application maps for bio-derived nanomaterials."
+  },
+  {
+    "id": "b5",
+    "title": "Basics of Nursing Critical Care | Essential Guide for Critical Care Nurses",
+    "category": "Nursing Books",
+    "isbn": "978-81-9607-5",
+    "originalPriceInr": 1500,
+    "salePriceInr": 1500,
+    "imageUrl": "https://dummyimage.com/360x460/fee2e2/7f1d1d.png&text=Critical+Care+Nursing",
+    "description": "Comprehensive procedures manual for ICU nurses, focusing on hemodynamic tracking, ventilator setup, and immediate cardiac arrest triggers."
+  },
+  {
+    "id": "b6",
+    "title": "Nursing Care for CARDIAC PATIENTS",
+    "category": "Nursing Books",
+    "isbn": "978-81-9607-6",
+    "originalPriceInr": 1200,
+    "salePriceInr": 900,
+    "imageUrl": "https://dummyimage.com/360x460/fef2f2/991b1b.png&text=Cardiac+Nursing",
+    "description": "Specialist methodologies for preoperative care, bypass monitoring, physical rehabilitation counseling, and chronic cardiac syndrome management."
+  },
+  {
+    "id": "b7",
+    "title": "Geriatric Nursing at a Glance",
+    "category": "Nursing Books",
+    "isbn": "978-81-9607-7",
+    "originalPriceInr": 1500,
+    "salePriceInr": 1500,
+    "imageUrl": "https://dummyimage.com/360x460/fee2e2/7f1d1d.png&text=Geriatric+Nursing",
+    "description": "A handy pocket visual guide summarizing cognitive declines, mobility assistance, multi-pharmacy drug conflict maps, and advanced care plans."
+  },
+  {
+    "id": "b8",
+    "title": "Concept Of Genetics In Nursing",
+    "category": "Nursing Books",
+    "isbn": "978-81-9607-8",
+    "originalPriceInr": 1300,
+    "salePriceInr": 1150,
+    "imageUrl": "https://dummyimage.com/360x460/fef2f2/991b1b.png&text=Genetics+Nursing",
+    "description": "Translates high-level molecular biology and hereditary studies into patient-centered prenatal screening and oncological risk reduction strategies."
+  },
+  {
+    "id": "b9",
+    "title": "Scientific Technical Writing: Concepts & Fundamentals",
+    "category": "NSTC BOOKS",
+    "isbn": "978-81-9607-9",
+    "originalPriceInr": 1000,
+    "salePriceInr": 650,
+    "imageUrl": "https://dummyimage.com/360x460/ecfdf5/064e3b.png&text=Technical+Writing",
+    "description": "Essential textbook outlining standard citation systems, syntax structure, grant preparation, and peer-reviewed scientific manuscript framing."
+  },
+  {
+    "id": "b10",
+    "title": "Environment, Health and Safety-Risk Assessment and Management",
+    "category": "NSTC BOOKS",
+    "isbn": "978-81-9608-0",
+    "originalPriceInr": 1000,
+    "salePriceInr": 650,
+    "imageUrl": "https://dummyimage.com/360x460/ecfdf5/064e3b.png&text=EHS+Risk+Mgmt",
+    "description": "Complete workplace overview of safety audits, toxicological exposure quantification, and statutory compliance enforcement mechanisms."
+  },
+  {
+    "id": "b11",
+    "title": "Architecture Materials and Methods",
+    "category": "Architecture Book",
+    "isbn": "978-81-9608-1",
+    "originalPriceInr": 1800,
+    "salePriceInr": 1500,
+    "imageUrl": "https://dummyimage.com/360x460/fef3c7/78350f.png&text=Arch+Materials",
+    "description": "Practical explorations of modern building compounds, structural load optimization, and energy-efficient interior architectural principles."
+  },
+  {
+    "id": "b12",
+    "title": "Electronics Concepts & Embedded Systems",
+    "category": "Electronics Books",
+    "isbn": "978-81-9608-2",
+    "originalPriceInr": 1200,
+    "salePriceInr": 850,
+    "imageUrl": "https://dummyimage.com/360x460/f3e8ff/581c87.png&text=Embedded+Sys",
+    "description": "Deep-dive into microcontroller architectures, low-latency sensor routing, and physical hardware communication protocols."
+  }
+]
