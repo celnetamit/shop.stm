@@ -24,6 +24,7 @@ export type JournalCatalogItem = {
   focusAndScope: string | null;
   abbreviation: string | null;
   focusScopeItems: FocusScopeItem[];
+  indexing: string | null;
 };
 
 type CsvRow = Record<string, string>;
@@ -217,7 +218,8 @@ export async function getJournalCatalog(): Promise<JournalCatalogItem[]> {
       aboutJournal: csv?.["About Journal"] || null,
       focusAndScope: csv?.["Focus and Scope (Keywords)"] || null,
       abbreviation: abbreviation || null,
-      focusScopeItems
+      focusScopeItems,
+      indexing: r.Indexing || csv?.Indexing || null
     };
   });
 }

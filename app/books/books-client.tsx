@@ -10,6 +10,70 @@ type Props = {
   categories: string[];
 };
 
+function BookImage({ src, title, category }: { src: string | null; title: string; category: string }) {
+  const [error, setError] = useState(false);
+
+  if (!src || error) {
+    return (
+      <div style={{
+        height: "220px",
+        width: "156px",
+        background: "linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%)",
+        borderRadius: "4px 8px 8px 4px",
+        boxShadow: "5px 10px 25px rgba(15, 23, 42, 0.25), inset 1px 0 0 rgba(255,255,255,0.2)",
+        borderLeft: "6px solid #3b82f6",
+        padding: "16px 12px",
+        color: "#ffffff",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        position: "relative",
+        overflow: "hidden",
+        userSelect: "none"
+      }}>
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "url('data:image/svg+xml,%3Csvg width=\"30\" height=\"30\" viewBox=\"0 0 30 30\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"%23ffffff\" fill-opacity=\"0.04\" fill-rule=\"evenodd\"%3E%3Cpath d=\"M15 0C6.716 0 0 6.716 0 15s6.716 15 15 15 15-6.716 15-15S23.284 0 15 0zm0 28C7.82 28 2 22.18 2 15S7.82 2 15 2s13 5.82 13 13-5.82 13-13 13z\"/%3E%3C/g%3E%3C/svg%3E')" }}></div>
+        <div style={{ fontSize: "8px", textTransform: "uppercase", letterSpacing: "0.12em", color: "#60a5fa", fontWeight: "800", zIndex: 2 }}>STM REFERENCE</div>
+        <div style={{
+          fontSize: "11.5px",
+          fontWeight: "700",
+          lineHeight: "1.45",
+          margin: "10px 0",
+          display: "-webkit-box",
+          WebkitLineClamp: 6,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
+          zIndex: 2,
+          color: "#f8fafc",
+          textShadow: "0 1px 2px rgba(0,0,0,0.3)"
+        }}>
+          {title}
+        </div>
+        <div style={{ marginTop: "auto", fontSize: "9px", color: "#93c5fd", borderTop: "1px solid rgba(255,255,255,0.15)", paddingTop: "8px", fontWeight: "600", zIndex: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {category}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <img 
+      src={src} 
+      alt={title}
+      onError={() => setError(true)}
+      style={{
+        height: "100%",
+        width: "auto",
+        maxHeight: "220px",
+        objectFit: "contain",
+        borderRadius: "4px 8px 8px 4px",
+        boxShadow: "5px 10px 20px rgba(0,0,0,0.15), inset 1px 0 0 rgba(255,255,255,0.2)",
+        borderLeft: "4px solid rgba(0,0,0,0.1)"
+      }} 
+    />
+  );
+}
+
+
 export default function BooksClient({ initialBooks, categories }: Props) {
   const { addItem, items } = useCart();
   const [query, setQuery] = useState("");
@@ -95,7 +159,7 @@ export default function BooksClient({ initialBooks, categories }: Props) {
               onChange={(e) => setQuery(e.target.value)}
               style={{
                 width: "100%",
-                padding: "16px 24px 16px 48px",
+                padding: "16px 24px 16px 56px",
                 borderRadius: "12px",
                 border: "1px solid rgba(255,255,255,0.1)",
                 background: "rgba(255,255,255,0.05)",
@@ -117,7 +181,7 @@ export default function BooksClient({ initialBooks, categories }: Props) {
                 e.currentTarget.style.boxShadow = "0 4px 6px rgba(0,0,0,0.1)";
               }}
             />
-            <span style={{ position: "absolute", left: "20px", top: "50%", transform: "translateY(-50%)", opacity: 0.6, fontSize: "18px" }}>🔍</span>
+            <span style={{ position: "absolute", left: "22px", top: "50%", transform: "translateY(-50%)", opacity: 0.8, fontSize: "18px" }}>🔍</span>
           </div>
         </div>
       </section>
@@ -130,12 +194,17 @@ export default function BooksClient({ initialBooks, categories }: Props) {
           display: "flex", 
           gap: "10px", 
           flexWrap: "wrap", 
-          background: "white", 
+          background: "rgba(255, 255, 255, 0.95)", 
+          backdropFilter: "blur(12px)",
+          border: "1px solid rgba(226, 232, 240, 0.8)",
           padding: "16px", 
           borderRadius: "16px",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
+          boxShadow: "0 10px 25px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.02)",
           marginBottom: "40px",
-          justifyContent: "center"
+          justifyContent: "center",
+          position: "sticky",
+          top: "80px",
+          zIndex: 45
         }}>
           <button
             onClick={() => setSelectedCategory(null)}
@@ -254,19 +323,7 @@ export default function BooksClient({ initialBooks, categories }: Props) {
                         Sale
                       </span>
                     )}
-                    <img 
-                      src={book.imageUrl || "https://dummyimage.com/360x460/f1f5f9/94a3b8.png&text=Book"} 
-                      alt={book.title}
-                      style={{
-                        height: "100%",
-                        width: "auto",
-                        maxHeight: "220px",
-                        objectFit: "contain",
-                        borderRadius: "4px 8px 8px 4px",
-                        boxShadow: "5px 10px 20px rgba(0,0,0,0.15), inset 1px 0 0 rgba(255,255,255,0.2)",
-                        borderLeft: "4px solid rgba(0,0,0,0.1)"
-                      }} 
-                    />
+                    <BookImage src={book.imageUrl} title={book.title} category={book.category} />
                   </div>
 
                   {/* Metadata details container */}

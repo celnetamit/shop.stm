@@ -24,6 +24,7 @@ type Journal = {
   startedSince: string | null;
   abbreviation: string | null;
   focusScopeItems: FocusScopeItem[];
+  indexing: string | null;
 };
 
 type Props = {
@@ -35,7 +36,7 @@ type Props = {
 };
 
 type Plan = "PRINT" | "ONLINE" | "PRINT_ONLINE";
-type Tab = "DESCRIPTION" | "ABOUT" | "FOCUS";
+type Tab = "DESCRIPTION" | "ABOUT" | "FOCUS" | "INDEXING";
 
 export default function ProductDetailClient({ journal, domains, description, about, focus }: Props) {
   const { addItem, items } = useCart();
@@ -199,6 +200,7 @@ export default function ProductDetailClient({ journal, domains, description, abo
             <button className={tab === "DESCRIPTION" ? "active" : ""} onClick={() => setTab("DESCRIPTION")}>Description</button>
             <button className={tab === "ABOUT" ? "active" : ""} onClick={() => setTab("ABOUT")}>About Journal</button>
             <button className={tab === "FOCUS" ? "active" : ""} onClick={() => setTab("FOCUS")}>Focus & Scope</button>
+            <button className={tab === "INDEXING" ? "active" : ""} onClick={() => setTab("INDEXING")}>Indexing</button>
           </div>
 
           <section className="product-v2-panel">
@@ -232,6 +234,48 @@ export default function ProductDetailClient({ journal, domains, description, abo
               ) : (
                 <p>{focus}</p>
               )
+            ) : null}
+
+            {tab === "INDEXING" ? (
+              <div className="product-indexing-container" style={{ padding: "4px" }}>
+                <h3 style={{ fontSize: "1.2rem", color: "#1e293b", fontWeight: "650", marginBottom: "1.25rem", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                  Indexing and Impact Platforms
+                </h3>
+                {journal.indexing ? (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+                            {journal.indexing.split(",").map((item, idx) => {
+                              const clean = item.trim();
+                              if (!clean) return null;
+                              return (
+                                <div key={idx} style={{
+                                  padding: "0.75rem 1.25rem",
+                                  background: "#ffffff",
+                                  border: "1.5px solid #f1f5f9",
+                                  borderRadius: "10px",
+                                  fontWeight: "600",
+                                  color: "#334155",
+                                  boxShadow: "0 2px 5px rgba(0,0,0,0.03)",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "8px",
+                                  fontSize: "0.9rem",
+                                  transition: "all 0.2s ease-out"
+                                }}
+                                className="indexing-badge-card">
+                                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#2563eb", flexShrink: 0 }}></span>
+                                  {clean}
+                                </div>
+                              );
+                            })}
+                  </div>
+                ) : (
+                  <p style={{ color: "#64748b", fontStyle: "italic" }}>Indexing information is currently undergoing validation and updates.</p>
+                )}
+              </div>
             ) : null}
           </section>
         </section>

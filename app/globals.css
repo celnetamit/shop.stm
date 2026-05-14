@@ -2948,6 +2948,15 @@ textarea:focus {
   margin: 0 0 10px 0;
   color: #1e3a8a;
   font-size: 16px;
+}
+
+/* Indexing Badge Hover Utility */
+.indexing-badge-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.07) !important;
+  border-color: #cbd5e1 !important;
+  background: #f8fafc !important;
+}
   font-weight: 700;
   line-height: 1.4;
 }
