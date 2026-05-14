@@ -18,6 +18,7 @@ export default function AdminJournalsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingJournal, setEditingJournal] = useState<Partial<JournalRow> | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   async function loadData() {
     try {
@@ -150,6 +151,41 @@ export default function AdminJournalsPage() {
     }));
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Invalid file type. Please upload an image (PNG, JPG, WEBP, etc.)");
+      return;
+    }
+
+    try {
+      setUploadingImage(true);
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        body: formData
+      });
+
+      const json = await res.json() as { ok: boolean; url?: string; error?: string };
+      
+      if (json.ok && json.url) {
+        handleFieldChange("imageUrl", json.url);
+      } else {
+        alert(json.error || "Image upload failed. Please try again.");
+      }
+    } catch (err) {
+      alert("Network error during image upload.");
+    } finally {
+      setUploadingImage(false);
+      // Reset file input pointer so uploading the same file triggers change again if needed
+      e.target.value = "";
+    }
+  };
+
   return (
     <section className="admin-page journals-management">
       <style>{`
@@ -211,6 +247,16 @@ export default function AdminJournalsPage() {
         }
         .btn-secondary:hover {
           background: #e2e8f0;
+        }
+        .upload-btn-action:hover:not(:disabled) {
+          background: #f1f5f9 !important;
+          border-color: #cbd5e1 !important;
+          color: #1e293b !important;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .upload-btn-action:disabled {
+          opacity: 0.65;
+          cursor: not-allowed;
         }
         .journals-table th {
           background: #f8fafc;
@@ -650,38 +696,80 @@ export default function AdminJournalsPage() {
                   </div>
 
                   <div className="form-group form-full">
-                    <label htmlFor="imageUrl">Journal Cover Image URL</label>
-                    <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-                      <input 
-                        id="imageUrl"
-                        type="url" 
-                        value={editingJournal.imageUrl || ""}
-                        onChange={(e) => handleFieldChange("imageUrl", e.target.value)}
-                        placeholder="e.g., https://journals.stmjournals.com/wp-content/uploads/cover.jpg"
-                        style={{ flex: 1 }}
-                      />
-                      {editingJournal.imageUrl && (
-                        <div style={{ 
-                          width: "42px", 
-                          height: "56px", 
-                          border: "1.5px solid #e2e8f0", 
-                          borderRadius: "6px", 
-                          overflow: "hidden", 
-                          background: "#f8fafc", 
-                          display: "flex", 
-                          justifyContent: "center", 
-                          alignItems: "center",
-                          boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
-                          flexShrink: 0
-                        }}>
-                          <img 
-                            src={editingJournal.imageUrl} 
-                            alt="Preview" 
-                            style={{ width: "100%", height: "100%", objectFit: "cover" }} 
-                            onError={(e) => { (e.target as HTMLImageElement).src = "https://dummyimage.com/42x56/f1f5f9/94a3b8.png&text=X"; }} 
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2px" }}>
+                      <label htmlFor="imageUrl">Journal Cover Image</label>
+                      <span style={{ fontSize: "0.75rem", color: "#64748b" }}>Upload local file OR enter address</span>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      <div style={{ display: "flex", gap: "10px", width: "100%" }}>
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          id="imageFileInput"
+                          style={{ display: "none" }} 
+                          onChange={handleImageUpload} 
+                        />
+                        <button 
+                          type="button" 
+                          onClick={() => document.getElementById("imageFileInput")?.click()}
+                          disabled={uploadingImage}
+                          style={{
+                            flexShrink: 0,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            padding: "0.625rem 1rem",
+                            background: "#f8fafc",
+                            border: "1px solid #cbd5e1",
+                            borderRadius: "8px",
+                            fontSize: "0.85rem",
+                            fontWeight: "600",
+                            color: "#334155",
+                            cursor: "pointer",
+                            transition: "all 0.15s ease"
+                          }}
+                          className="upload-btn-action"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                          </svg>
+                          {uploadingImage ? "Uploading..." : "Upload File"}
+                        </button>
+                        <div style={{ flex: 1, display: "flex", gap: "12px", alignItems: "center" }}>
+                          <input 
+                            id="imageUrl"
+                            type="text" 
+                            value={editingJournal.imageUrl || ""}
+                            onChange={(e) => handleFieldChange("imageUrl", e.target.value)}
+                            placeholder="https://... or uploaded image URL"
+                            style={{ flex: 1 }}
                           />
+                          {editingJournal.imageUrl && (
+                            <div style={{ 
+                              width: "42px", 
+                              height: "56px", 
+                              border: "1.5px solid #e2e8f0", 
+                              borderRadius: "6px", 
+                              overflow: "hidden", 
+                              background: "#f8fafc", 
+                              display: "flex", 
+                              justifyContent: "center", 
+                              alignItems: "center",
+                              boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+                              flexShrink: 0
+                            }}>
+                              <img 
+                                src={editingJournal.imageUrl} 
+                                alt="Preview" 
+                                style={{ width: "100%", height: "100%", objectFit: "cover" }} 
+                                onError={(e) => { (e.target as HTMLImageElement).src = "https://dummyimage.com/42x56/f1f5f9/94a3b8.png&text=X"; }} 
+                              />
+                            </div>
+                          )}
                         </div>
-                      )}
+                      </div>
                     </div>
                   </div>
 
