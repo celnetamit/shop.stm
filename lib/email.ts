@@ -132,8 +132,11 @@ export async function sendTemplatedEmail(key: string, to: string, data: Record<s
     
     // Fail-safe injection: Ensure items and financial tables are present in institutional quotes
     if (key.startsWith("PROFORMA_CREATED")) {
-      const hasItems = interpolatedBody.includes("<table") || interpolatedBody.includes("itemsTableHtml");
-      if (!hasItems && data.itemsTableHtml && data.financialsHtml) {
+      // Check if raw DB template lacks placeholders. If missing, append them forcefully.
+      const templateRaw = template.body;
+      const hasItemsPlaceholder = templateRaw.includes("{{itemsTableHtml}}") || templateRaw.includes("{{financialsHtml}}");
+      
+      if (!hasItemsPlaceholder && data.itemsTableHtml && data.financialsHtml) {
         console.log(`[SES] Injecting missing price breakout tables to ${key} body flow.`);
         interpolatedBody += `
           <div style="margin-top:30px; padding-top:20px; border-top:2px solid #e2e8f0;">

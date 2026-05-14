@@ -61,41 +61,78 @@ export default function CataloguesClient({ journals, initialCurrency = "INR" }: 
   }
 
   function onDownloadPdf() {
-    const doc = new jsPDF({ orientation: "landscape" });
-    const title = "Full Price List Catalog - 2026";
-    const subtitle = `Domain: ${domain} | Keyword: ${keyword || "All"} | Currency: ${currency}`;
+    const logoSrc = "/stmlogo.png";
+    
+    const generateWithHeader = (imgElement?: HTMLImageElement) => {
+      const doc = new jsPDF({ orientation: "landscape" });
+      
+      let textX = 14;
+      let startY = 28;
+      
+      if (imgElement) {
+        const aspectRatio = imgElement.naturalWidth / imgElement.naturalHeight;
+        const imgWidth = 25;
+        const imgHeight = imgWidth / (aspectRatio || 1);
+        
+        try {
+          doc.addImage(imgElement, "PNG", 14, 8, imgWidth, imgHeight);
+          textX = 14 + imgWidth + 6;
+          startY = Math.max(28, 8 + imgHeight + 6);
+        } catch (e) {
+          console.error("Failed adding image to PDF", e);
+        }
+      }
+      
+      // Company Name & Brand
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
+      doc.setTextColor(15, 42, 87); // #0F2A57
+      doc.text("Consortium e-Learning Network Pvt. Ltd. - STM Journals", textX, 13);
+      
+      // Catalog Title
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(71, 85, 105);
+      doc.text("Full Price List Catalog - 2026", textX, 18);
+      
+      // Subtitle parameters
+      doc.setFontSize(9);
+      doc.setTextColor(100, 116, 139);
+      const subtitle = `Domain: ${domain} | Keyword: ${keyword || "All"} | Currency: ${currency}`;
+      doc.text(subtitle, textX, 23);
+      
+      autoTable(doc, {
+        startY: startY < 28 ? 28 : startY,
+        head: [["S.NO", "JOURNAL TITLE", "ISSN", "FREQUENCY", "PRINT", "DIGITAL", "COMBINED"]],
+        body: filtered.map((item) => {
+          const print = currency === "INR" ? item.printInr : item.printUsd;
+          const online = currency === "INR" ? item.onlineInr : item.onlineUsd;
+          const combined = currency === "INR" ? item.combinedInr : item.combinedUsd;
+          const fmt = (v: number) =>
+            currency === "INR" ? `Rs ${v.toLocaleString("en-IN")}` : `$${v.toLocaleString("en-US")}`;
 
-    doc.setFontSize(16);
-    doc.text(title, 14, 14);
-    doc.setFontSize(10);
-    doc.text(subtitle, 14, 21);
+          return [
+            item.serialNo,
+            `${item.journalName}\n${item.subject}`,
+            item.issn || "-",
+            item.frequency || "-",
+            fmt(print),
+            fmt(online),
+            fmt(combined)
+          ];
+        }),
+        styles: { fontSize: 8, cellPadding: 2 },
+        headStyles: { fillColor: [15, 42, 87] }, // Brand Blue
+        columnStyles: { 1: { cellWidth: 95 } }
+      });
 
-    autoTable(doc, {
-      startY: 26,
-      head: [["S.NO", "JOURNAL TITLE", "ISSN", "FREQUENCY", "PRINT", "DIGITAL", "COMBINED"]],
-      body: filtered.map((item) => {
-        const print = currency === "INR" ? item.printInr : item.printUsd;
-        const online = currency === "INR" ? item.onlineInr : item.onlineUsd;
-        const combined = currency === "INR" ? item.combinedInr : item.combinedUsd;
-        const fmt = (v: number) =>
-          currency === "INR" ? `Rs ${v.toLocaleString("en-IN")}` : `$${v.toLocaleString("en-US")}`;
+      doc.save(`catalogues-list-${currency.toLowerCase()}.pdf`);
+    };
 
-        return [
-          item.serialNo,
-          `${item.journalName}\n${item.subject}`,
-          item.issn || "-",
-          item.frequency || "-",
-          fmt(print),
-          fmt(online),
-          fmt(combined)
-        ];
-      }),
-      styles: { fontSize: 8, cellPadding: 2 },
-      headStyles: { fillColor: [12, 26, 58] },
-      columnStyles: { 1: { cellWidth: 95 } }
-    });
-
-    doc.save(`catalogues-list-${currency.toLowerCase()}.pdf`);
+    const img = new Image();
+    img.src = logoSrc;
+    img.onload = () => generateWithHeader(img);
+    img.onerror = () => generateWithHeader();
   }
 
   return (
