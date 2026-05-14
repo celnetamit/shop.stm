@@ -4,6 +4,11 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/app/components/cart-store";
 
+type FocusScopeItem = {
+  title: string;
+  contentHtml: string;
+};
+
 type Journal = {
   slug: string;
   journalName: string;
@@ -17,6 +22,8 @@ type Journal = {
   aboutJournal: string | null;
   focusAndScope: string | null;
   startedSince: string | null;
+  abbreviation: string | null;
+  focusScopeItems: FocusScopeItem[];
 };
 
 type Props = {
@@ -88,6 +95,22 @@ export default function ProductDetailClient({ journal, domains, description, abo
                 {journal.frequency ? ` • ${journal.frequency}` : ""}
               </p>
               <p className="product-v2-copy">{description}</p>
+              {journal.abbreviation && (
+                <a 
+                  href={`https://journals.stmjournals.com/editorial-board/${journal.abbreviation.toLowerCase()}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="editorial-board-btn"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                  Editorial Board
+                </a>
+              )}
 
               <div className="product-v2-price-grid">
                 <div 
@@ -196,7 +219,20 @@ export default function ProductDetailClient({ journal, domains, description, abo
               </div>
             ) : null}
 
-            {tab === "FOCUS" ? <p>{focus}</p> : null}
+            {tab === "FOCUS" ? (
+              journal.focusScopeItems && journal.focusScopeItems.length > 0 ? (
+                <div className="product-focus-scope-grid">
+                  {journal.focusScopeItems.map((item, idx) => (
+                    <div key={idx} className="product-focus-scope-card">
+                      <h4>{item.title}</h4>
+                      <div dangerouslySetInnerHTML={{ __html: item.contentHtml }} />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p>{focus}</p>
+              )
+            ) : null}
           </section>
         </section>
       </div>

@@ -1,6 +1,12 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { loadJournals } from "@/lib/journal-data";
+import * as cheerio from "cheerio";
+
+export type FocusScopeItem = {
+  title: string;
+  contentHtml: string;
+};
 
 export type JournalCatalogItem = {
   startedSince: string | null;
@@ -16,6 +22,8 @@ export type JournalCatalogItem = {
   imageUrl: string | null;
   aboutJournal: string | null;
   focusAndScope: string | null;
+  abbreviation: string | null;
+  focusScopeItems: FocusScopeItem[];
 };
 
 type CsvRow = Record<string, string>;
@@ -103,6 +111,49 @@ async function loadCsvRows(): Promise<CsvRow[]> {
   return csvCache;
 }
 
+let focusScopeCache: CsvRow[] | null = null;
+
+async function loadFocusScopeRows(): Promise<CsvRow[]> {
+  if (focusScopeCache) return focusScopeCache;
+  try {
+    const filePath = path.join(process.cwd(), "focus-and-scope.csv");
+    const raw = await readFile(filePath, "utf8");
+    focusScopeCache = parseCsv(raw);
+    return focusScopeCache;
+  } catch (e) {
+    console.error("Error loading focus-and-scope.csv:", e);
+    return [];
+  }
+}
+
+function processFocusScopeItems(html: string | null): FocusScopeItem[] {
+  if (!html) return [];
+  try {
+    const $ = cheerio.load(html);
+    const items: FocusScopeItem[] = [];
+    
+    $("ul").first().children("li").each((_, el) => {
+      const $el = $(el);
+      const title = $el.find("> strong").first().text().replace(/[:\-\s]+$/, "").trim();
+      
+      const $clone = $el.clone();
+      $clone.find("> strong").first().remove();
+      
+      const contentHtml = $clone.html()?.trim().replace(/^[:\-\s]+/, "") || "";
+      
+      items.push({
+        title: title || "Focus Topic",
+        contentHtml
+      });
+    });
+    
+    return items;
+  } catch (e) {
+    console.error("Error parsing focus scope html:", e);
+    return [];
+  }
+}
+
 export async function getDomainCountsFromCsv(): Promise<Array<{ domain: string; count: number }>> {
   const rows = await loadCsvRows();
   const map = new Map<string, number>();
@@ -117,7 +168,11 @@ export async function getDomainCountsFromCsv(): Promise<Array<{ domain: string; 
 }
 
 export async function getJournalCatalog(): Promise<JournalCatalogItem[]> {
-  const [priceRows, csvRows] = await Promise.all([loadJournals(), loadCsvRows()]);
+  const [priceRows, csvRows, scopeRows] = await Promise.all([
+    loadJournals(),
+    loadCsvRows(),
+    loadFocusScopeRows()
+  ]);
 
   const csvByName = new Map<string, CsvRow>();
   for (const r of csvRows) {
@@ -127,12 +182,25 @@ export async function getJournalCatalog(): Promise<JournalCatalogItem[]> {
     if (!csvByName.has(key)) csvByName.set(key, r);
   }
 
+  const scopeByAbbr = new Map<string, CsvRow>();
+  for (const r of scopeRows) {
+    const abbr = (r["Abbreviation"] || "").trim().toLowerCase();
+    if (!abbr) continue;
+    scopeByAbbr.set(abbr, r);
+  }
+
   return priceRows.map((r) => {
     const journalName = r["Journal Name"];
     const csv = csvByName.get(normalizeName(journalName));
     const eIssn = csv?.["e-ISSN"] || "";
     const pIssn = csv?.["p-ISSN"] || "";
     const issn = r.issn || eIssn || pIssn || null;
+    
+    const abbreviation = (csv?.["Abbreviation"] || "").trim();
+    const matchedScope = abbreviation ? scopeByAbbr.get(abbreviation.toLowerCase()) : null;
+    
+    const focusScopeHtml = matchedScope?.["Focus & Scope"] || null;
+    const focusScopeItems = focusScopeHtml ? processFocusScopeItems(focusScopeHtml) : [];
 
     return {
       id: String(r["S/No"]),
@@ -147,7 +215,9 @@ export async function getJournalCatalog(): Promise<JournalCatalogItem[]> {
       combinedInr: r["Subscription\n[Print+Online]"],
       imageUrl: csv?.["Journal Image URL"] || null,
       aboutJournal: csv?.["About Journal"] || null,
-      focusAndScope: csv?.["Focus and Scope (Keywords)"] || null
+      focusAndScope: csv?.["Focus and Scope (Keywords)"] || null,
+      abbreviation: abbreviation || null,
+      focusScopeItems
     };
   });
 }
