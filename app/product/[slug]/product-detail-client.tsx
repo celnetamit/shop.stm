@@ -90,9 +90,33 @@ export default function ProductDetailClient({ journal, domains, description, abo
               <p className="product-v2-copy">{description}</p>
 
               <div className="product-v2-price-grid">
-                <div className={plan === "PRINT" ? "active" : ""}><span>Print</span><strong>₹{journal.printInr.toLocaleString("en-IN")}</strong></div>
-                <div className={plan === "ONLINE" ? "active" : ""}><span>Online</span><strong>₹{journal.onlineInr.toLocaleString("en-IN")}</strong></div>
-                <div className={plan === "PRINT_ONLINE" ? "active" : ""}><span>Print + Online</span><strong>₹{journal.combinedInr.toLocaleString("en-IN")}</strong></div>
+                <div 
+                  className={plan === "PRINT" ? "active" : ""}
+                  onClick={() => setPlan("PRINT")}
+                  role="button"
+                  tabIndex={0}
+                >
+                  <span>Print</span>
+                  <strong>₹{journal.printInr.toLocaleString("en-IN")}</strong>
+                </div>
+                <div 
+                  className={plan === "ONLINE" ? "active" : ""}
+                  onClick={() => setPlan("ONLINE")}
+                  role="button"
+                  tabIndex={0}
+                >
+                  <span>Online</span>
+                  <strong>₹{journal.onlineInr.toLocaleString("en-IN")}</strong>
+                </div>
+                <div 
+                  className={plan === "PRINT_ONLINE" ? "active" : ""}
+                  onClick={() => setPlan("PRINT_ONLINE")}
+                  role="button"
+                  tabIndex={0}
+                >
+                  <span>Print + Online</span>
+                  <strong>₹{journal.combinedInr.toLocaleString("en-IN")}</strong>
+                </div>
               </div>
 
               <div className="product-v2-controls">
