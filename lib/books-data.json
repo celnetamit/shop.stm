@@ -6,7 +6,7 @@
     "isbn": "978-81-9607-1",
     "originalPriceInr": 1000,
     "salePriceInr": 650,
-    "imageUrl": "https://dummyimage.com/360x460/dbeafe/1e3a8a.png&text=Nano+EHS",
+    "imageUrl": "https://storage.googleapis.com/shop-stmjournals-com-wp-media-to-gcp-offload/2020/02/24411786-first-aid-nanotechnology-environment-health-book.png",
     "description": "Detailed assessment of standard safety operating practices for nanomaterials with emphasis on emergency response and community health hazards."
   },
   {
@@ -16,7 +16,7 @@
     "isbn": "978-81-9607-2",
     "originalPriceInr": 1000,
     "salePriceInr": 650,
-    "imageUrl": "https://dummyimage.com/360x460/e0e7ff/312e81.png&text=Bio-Nano+Props",
+    "imageUrl": "https://storage.googleapis.com/shop-stmjournals-com-wp-media-to-gcp-offload/2025/11/fcf41820-npp.jpg",
     "description": "Authoritative guide for characterizing mechanical, optical, and electrical attributes of nanostructured biological targets."
   },
   {
@@ -26,7 +26,7 @@
     "isbn": "978-81-9607-3",
     "originalPriceInr": 1000,
     "salePriceInr": 650,
-    "imageUrl": "https://dummyimage.com/360x460/dbeafe/1e3a8a.png&text=Nanomedicine",
+    "imageUrl": "https://storage.googleapis.com/shop-stmjournals-com-wp-media-to-gcp-offload/2025/11/f644ea51-bio-nanomedicalbook.jpg",
     "description": "Explore targeted delivery systems, magnetic resonance enhancement, and therapeutic nanotechnology interventions across medical specialities."
   },
   {
@@ -36,7 +36,7 @@
     "isbn": "978-81-9607-4",
     "originalPriceInr": 1000,
     "salePriceInr": 650,
-    "imageUrl": "https://dummyimage.com/360x460/e0e7ff/312e81.png&text=Bio-Nano+Guide",
+    "imageUrl": "https://storage.googleapis.com/shop-stmjournals-com-wp-media-to-gcp-offload/2025/11/b312f166-bionanomaterialsbooks.jpg",
     "description": "Foundational material covering the synthesis, structure, properties, and emerging application maps for bio-derived nanomaterials."
   },
   {
@@ -46,7 +46,7 @@
     "isbn": "978-81-9607-5",
     "originalPriceInr": 1500,
     "salePriceInr": 1500,
-    "imageUrl": "https://dummyimage.com/360x460/fee2e2/7f1d1d.png&text=Critical+Care+Nursing",
+    "imageUrl": "https://storage.googleapis.com/shop-stmjournals-com-wp-media-to-gcp-offload/2019/12/917bb2c2-unnamed-file-300x398.png",
     "description": "Comprehensive procedures manual for ICU nurses, focusing on hemodynamic tracking, ventilator setup, and immediate cardiac arrest triggers."
   },
   {
@@ -56,7 +56,7 @@
     "isbn": "978-81-9607-6",
     "originalPriceInr": 1200,
     "salePriceInr": 900,
-    "imageUrl": "https://dummyimage.com/360x460/fef2f2/991b1b.png&text=Cardiac+Nursing",
+    "imageUrl": "https://storage.googleapis.com/shop-stmjournals-com-wp-media-to-gcp-offload/2020/01/a1f01855-nursing-care-300x398.png",
     "description": "Specialist methodologies for preoperative care, bypass monitoring, physical rehabilitation counseling, and chronic cardiac syndrome management."
   },
   {
@@ -66,7 +66,7 @@
     "isbn": "978-81-9607-7",
     "originalPriceInr": 1500,
     "salePriceInr": 1500,
-    "imageUrl": "https://dummyimage.com/360x460/fee2e2/7f1d1d.png&text=Geriatric+Nursing",
+    "imageUrl": "https://storage.googleapis.com/shop-stmjournals-com-wp-media-to-gcp-offload/2019/12/3933e4e7-geriatric-300x401.png",
     "description": "A handy pocket visual guide summarizing cognitive declines, mobility assistance, multi-pharmacy drug conflict maps, and advanced care plans."
   },
   {
@@ -76,7 +76,7 @@
     "isbn": "978-81-9607-8",
     "originalPriceInr": 1300,
     "salePriceInr": 1150,
-    "imageUrl": "https://dummyimage.com/360x460/fef2f2/991b1b.png&text=Genetics+Nursing",
+    "imageUrl": "https://storage.googleapis.com/shop-stmjournals-com-wp-media-to-gcp-offload/2019/12/6ea850a5-nursing-of-300x396.png",
     "description": "Translates high-level molecular biology and hereditary studies into patient-centered prenatal screening and oncological risk reduction strategies."
   },
   {
@@ -86,7 +86,7 @@
     "isbn": "978-81-9607-9",
     "originalPriceInr": 1000,
     "salePriceInr": 650,
-    "imageUrl": "https://dummyimage.com/360x460/ecfdf5/064e3b.png&text=Technical+Writing",
+    "imageUrl": "https://storage.googleapis.com/shop-stmjournals-com-wp-media-to-gcp-offload/2025/11/017e3dc9-stw.jpg",
     "description": "Essential textbook outlining standard citation systems, syntax structure, grant preparation, and peer-reviewed scientific manuscript framing."
   },
   {
@@ -96,7 +96,7 @@
     "isbn": "978-81-9608-0",
     "originalPriceInr": 1000,
     "salePriceInr": 650,
-    "imageUrl": "https://dummyimage.com/360x460/ecfdf5/064e3b.png&text=EHS+Risk+Mgmt",
+    "imageUrl": "https://storage.googleapis.com/shop-stmjournals-com-wp-media-to-gcp-offload/2025/11/99fc4437-ehsam-books.jpg",
     "description": "Complete workplace overview of safety audits, toxicological exposure quantification, and statutory compliance enforcement mechanisms."
   },
   {
