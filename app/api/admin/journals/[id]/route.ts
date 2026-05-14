@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getCurrentSession } from "@/lib/auth/session";
 import { deleteJournal } from "@/lib/journal-data";
 
@@ -25,6 +26,9 @@ export async function DELETE(
     if (!success) {
       return NextResponse.json({ ok: false, error: "Journal not found" }, { status: 404 });
     }
+
+    // Purge the Next.js Data Cache and Router Cache to reflect deletion immediately
+    revalidatePath("/", "layout");
 
     return NextResponse.json({ ok: true, message: "Journal deleted successfully" });
   } catch (error) {

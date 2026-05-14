@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getCurrentSession } from "@/lib/auth/session";
 import { loadJournals, saveJournal, type JournalRow } from "@/lib/journal-data";
 
@@ -33,6 +34,10 @@ export async function POST(request: Request) {
     }
 
     const updated = await saveJournal(body as Partial<JournalRow> & { "Journal Name": string });
+    
+    // Purge the Next.js Data Cache and Router Cache to reflect changes immediately
+    revalidatePath("/", "layout");
+
     return NextResponse.json({ ok: true, journal: updated });
   } catch (error) {
     console.error("[JOURNALS_POST]", error);
