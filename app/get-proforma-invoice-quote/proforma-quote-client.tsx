@@ -313,31 +313,33 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
           <h2>Subscriber Info</h2>
           {error ? <p className="auth-error">{error}</p> : null}
           <form className="proforma-form" onSubmit={onSaveStepOne}>
-            <label className="proforma-label">Select Subscription Type *</label>
-            <div className="proforma-pill-row proforma-full">
-              <label className={`proforma-pill-option ${subscriptionType === "STM" ? "active" : ""}`}>
-                <input
-                  type="radio"
-                  name="subscriptionType"
-                  value="STM"
-                  checked={subscriptionType === "STM"}
-                  onChange={() => setSubscriptionType("STM")}
-                />
-                <span>STM Journals Subscription</span>
-              </label>
-              {canUsePubSubscription ? (
-                <label className={`proforma-pill-option ${subscriptionType === "PUB" ? "active" : ""}`}>
-                  <input
-                    type="radio"
-                    name="subscriptionType"
-                    value="PUB"
-                    checked={subscriptionType === "PUB"}
-                    onChange={() => setSubscriptionType("PUB")}
-                  />
-                  <span>Journals Pub Subscription</span>
-                </label>
-              ) : null}
-            </div>
+            {canUsePubSubscription ? (
+              <>
+                <label className="proforma-label">Select Subscription Type *</label>
+                <div className="proforma-pill-row proforma-full">
+                  <label className={`proforma-pill-option ${subscriptionType === "STM" ? "active" : ""}`}>
+                    <input
+                      type="radio"
+                      name="subscriptionType"
+                      value="STM"
+                      checked={subscriptionType === "STM"}
+                      onChange={() => setSubscriptionType("STM")}
+                    />
+                    <span>STM Journals Subscription</span>
+                  </label>
+                  <label className={`proforma-pill-option ${subscriptionType === "PUB" ? "active" : ""}`}>
+                    <input
+                      type="radio"
+                      name="subscriptionType"
+                      value="PUB"
+                      checked={subscriptionType === "PUB"}
+                      onChange={() => setSubscriptionType("PUB")}
+                    />
+                    <span>Journals Pub Subscription</span>
+                  </label>
+                </div>
+              </>
+            ) : null}
 
             <label className="proforma-label">Subscriber Category *</label>
             <div className="proforma-pill-row proforma-full">
