@@ -363,9 +363,6 @@ export default function CataloguesClient({ journals, initialCurrency = "INR" }: 
                 <div className="card-details">
                   <p><span>issn:</span> {item.issn || "-"}</p>
                   <p><span>Freq:</span> {item.frequency || "-"}</p>
-                  {item.indexing && (
-                    <p className="indexing-text" title={item.indexing}>{item.indexing}</p>
-                  )}
                 </div>
                 <div className="price-rows">
                   <div className="price-row print">
