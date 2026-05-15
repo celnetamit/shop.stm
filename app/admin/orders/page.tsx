@@ -12,6 +12,8 @@ type Order = {
   status: "PENDING" | "PAID" | "CANCELLED";
   adminRemarks: string | null;
   createdAt: string;
+  razorpayOrderId?: string | null;
+  razorpayPaymentId?: string | null;
   user: { id: string; email: string } | null;
   items: OrderItem[];
 };
@@ -54,6 +56,7 @@ export default function AdminOrdersPage() {
               <th style={{padding:"12px"}}>Payment Status</th>
               <th style={{padding:"12px"}}>Action Override</th>
               <th style={{padding:"12px"}}>Admin Remarks</th>
+              <th style={{padding:"12px"}}>Transactions & Invoice</th>
               <th style={{padding:"12px"}}>Total</th>
               <th style={{padding:"12px"}}>Items</th>
             </tr>
@@ -100,6 +103,39 @@ export default function AdminOrdersPage() {
                     >
                       Save
                     </button>
+                  </div>
+                </td>
+                <td style={{padding:"12px"}}>
+                  <div style={{display:"flex", flexDirection:"column", gap:"5px"}}>
+                    {r.razorpayPaymentId ? (
+                      <div style={{fontSize:"11px", color:"#475569"}}>
+                        <div>Payment ID: <strong style={{color:"#0f172a"}}>{r.razorpayPaymentId}</strong></div>
+                        <div style={{fontSize:"10px", color:"#64748b"}}>Ref: {r.razorpayOrderId || "Direct"}</div>
+                      </div>
+                    ) : (
+                      <div style={{fontSize:"11px", color:"#94a3b8", fontStyle:"italic"}}>No transaction data</div>
+                    )}
+                    <div>
+                      <a 
+                        href={`/admin/orders/${r.id}/invoice`} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          fontSize: "11px",
+                          color: "white",
+                          background: "#2563eb",
+                          padding: "4px 10px",
+                          borderRadius: "4px",
+                          textDecoration: "none",
+                          fontWeight: "600"
+                        }}
+                      >
+                        📄 View Invoice
+                      </a>
+                    </div>
                   </div>
                 </td>
                 <td style={{padding:"12px", fontWeight:"bold"}}>{r.currency} {r.total}</td>
