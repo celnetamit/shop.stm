@@ -204,7 +204,12 @@ export default function ProductDetailClient({ journal, domains, description, abo
           </div>
 
           <section className="product-v2-panel">
-            {tab === "DESCRIPTION" ? <p>{description}</p> : null}
+            {tab === "DESCRIPTION" ? (
+              <div 
+                className="product-v2-html-content"
+                dangerouslySetInnerHTML={{ __html: journal.aboutJournal || description }}
+              />
+            ) : null}
 
             {tab === "ABOUT" ? (
               <div>
