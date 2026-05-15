@@ -22,7 +22,7 @@ export default function CartPage() {
       setCoupon("", 0);
       return;
     }
-    const res = await fetch(`/api/coupons/validate?code=${encodeURIComponent(code)}`);
+    const res = await fetch(`/api/coupons/validate?code=${encodeURIComponent(code)}&subtotal=${subtotal}`);
     const json = (await res.json()) as { ok: boolean; error?: string; coupon?: { code: string; discount: number } };
     if (!json.ok || !json.coupon) {
       setCoupon("", 0);

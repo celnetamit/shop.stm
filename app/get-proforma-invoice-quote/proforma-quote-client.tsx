@@ -247,7 +247,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
       return;
     }
 
-    const res = await fetch(`/api/coupons/validate?code=${encodeURIComponent(input)}`, { cache: "no-store" });
+    const res = await fetch(`/api/coupons/validate?code=${encodeURIComponent(input)}&subtotal=${subtotal}`, { cache: "no-store" });
     const json = (await res.json()) as {
       ok: boolean;
       error?: string;

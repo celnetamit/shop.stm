@@ -102,13 +102,25 @@ model ProformaQuoteItem {
   createdAt        DateTime         @default(now())
 }
 
+enum CouponType {
+  PERCENTAGE
+  FIXED
+}
+
 model Coupon {
-  id         String   @id @default(cuid())
-  code       String   @unique
-  discount   Int
-  isActive   Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id             String      @id @default(cuid())
+  code           String      @unique
+  discount       Int         @default(0) // For fallback compatibility
+  type           CouponType  @default(PERCENTAGE)
+  value          Float       @default(0)
+  maxUses        Int?
+  usedCount      Int         @default(0)
+  minOrderAmount Float       @default(0)
+  validFrom      DateTime?
+  validUntil     DateTime?
+  isActive       Boolean     @default(true)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 }
 
 model Order {

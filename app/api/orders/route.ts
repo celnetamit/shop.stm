@@ -96,6 +96,18 @@ export async function POST(req: NextRequest) {
       }
     });
 
+    // Post-creation logic: Securely increment coupon usage metrics if valid code applied
+    if (order.couponCode) {
+      try {
+        await prisma.coupon.update({
+          where: { code: order.couponCode },
+          data: { usedCount: { increment: 1 } }
+        });
+      } catch (couponErr) {
+        console.error("Optional coupon counter logging error", couponErr);
+      }
+    }
+
     try {
       const { sendTemplatedEmail, sendAdminNotification } = await import("@/lib/email");
       const d = {
