@@ -29,6 +29,7 @@ export default function CataloguesClient({ journals, initialCurrency = "INR" }: 
   const [keyword, setKeyword] = useState("");
   const [domain, setDomain] = useState("All Domains");
   const [currency, setCurrency] = useState<"INR" | "USD">(initialCurrency);
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
 
   const domains = useMemo(() => {
     const set = new Set(journals.map((j) => j.subject).filter(Boolean));
@@ -217,33 +218,110 @@ export default function CataloguesClient({ journals, initialCurrency = "INR" }: 
       <section className="catalogues-hero">
         <div>
           <h1>Full Price List Catalog - 2026</h1>
-          <p>
+          <p style={{ marginBottom: "20px" }}>
             Official pricing for Institutional and Individual subscriptions within India. All prices are in Indian
             Rupees (INR).
           </p>
+          
+          <button
+            type="button"
+            className="catalogues-view-toggle"
+            onClick={() => setViewMode(viewMode === "list" ? "grid" : "list")}
+          >
+            {viewMode === "list" ? (
+              <>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 16, height: 16 }}>
+                  <rect x="3" y="3" width="7" height="7" />
+                  <rect x="14" y="3" width="7" height="7" />
+                  <rect x="14" y="14" width="7" height="7" />
+                  <rect x="3" y="14" width="7" height="7" />
+                </svg>
+                Switch to Grid View
+              </>
+            ) : (
+              <>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 16, height: 16 }}>
+                  <line x1="8" y1="6" x2="21" y2="6" />
+                  <line x1="8" y1="12" x2="21" y2="12" />
+                  <line x1="8" y1="18" x2="21" y2="18" />
+                  <line x1="3" y1="6" x2="3.01" y2="6" />
+                  <line x1="3" y1="12" x2="3.01" y2="12" />
+                  <line x1="3" y1="18" x2="3.01" y2="18" />
+                </svg>
+                Switch to List View
+              </>
+            )}
+          </button>
         </div>
         <div className="catalogues-actions">
-          <button type="button" className="catalogues-ghost" onClick={onPrint}>Print List</button>
-          <button type="button" className="catalogues-primary" onClick={onDownloadPdf}>Download PDF</button>
+          <button type="button" className="catalogues-ghost" onClick={onPrint}>
+            <svg style={{ width: 16, height: 16, marginRight: 8, display: "inline-block", verticalAlign: "middle" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="6 9 6 2 18 2 18 9" />
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+              <rect x="6" y="14" width="12" height="8" />
+            </svg>
+            Print List
+          </button>
+          <button type="button" className="catalogues-primary" onClick={onDownloadPdf}>
+            <svg style={{ width: 16, height: 16, marginRight: 8, display: "inline-block", verticalAlign: "middle" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Download PDF
+          </button>
         </div>
       </section>
 
       <section className="catalogues-toolbar">
-        <input
-          type="text"
-          placeholder="Live Search ..."
-          value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
-          className="catalogues-search"
-        />
+        <div style={{ position: "relative", display: "flex", alignItems: "center", width: "100%" }}>
+          <input
+            type="text"
+            placeholder="Live Search ..."
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            className="catalogues-search"
+            style={{ paddingLeft: "42px" }}
+          />
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            style={{ position: "absolute", left: "14px", width: "18px", height: "18px", color: "#94a3b8" }}
+          >
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <span
+            style={{
+              position: "absolute",
+              right: "12px",
+              fontSize: "11px",
+              fontWeight: 700,
+              background: "#dcfce7",
+              color: "#15803d",
+              borderRadius: "99px",
+              padding: "4px 8px",
+              display: "flex",
+              alignItems: "center",
+              gap: "4px"
+            }}
+          >
+            <span style={{ width: "6px", height: "6px", background: "#22c55e", borderRadius: "50%" }}></span>
+            LIVE
+          </span>
+        </div>
 
-        <select value={domain} onChange={(e) => setDomain(e.target.value)} className="catalogues-domain">
-          {domains.map((d) => (
-            <option key={d} value={d}>
-              {d}
-            </option>
-          ))}
-        </select>
+        <div style={{ width: "100%" }}>
+          <select value={domain} onChange={(e) => setDomain(e.target.value)} className="catalogues-domain">
+            {domains.map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <div className="catalogues-currency">
           <span>CURRENCY:</span>
@@ -266,45 +344,88 @@ export default function CataloguesClient({ journals, initialCurrency = "INR" }: 
         <div className="catalogues-results">Filtered <strong>{filtered.length}</strong> results</div>
       </section>
 
-      <section className="catalogues-table-shell">
-        <table className="catalogues-table-v2">
-          <thead>
-            <tr>
-              <th>S.NO</th>
-              <th>JOURNAL TITLE</th>
-              <th>ISSN</th>
-              <th>FREQUENCY</th>
-              <th>{currency === "INR" ? "PRINT (INR)" : "PRINT (USD)"}</th>
-              <th>{currency === "INR" ? "DIGITAL (INR)" : "DIGITAL (USD)"}</th>
-              <th>{currency === "INR" ? "COMBINED (INR)" : "COMBINED (USD)"}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((item) => {
-              const print = currency === "INR" ? item.printInr : item.printUsd;
-              const online = currency === "INR" ? item.onlineInr : item.onlineUsd;
-              const combined = currency === "INR" ? item.combinedInr : item.combinedUsd;
-              const fmt = (v: number) =>
-                currency === "INR" ? `₹${v.toLocaleString("en-IN")}` : `$${v.toLocaleString("en-US")}`;
+      {viewMode === "grid" ? (
+        <section className="catalogues-grid-container">
+          {filtered.map((item) => {
+            const print = currency === "INR" ? item.printInr : item.printUsd;
+            const online = currency === "INR" ? item.onlineInr : item.onlineUsd;
+            const combined = currency === "INR" ? item.combinedInr : item.combinedUsd;
+            const fmt = (v: number) =>
+              currency === "INR" ? `₹${v.toLocaleString("en-IN")}` : `$${v.toLocaleString("en-US")}`;
 
-              return (
-                <tr key={item.serialNo}>
-                  <td>{item.serialNo}</td>
-                  <td>
-                    <div className="catalogues-journal">{item.journalName}</div>
-                    <div className="catalogues-subject">{item.subject.toUpperCase()}</div>
-                  </td>
-                  <td>{item.issn || "-"}</td>
-                  <td>{item.frequency || "-"}</td>
-                  <td className="price print">{fmt(print)}</td>
-                  <td className="price online">{fmt(online)}</td>
-                  <td className="price combo">{fmt(combined)}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </section>
+            return (
+              <article key={item.serialNo} className="catalogue-grid-card">
+                <div className="grid-card-header">
+                  <span className="serial-no">{item.serialNo}</span>
+                </div>
+                <h3 className="journal-title">{item.journalName}</h3>
+                <div className="subject-label">{item.subject.toUpperCase()}</div>
+                <div className="card-details">
+                  <p><span>issn:</span> {item.issn || "-"}</p>
+                  <p><span>Freq:</span> {item.frequency || "-"}</p>
+                  {item.indexing && (
+                    <p className="indexing-text" title={item.indexing}>{item.indexing}</p>
+                  )}
+                </div>
+                <div className="price-rows">
+                  <div className="price-row print">
+                    <span>Print</span>
+                    <strong>{fmt(print)}</strong>
+                  </div>
+                  <div className="price-row online">
+                    <span>Digital</span>
+                    <strong>{fmt(online)}</strong>
+                  </div>
+                  <div className="price-row combo">
+                    <span>Combined</span>
+                    <strong>{fmt(combined)}</strong>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </section>
+      ) : (
+        <section className="catalogues-table-shell">
+          <table className="catalogues-table-v2">
+            <thead>
+              <tr>
+                <th>S.NO</th>
+                <th>JOURNAL TITLE</th>
+                <th>ISSN</th>
+                <th>FREQUENCY</th>
+                <th>{currency === "INR" ? "PRINT (INR)" : "PRINT (USD)"}</th>
+                <th>{currency === "INR" ? "DIGITAL (INR)" : "DIGITAL (USD)"}</th>
+                <th>{currency === "INR" ? "COMBINED (INR)" : "COMBINED (USD)"}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((item) => {
+                const print = currency === "INR" ? item.printInr : item.printUsd;
+                const online = currency === "INR" ? item.onlineInr : item.onlineUsd;
+                const combined = currency === "INR" ? item.combinedInr : item.combinedUsd;
+                const fmt = (v: number) =>
+                  currency === "INR" ? `₹${v.toLocaleString("en-IN")}` : `$${v.toLocaleString("en-US")}`;
+
+                return (
+                  <tr key={item.serialNo}>
+                    <td>{item.serialNo}</td>
+                    <td>
+                      <div className="catalogues-journal">{item.journalName}</div>
+                      <div className="catalogues-subject">{item.subject.toUpperCase()}</div>
+                    </td>
+                    <td>{item.issn || "-"}</td>
+                    <td>{item.frequency || "-"}</td>
+                    <td className="price print">{fmt(print)}</td>
+                    <td className="price online">{fmt(online)}</td>
+                    <td className="price combo">{fmt(combined)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </section>
+      )}
 
       <footer className="catalogues-page-footer">
         Consortium e-Learning Network Pvt. Ltd. - STM Journals
@@ -312,3 +433,4 @@ export default function CataloguesClient({ journals, initialCurrency = "INR" }: 
     </main>
   );
 }
+
