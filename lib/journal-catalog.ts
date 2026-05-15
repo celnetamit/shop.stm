@@ -155,6 +155,28 @@ function processFocusScopeItems(html: string | null): FocusScopeItem[] {
   }
 }
 
+function extractNameFromAbout(html: string | null): string {
+  if (!html) return "";
+  try {
+    const $ = cheerio.load(`<div>${html}</div>`);
+    const text = $("strong").first().text() || $("b").first().text() || $("span").first().text() || $.text();
+    if (!text) return "";
+    const raw = text.replace(/\[[^\]]*\]/g, "");
+    return raw.replace(/&amp;/g, "&").replace(/&/g, "and").toLowerCase().replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
+  } catch (e) {
+    return "";
+  }
+}
+
+function stemWord(name: string): string {
+  return name
+    .replace(/\bs\b/g, "")
+    .replace(/systems/g, "system")
+    .replace(/journals/g, "journal")
+    .replace(/trends/g, "trend")
+    .trim();
+}
+
 export async function getDomainCountsFromCsv(): Promise<Array<{ domain: string; count: number }>> {
   const rows = await loadCsvRows();
   const map = new Map<string, number>();
@@ -185,9 +207,20 @@ export async function getJournalCatalog(): Promise<JournalCatalogItem[]> {
 
   const scopeByAbbr = new Map<string, CsvRow>();
   for (const r of scopeRows) {
-    const abbr = (r["Abbreviation"] || "").trim().toLowerCase();
-    if (!abbr) continue;
-    scopeByAbbr.set(abbr, r);
+    const abbr1 = (r["Abbreviation"] || "").trim().toLowerCase();
+    const abbr2 = (r["Abberiviation"] || "").trim().toLowerCase();
+    const cleanAbbr = abbr1 || (Array.isArray(abbr2) ? abbr2[0] : abbr2);
+    if (cleanAbbr) {
+      scopeByAbbr.set(cleanAbbr, r);
+    }
+  }
+
+  const scopeByName = new Map<string, CsvRow>();
+  for (const r of scopeRows) {
+    const name = extractNameFromAbout(r.About);
+    if (name) {
+      scopeByName.set(name, r);
+    }
   }
 
   return priceRows.map((r) => {
@@ -197,8 +230,32 @@ export async function getJournalCatalog(): Promise<JournalCatalogItem[]> {
     const pIssn = csv?.["p-ISSN"] || "";
     const issn = r.issn || eIssn || pIssn || null;
     
-    const abbreviation = (csv?.["Abbreviation"] || "").trim();
-    const matchedScope = abbreviation ? scopeByAbbr.get(abbreviation.toLowerCase()) : null;
+    const abbreviation = (r.Abbreviation || csv?.["Abbreviation"] || "").trim();
+    const nName = normalizeName(journalName);
+
+    let matchedScope: CsvRow | null = null;
+
+    // 1. Try direct Abbreviation matching
+    if (abbreviation) {
+      matchedScope = scopeByAbbr.get(abbreviation.toLowerCase()) || null;
+    }
+
+    // 2. Try Exact Extracted Name matching
+    if (!matchedScope) {
+      matchedScope = scopeByName.get(nName) || null;
+    }
+
+    // 3. Try Partial / Fuzzy / Stemmed matching
+    if (!matchedScope) {
+      const stemmedTarget = stemWord(nName);
+      for (const [keyName, record] of scopeByName.entries()) {
+        const stemmedKey = stemWord(keyName);
+        if (stemmedTarget === stemmedKey || stemmedTarget.includes(stemmedKey) || stemmedKey.includes(stemmedTarget)) {
+          matchedScope = record;
+          break;
+        }
+      }
+    }
     
     const focusScopeHtml = matchedScope?.["Focus & Scope"] || null;
     const focusScopeItems = focusScopeHtml ? processFocusScopeItems(focusScopeHtml) : [];
