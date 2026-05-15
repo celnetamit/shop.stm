@@ -128,17 +128,39 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
     }
   }
 
-  const subtotal = useMemo(
-    () => selectedRows.reduce((sum, row) => sum + getPrice(row, plans[row.serialNo] || "PRINT"), 0),
-    [selectedRows, plans, currency]
-  );
-  const discount = Math.round((subtotal * appliedDiscountPercent) / 100);
-  const taxable = subtotal - discount;
-  const gst = currency === "INR" ? Math.round(taxable * 0.18) : 0;
+  const itemizedTotals = useMemo(() => {
+    return selectedRows.map((row) => {
+      const plan = plans[row.serialNo] || "PRINT";
+      const unitPrice = getPrice(row, plan);
+      const itemDiscount = (unitPrice * appliedDiscountPercent) / 100;
+      const itemTaxable = unitPrice - itemDiscount;
+      const isDigital = plan === "ONLINE" || plan === "PRINT_ONLINE";
+      const gstRate = currency === "INR" && isDigital ? 18 : 0;
+      const itemGst = itemTaxable * (gstRate / 100);
+      const netAmount = itemTaxable + itemGst;
+      return {
+        row,
+        plan,
+        unitPrice,
+        itemDiscount,
+        itemTaxable,
+        gstRate,
+        itemGst,
+        netAmount,
+        hsn: isDigital ? "9984" : "49029020"
+      };
+    });
+  }, [selectedRows, plans, currency, appliedDiscountPercent]);
+
+  const subtotal = useMemo(() => itemizedTotals.reduce((sum, item) => sum + item.unitPrice, 0), [itemizedTotals]);
+  const discount = useMemo(() => itemizedTotals.reduce((sum, item) => sum + item.itemDiscount, 0), [itemizedTotals]);
+  const taxable = useMemo(() => itemizedTotals.reduce((sum, item) => sum + item.itemTaxable, 0), [itemizedTotals]);
+  const gst = useMemo(() => itemizedTotals.reduce((sum, item) => sum + item.itemGst, 0), [itemizedTotals]);
   const grandTotal = taxable + gst;
 
   function fmt(amount: number) {
-    return currency === "INR" ? `₹${amount.toLocaleString("en-IN")}` : `$${amount.toLocaleString("en-US")}`;
+    const fixed = Number(amount).toFixed(2);
+    return currency === "INR" ? `₹${fixed}` : `$${fixed}`;
   }
 
   async function onSaveStepOne(e: React.FormEvent) {
@@ -244,36 +266,97 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
     setCouponMessage(`Applied ${json.coupon.code} (${json.coupon.discount}% off)`);
   }
 
-  function amountInWords(n: number) {
-    const ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
-    const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
-    const twoDigits = (x: number) => (x < 20 ? ones[x] : `${tens[Math.floor(x / 10)]}${x % 10 ? ` ${ones[x % 10]}` : ""}`);
-    const threeDigits = (x: number) => {
-      const h = Math.floor(x / 100);
-      const r = x % 100;
-      if (!h) return twoDigits(r);
-      return `${ones[h]} Hundred${r ? ` ${twoDigits(r)}` : ""}`;
+  function amountInWords(val: number) {
+    const n = Math.floor(val);
+    const paise = Math.round((val - n) * 100);
+
+    const toWords = (num: number) => {
+      const ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
+      const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+      const twoDigits = (x: number) => (x < 20 ? ones[x] : `${tens[Math.floor(x / 10)]}${x % 10 ? ` ${ones[x % 10]}` : ""}`);
+      const threeDigits = (x: number) => {
+        const h = Math.floor(x / 100);
+        const r = x % 100;
+        if (!h) return twoDigits(r);
+        return `${ones[h]} Hundred${r ? ` ${twoDigits(r)}` : ""}`;
+      };
+
+      if (num === 0) return "Zero";
+      if (num > 99999999) return `${num.toLocaleString("en-IN")}`;
+
+      const crore = Math.floor(num / 10000000);
+      const lakh = Math.floor((num % 10000000) / 100000);
+      const thousand = Math.floor((num % 100000) / 1000);
+      const rest = num % 1000;
+      const parts: string[] = [];
+      if (crore) parts.push(`${twoDigits(crore)} Crore`);
+      if (lakh) parts.push(`${twoDigits(lakh)} Lakh`);
+      if (thousand) parts.push(`${twoDigits(thousand)} Thousand`);
+      if (rest) parts.push(threeDigits(rest));
+      return parts.filter(Boolean).join(" ");
     };
 
-    if (n === 0) return "Zero";
-    if (n > 99999999) return `${n.toLocaleString("en-IN")}`;
+    if (currency === "USD") {
+      let str = `US Dollars ${toWords(n)}`;
+      if (paise > 0) {
+        str += ` and Cents ${toWords(paise)}`;
+      }
+      return str + " Only";
+    }
 
-    const crore = Math.floor(n / 10000000);
-    const lakh = Math.floor((n % 10000000) / 100000);
-    const thousand = Math.floor((n % 100000) / 1000);
-    const rest = n % 1000;
-    const parts: string[] = [];
-    if (crore) parts.push(`${twoDigits(crore)} Crore`);
-    if (lakh) parts.push(`${twoDigits(lakh)} Lakh`);
-    if (thousand) parts.push(`${twoDigits(thousand)} Thousand`);
-    if (rest) parts.push(threeDigits(rest));
-    return parts.join(" ");
+    let str = `Indian Rupees ${toWords(n)}`;
+    if (paise > 0) {
+      str += ` and ${toWords(paise)} Paise`;
+    }
+    return str + " Only";
   }
 
-  function onDownloadInvoicePdf() {
-    // Utilize standard high-quality window.print() which now utilizes @media print styles
-    // designed in globals.css to flawlessly save the exact HTML Preview as PDF.
-    window.print();
+  async function onDownloadInvoicePdf() {
+    const input = document.getElementById("invoice-capture-area");
+    if (!input) return;
+    
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      
+      // Hide interactive action buttons if they are inside capturing tree,
+      // though our DOM targeting is scoped to just the article.
+      const canvas = await html2canvas(input, {
+        scale: 2, // Retain absolute high-fidelity text/graphics
+        useCORS: true, // Load external logos from URL without taint issues
+        logging: false,
+        backgroundColor: "#ffffff"
+      });
+      
+      const imgData = canvas.toDataURL("image/png");
+      
+      // Establish Portrait A4 configuration (210mm x 297mm)
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      // Canvas absolute dimensions
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      
+      // Compute exact fit-to-page ratios
+      const ratio = Math.min(pdfWidth / (imgWidth / 3.7795275590551), pdfHeight / (imgHeight / 3.7795275590551)); // 3.779 is standard pixel-to-mm ratio
+      
+      // Scale the image dimensions with margins
+      const scale = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight) * 0.95; // Reduce slightly for margins
+      const finalWidth = imgWidth * scale;
+      const finalHeight = imgHeight * scale;
+      
+      // Center both horizontally and vertically on page
+      const marginX = (pdfWidth - finalWidth) / 2;
+      const marginY = (pdfHeight - finalHeight) / 2;
+      
+      pdf.addImage(imgData, "PNG", marginX, marginY, finalWidth, finalHeight);
+      pdf.save(`proforma-${quoteId || "draft"}.pdf`);
+    } catch (err) {
+      console.error("Encountered html2canvas conversion error", err);
+      // Resilience fallback to classic browser print flow
+      window.print();
+    }
   }
 
   async function onSendEmailNotification() {
@@ -505,7 +588,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
               </div>
 
               <div className="proforma-bottom-bar">
-                <div>Final Total including +18% GST <strong>{fmt(grandTotal)}</strong></div>
+                <div>Final Total inclusive of GST <strong>{fmt(grandTotal)}</strong></div>
                 <button type="button" className="proforma-cta" onClick={onSubmitQuote} disabled={submitting || selectedRows.length === 0}>
                   {submitting ? "Building..." : "Build Proforma ⚡"}
                 </button>
@@ -516,8 +599,8 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
               <h3>Quote Summary</h3>
               <p><span>Subtotal</span><strong>{fmt(subtotal)}</strong></p>
               <p><span>Discount</span><strong>{fmt(discount)}</strong></p>
-              <p><span>GST (+18%)</span><strong>{fmt(gst)}</strong></p>
-              <p className="grand"><span>{currency === "INR" ? "₹" : "$"}{grandTotal.toLocaleString(currency === "INR" ? "en-IN" : "en-US")}</span></p>
+              <p><span>GST</span><strong>{fmt(gst)}</strong></p>
+              <p className="grand"><span>{fmt(grandTotal)}</span></p>
               <p className="selected-count">{selectedRows.length} Selected</p>
               <button className="proforma-review-btn" onClick={onSubmitQuote} disabled={submitting || selectedRows.length === 0}>
                 Review Quotation →
@@ -528,136 +611,284 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
         </section>
       ) : null}
 
-      {step === 3 ? (
-        <section className="proforma-preview-wrap">
-          <article className="proforma-invoice">
-            <div className="proforma-top-brand-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "2px solid #1e40af", paddingBottom: "12px", marginBottom: "16px" }}>
-              <img src="/stmlogo.png" alt="Logo" style={{ height: "48px", objectFit: "contain" }} />
-              <h1 style={{ margin: 0, fontSize: "26px", fontWeight: 800, textTransform: "uppercase", color: "#111", letterSpacing: "0.5px" }}>Proforma Invoice</h1>
-            </div>
-            <section className="proforma-quote-meta">
-              <div>
-                <h5>Quotation Number</h5>
-                <strong>{quoteId || "DRAFT"}</strong>
-                <h5>Issue Date</h5>
-                <p>{new Date().toLocaleDateString("en-IN")}</p>
-              </div>
-              <div>
-                <h5>Bank Details (NEFT/RTGS)</h5>
-                <p>Bank: HDFC Bank</p>
-                <p>A/C: 639400000001153</p>
-                <p>IFSC: HDFC0000549</p>
-                <p>Holder: Consortium eLearning Network Pvt. Ltd.</p>
-              </div>
-              <div>
-                <h5>Legal Identifiers</h5>
-                <p>GSTIN: 09AAACC...</p>
-                <p>PAN: AAACC...</p>
-                <p>CIN: U80302DL2005PTC138759</p>
-              </div>
-            </section>
+      {step === 3 ? (() => {
+        const today = new Date();
+        const validDate = new Date();
+        validDate.setDate(today.getDate() + 30);
+        const formatDate = (d: Date) => `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+        
+        const activeCgst = gst / 2;
+        const activeSgst = gst / 2;
 
-            <header className="proforma-invoice-head">
-              <div>
-                <h2>{contactName}</h2>
-                <p>{institutionName || organization}</p>
-                <p>{city}{stateName ? `, ${stateName}` : ""}{pincode ? ` - ${pincode}` : ""}</p>
-              </div>
-              <div className="proforma-subscription-summary">
-                <h5>Subscription Summary</h5>
-                <p>Category: {subscriberCategory === "COLLEGE" ? "College / University" : subscriberCategory === "AGENCY" ? "Subscription Agency" : "Individual Scholar"}</p>
-                <p>Duration Plan: Yearly</p>
-                <p>{selectedRows.length} Department(s)</p>
-              </div>
-            </header>
+        return (
+          <section className="proforma-preview-wrap" style={{ background: "#f1f5f9", padding: "2rem 1rem", display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <article id="invoice-capture-area" className="proforma-invoice" style={{
+              background: "#ffffff",
+              width: "100%",
+              maxWidth: "900px",
+              padding: "30px",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+              fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+              color: "#1e293b",
+              fontSize: "12px",
+              lineHeight: "1.5",
+              border: "1px solid #cbd5e1",
+              position: "relative",
+              boxSizing: "border-box"
+            }}>
+              
+              {/* Border Outer Wrapper to match PDF strictly */}
+              <div style={{ border: "1px solid #94a3b8", padding: "1px" }}>
+                
+                {/* Header Row */}
+                <div style={{ display: "flex", alignItems: "center", borderBottom: "1px solid #94a3b8", padding: "15px 20px" }}>
+                  <div style={{ width: "15%", display: "flex", justifyContent: "center" }}>
+                    <img src="/stmlogo.png" alt="STM" style={{ maxHeight: "65px", objectFit: "contain" }} onError={(e) => { (e.target as HTMLImageElement).src = "https://dummyimage.com/100x100/1e3a8a/ffffff.png&text=STM"; }} />
+                  </div>
+                  <div style={{ width: "85%", textAlign: "center", paddingRight: "10%" }}>
+                    <h1 style={{ fontSize: "34px", fontWeight: "700", color: "#0f172a", margin: "0 0 4px 0", letterSpacing: "0.5px" }}>STM Journals</h1>
+                    <p style={{ fontSize: "12px", fontWeight: "600", margin: "0", color: "#334155" }}>Consortium e-Learning Network Pvt. Ltd.,</p>
+                    <p style={{ fontSize: "11px", color: "#64748b", margin: "2px 0 0 0" }}>A-118 1st Floor, Sector 63, Noida, Uttar Pradesh, India - 201301</p>
+                  </div>
+                </div>
 
-            <section className="proforma-meta-grid">
-              <div>
-                <h4>BILLED TO</h4>
-                <p>{institutionName || organization}</p>
-                <p>Attn: {contactName}</p>
-                <p>{email}</p>
-              </div>
-              <div>
-                <h4>BANK DETAILS</h4>
-                <p>Bank: HDFC BANK LTD</p>
-                <p>A/C No: 502000000000</p>
-                <p>IFSC: HDFC0000001</p>
-                <p>Branch: NOIDA SECTOR 18</p>
-              </div>
-            </section>
+                {/* Metadata Three Panels Grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderBottom: "1px solid #94a3b8" }}>
+                  {/* Col 1 */}
+                  <div style={{ padding: "12px 15px", borderRight: "1px solid #94a3b8" }}>
+                    <span style={{ fontSize: "10px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.03em", color: "#475569" }}>PROFORMA INVOICE NUMBER :</span>
+                    <div style={{ fontSize: "17px", fontWeight: "800", color: "#0f172a", margin: "4px 0 10px 0" }}>{quoteId || "PRO-2026-DRAFT"}</div>
+                    
+                    <span style={{ fontSize: "10px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.03em", color: "#475569" }}>PROFORMA INVOICE DATE :</span>
+                    <div style={{ fontSize: "17px", fontWeight: "800", color: "#0f172a", margin: "4px 0 10px 0" }}>{formatDate(today)}</div>
+                    
+                    <span style={{ fontSize: "10px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.03em", color: "#475569" }}>VALID UNTIL :</span>
+                    <div style={{ fontSize: "17px", fontWeight: "800", color: "#2563eb", margin: "4px 0 0 0" }}>{formatDate(validDate)}</div>
+                  </div>
+                  {/* Col 2 */}
+                  <div style={{ padding: "12px 15px", borderRight: "1px solid #94a3b8", fontSize: "11px" }}>
+                    <span style={{ fontSize: "10px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.03em", color: "#475569", display: "block", marginBottom: "6px" }}>BANK DETAILS:</span>
+                    <div style={{ display: "grid", gridTemplateColumns: "90px 1fr", gap: "4px 2px" }}>
+                      <strong style={{ color: "#475569" }}>Bank Name :</strong> <span>HDFC Bank</span>
+                      <strong style={{ color: "#475569" }}>Bank Address :</strong> <span>Sector-62, Noida, U.P., India</span>
+                      <strong style={{ color: "#475569" }}>A/C. Number :</strong> <span style={{ fontWeight: "700", color: "#0f172a" }}>03942000001153</span>
+                      <strong style={{ color: "#475569" }}>IFSC Code :</strong> <span>HDFC0002649</span>
+                      <strong style={{ color: "#475569" }}>Swift Code :</strong> <span>HDFCINBBXXX</span>
+                      <strong style={{ color: "#475569" }}>A/C. Holder :</strong> <span style={{ fontWeight: "600" }}>Consortium eLearning Network Pvt. Ltd.</span>
+                    </div>
+                  </div>
+                  {/* Col 3 */}
+                  <div style={{ padding: "12px 15px", fontSize: "11px" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "90px 1fr", gap: "8px 2px" }}>
+                      <strong style={{ color: "#475569", fontSize: "10px", textTransform: "uppercase" }}>GSTIN :</strong> <span style={{ fontWeight: "700", color: "#0f172a" }}>09AACCC6494M1Z1</span>
+                      <strong style={{ color: "#475569", fontSize: "10px", textTransform: "uppercase" }}>PAN No. :</strong> <span style={{ fontWeight: "700", color: "#0f172a" }}>AACCC6494M</span>
+                      <strong style={{ color: "#475569", fontSize: "10px", textTransform: "uppercase" }}>CIN No. :</strong> <span style={{ fontWeight: "700", color: "#0f172a" }}>U80302DL2005PTC138759</span>
+                      <strong style={{ color: "#475569", fontSize: "10px", textTransform: "uppercase" }}>Legal Name :</strong> <span>Consortium e-Learning Network Pvt. Ltd.</span>
+                    </div>
+                  </div>
+                </div>
 
-            <table className="proforma-invoice-table">
-              <thead>
-                <tr>
-                  <th>SL</th>
-                  <th>PUBLICATION</th>
-                  <th>FORMAT</th>
-                  <th>AMOUNT</th>
-                </tr>
-              </thead>
-              <tbody>
-                {selectedRows.map((row, idx) => {
-                  const plan = plans[row.serialNo] || "PRINT";
-                  const price = getPrice(row, plan);
-                  const format = plan === "PRINT_ONLINE" ? "Print + Online" : plan === "ONLINE" ? "Online" : "Print";
-                  return (
-                    <tr key={row.serialNo}>
-                      <td>{idx + 1}</td>
-                      <td>{row.journalName}</td>
-                      <td>{format}</td>
-                      <td>{fmt(price)}</td>
+                {/* Billed and Shipped Section */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", borderBottom: "1px solid #94a3b8", minHeight: "150px" }}>
+                  {/* Billed Column */}
+                  <div style={{ padding: "15px", borderRight: "1px solid #94a3b8" }}>
+                    <h4 style={{ fontSize: "10px", fontWeight: "750", textTransform: "uppercase", borderBottom: "1.5px solid #334155", paddingBottom: "4px", margin: "0 0 12px 0", display: "inline-block", color: "#1e293b" }}>
+                      BILLED TO / DETAILS OF RECEIVER:
+                    </h4>
+                    <div style={{ display: "grid", gridTemplateColumns: "85px 1fr", gap: "6px 4px", fontSize: "11.5px" }}>
+                      <strong style={{ color: "#64748b" }}>Name :</strong> <span style={{ fontWeight: "700", color: "#0f172a" }}>{contactName}</span>
+                      <strong style={{ color: "#64748b" }}>Institution :</strong> <span style={{ fontWeight: "600" }}>{institutionName || organization || "N/A"}</span>
+                      <strong style={{ color: "#64748b" }}>Address :</strong> <span>{address}{city ? `, ${city}` : ""}{stateName ? `, ${stateName}` : ""}{pincode ? ` - ${pincode}` : ""}. <br/>Phone:- {phone} Email:- {email}</span>
+                      <strong style={{ color: "#64748b" }}>GSTIN :</strong> <span style={{ fontWeight: "700" }}>{gstNumber || "N/A"}</span>
+                    </div>
+                  </div>
+
+                  {/* Shipped Column */}
+                  <div style={{ padding: "15px", position: "relative" }}>
+                    {/* QR Box Overlay */}
+                    <div style={{ position: "absolute", right: "15px", top: "15px", border: "1px solid #cbd5e1", padding: "4px", textAlign: "center", width: "60px" }}>
+                      <span style={{ fontSize: "7px", fontWeight: "700", display: "block", marginBottom: "2px" }}>SCAN INVOICE</span>
+                      <div style={{ height: "35px", background: "#f8fafc", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "8px", color: "#94a3b8", fontWeight: "600", border: "1px dashed #cbd5e1" }}>QR</div>
+                    </div>
+
+                    <h4 style={{ fontSize: "10px", fontWeight: "750", textTransform: "uppercase", borderBottom: "1.5px solid #334155", paddingBottom: "4px", margin: "0 0 12px 0", display: "inline-block", color: "#1e293b" }}>
+                      SHIPPED TO / DELIVERY ADDRESS:
+                    </h4>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "85px 1fr", gap: "6px 4px", fontSize: "11.5px", paddingRight: "70px" }}>
+                      <strong style={{ color: "#64748b" }}>Recipient :</strong> <span style={{ fontWeight: "700", color: "#0f172a" }}>{sameAsBilling ? contactName : shippingRecipientName || contactName}</span>
+                      <strong style={{ color: "#64748b" }}>Address :</strong> <span>
+                        {sameAsBilling 
+                          ? `${address}${city ? `, ${city}` : ""}${stateName ? `, ${stateName}` : ""}${pincode ? ` - ${pincode}` : ""}` 
+                          : `${shippingAddress}${shippingCity ? `, ${shippingCity}` : ""}${shippingState ? `, ${shippingState}` : ""}${shippingPincode ? ` - ${shippingPincode}` : ""}`
+                        }
+                      </span>
+                      <strong style={{ color: "#64748b" }}>Contact :</strong> <span>{sameAsBilling ? phone : shippingPhone || phone}</span>
+                    </div>
+
+                    <div style={{ borderTop: "1px dashed #cbd5e1", marginTop: "12px", paddingTop: "8px", fontSize: "11.5px" }}>
+                      <span style={{ fontSize: "9px", fontWeight: "700", color: "#2563eb", textTransform: "uppercase" }}>ORDER INFORMATION:</span>
+                      <div style={{ marginTop: "4px" }}><strong style={{ color: "#64748b" }}>Order Placed By :</strong> <span style={{ fontWeight: "750", color: "#0f172a", textTransform: "uppercase" }}>{contactName}</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* The Itemized Table */}
+                <table style={{ width: "100%", borderCollapse: "collapse", borderBottom: "1px solid #94a3b8" }} cellPadding="6">
+                  <thead>
+                    <tr style={{ borderBottom: "1px solid #94a3b8", background: "#f8fafc", fontSize: "10.5px", fontWeight: "800" }}>
+                      <th style={{ width: "5%", borderRight: "1px solid #94a3b8", textAlign: "center" }}>Sr.No</th>
+                      <th style={{ width: "35%", borderRight: "1px solid #94a3b8", textAlign: "left" }}>Particulars</th>
+                      <th style={{ width: "10%", borderRight: "1px solid #94a3b8", textAlign: "center" }}>HSN/SAC</th>
+                      <th style={{ width: "6%", borderRight: "1px solid #94a3b8", textAlign: "center" }}>Qty</th>
+                      <th style={{ width: "11%", borderRight: "1px solid #94a3b8", textAlign: "right" }}>Unit Price</th>
+                      <th style={{ width: "11%", borderRight: "1px solid #94a3b8", textAlign: "right" }}>Amount</th>
+                      <th style={{ width: "10%", borderRight: "1px solid #94a3b8", textAlign: "right" }}>Discount</th>
+                      <th style={{ width: "12%", borderRight: "1px solid #94a3b8", textAlign: "right" }}>Taxable Value</th>
+                      <th style={{ width: "10%", borderRight: "1px solid #94a3b8", textAlign: "right" }}>GST Rate (%)</th>
+                      <th style={{ width: "12%", textAlign: "right" }}>Net Amount</th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody>
+                    {itemizedTotals.map((it, idx) => {
+                      const planLabel = it.plan === "PRINT_ONLINE" ? "Print + Digital Subscription" : it.plan === "ONLINE" ? "Online Subscription" : "Print Subscription";
+                      return (
+                        <tr key={it.row.serialNo} style={{ borderBottom: "1px solid #e2e8f0", fontSize: "11.5px" }}>
+                          <td style={{ borderRight: "1px solid #94a3b8", textAlign: "center", color: "#475569" }}>{idx + 1}</td>
+                          <td style={{ borderRight: "1px solid #94a3b8", textAlign: "left", fontWeight: "600", color: "#1e293b", lineHeight: "1.3", padding: "8px 6px" }}>
+                            {it.row.journalName}
+                            <div style={{ fontSize: "9px", fontWeight: "400", color: "#64748b", marginTop: "2px" }}>
+                              ({new Date().getFullYear()} TO Dec-{new Date().getFullYear()} | {planLabel})
+                            </div>
+                          </td>
+                          <td style={{ borderRight: "1px solid #94a3b8", textAlign: "center" }}>{it.hsn}</td>
+                          <td style={{ borderRight: "1px solid #94a3b8", textAlign: "center" }}>1</td>
+                          <td style={{ borderRight: "1px solid #94a3b8", textAlign: "right" }}>{Number(it.unitPrice).toFixed(2)}</td>
+                          <td style={{ borderRight: "1px solid #94a3b8", textAlign: "right" }}>{Number(it.unitPrice).toFixed(2)}</td>
+                          <td style={{ borderRight: "1px solid #94a3b8", textAlign: "right" }}>{Number(it.itemDiscount).toFixed(2)}</td>
+                          <td style={{ borderRight: "1px solid #94a3b8", textAlign: "right", fontWeight: "600" }}>{Number(it.itemTaxable).toFixed(2)}</td>
+                          <td style={{ borderRight: "1px solid #94a3b8", textAlign: "right" }}>{Number(it.gstRate).toFixed(2)}</td>
+                          <td style={{ textAlign: "right", fontWeight: "700", color: "#0f172a" }}>{Number(it.netAmount).toFixed(2)}</td>
+                        </tr>
+                      );
+                    })}
 
-            <div className="proforma-totals">
-              <p><span>Subtotal</span><strong>{fmt(subtotal)}</strong></p>
-              <p><span>Discount {appliedCouponCode ? `(${appliedCouponCode})` : ""}</span><strong>{fmt(discount)}</strong></p>
-              <p><span>Taxable Value</span><strong>{fmt(taxable)}</strong></p>
-              <p><span>GST +18%</span><strong>{fmt(gst)}</strong></p>
-              <p className="grand"><span>Grand Total</span><strong>{fmt(grandTotal)}</strong></p>
+                    {/* Financial Ledger Summary Overlay Row */}
+                    <tr>
+                      <td colSpan={6} style={{ borderRight: "1px solid #94a3b8", borderTop: "1px solid #94a3b8", verticalAlign: "top", padding: "12px" }}>
+                        <div style={{ fontSize: "11px", color: "#334155" }}>
+                          <strong style={{ color: "#0f172a" }}>In Words:</strong> {amountInWords(grandTotal)}
+                        </div>
+                      </td>
+                      <td colSpan={4} style={{ borderTop: "1px solid #94a3b8", padding: "0" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 100px", gap: "4px", padding: "10px", fontSize: "11.5px" }}>
+                          <span style={{ textAlign: "right", color: "#64748b" }}>Subtotal:</span>
+                          <span style={{ textAlign: "right", fontWeight: "600" }}>{Number(subtotal).toFixed(2)}</span>
+                          
+                          {discount > 0 && (
+                            <>
+                              <span style={{ textAlign: "right", color: "#64748b" }}>Discount:</span>
+                              <span style={{ textAlign: "right", color: "#ef4444" }}>-{Number(discount).toFixed(2)}</span>
+                            </>
+                          )}
+
+                          {currency === "INR" && (
+                            <>
+                              <span style={{ textAlign: "right", color: "#64748b" }}>CGST (9%):</span>
+                              <span style={{ textAlign: "right" }}>{Number(activeCgst).toFixed(2)}</span>
+                              
+                              <span style={{ textAlign: "right", color: "#64748b" }}>SGST (9%):</span>
+                              <span style={{ textAlign: "right" }}>{Number(activeSgst).toFixed(2)}</span>
+                            </>
+                          )}
+
+                          <span style={{ textAlign: "right", fontWeight: "800", color: "#0f172a", borderTop: "1.5px solid #334155", paddingTop: "6px", marginTop: "4px", fontSize: "13px" }}>Total ({currency}):</span>
+                          <span style={{ textAlign: "right", fontWeight: "800", color: "#0f172a", borderTop: "1.5px solid #334155", paddingTop: "6px", marginTop: "4px", fontSize: "13px" }}>{Number(grandTotal).toFixed(2)}</span>
+
+                          <span style={{ textAlign: "right", fontSize: "9px", color: "#94a3b8" }}>Round Off :</span>
+                          <span style={{ textAlign: "right", fontSize: "9px", color: "#94a3b8" }}>- 0</span>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                {/* Footer Note Bar */}
+                <div style={{ padding: "12px 15px", borderBottom: "1px solid #94a3b8", background: "#f8fafc", fontStyle: "italic", color: "#334155", fontSize: "11px" }}>
+                  The sum of {currency} {Math.round(grandTotal)}/- is a payment on account of subscription by NEFT/RTGS.
+                </div>
+
+                {/* Terms & Signature Block */}
+                <div style={{ display: "grid", gridTemplateColumns: "3fr 2fr", padding: "15px" }}>
+                  <div>
+                    <strong style={{ fontSize: "10px", textDecoration: "underline", textTransform: "uppercase", display: "block", marginBottom: "6px", color: "#1e293b" }}>TERMS & CONDITIONS:</strong>
+                    <ol style={{ margin: 0, paddingLeft: "16px", fontSize: "10.5px", color: "#475569", lineHeight: "1.6" }}>
+                      <li>All subscription amount mentioned is as per year fee (Between January and December).</li>
+                      <li>Missing numbers will not be supplied if claims are received more than six months.</li>
+                      <li>The Publisher cannot accept responsibly for foreign delivery when records indicate posting has been made.</li>
+                      <li>Invoice subject to realization of demand draft/cheque.</li>
+                    </ol>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", textAlign: "center" }}>
+                    <strong style={{ color: "#0f172a", fontSize: "11px", marginBottom: "45px" }}>For, STM JOURNALS</strong>
+                    <div style={{ width: "180px", borderBottom: "1px solid #64748b" }}></div>
+                    <span style={{ fontSize: "9px", fontWeight: "800", textTransform: "uppercase", marginTop: "5px", letterSpacing: "0.05em", color: "#334155" }}>AUTHORISED SIGNATORY</span>
+                  </div>
+                </div>
+
+              </div> {/* End Outer Border Box */}
+
+              {/* Corporate Footers Section */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginTop: "20px", fontSize: "10px", borderTop: "1px solid #cbd5e1", paddingTop: "10px" }}>
+                <div>
+                  <strong style={{ color: "#64748b", textTransform: "uppercase" }}>REGD. OFFICE:</strong>
+                  <p style={{ margin: "2px 0", color: "#475569" }}>Office No. 4, First Floor, CSC Pocket -E, Mayur Vihar, Phase-II, New Delhi-110091</p>
+                </div>
+                <div>
+                  <strong style={{ color: "#64748b", textTransform: "uppercase" }}>SALES & ADMIN OFFICE:</strong>
+                  <p style={{ margin: "2px 0", color: "#475569" }}>STM Journals, A Division of Consortium e-Learning Network Pvt. Ltd., A-118 1st Floor, Sector 63, Noida, Uttar Pradesh, India - 201301</p>
+                </div>
+              </div>
+
+              <div style={{ textAlign: "center", borderTop: "1px dashed #cbd5e1", marginTop: "12px", paddingTop: "8px", fontSize: "10px", color: "#64748b" }}>
+                Tel: 01120 - 4781206 &nbsp;|&nbsp; Mob: +91-9810078958 &nbsp;|&nbsp; E-mail: subscriptions@stmjournals.com &nbsp;|&nbsp; Website: shop.stmjournals.com
+                <div style={{ fontSize: "8px", marginTop: "6px", color: "#94a3b8" }}>
+                  This computer generated invoice is available online at: {window.location.origin}/invoice.aspx?I=PRO-2026
+                </div>
+              </div>
+
+            </article>
+
+            <div className="proforma-preview-actions" style={{ marginTop: "2rem", display: "flex", gap: "1rem" }}>
+              <button className="catalogues-ghost" onClick={() => setStep(2)}>← Back to Selection</button>
+              <button className="catalogues-primary" style={{ background: "#2563eb" }} onClick={onDownloadInvoicePdf}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: "6px" }}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                PRINT / SAVE AS PDF
+              </button>
+              <button 
+                className="catalogues-ghost" 
+                onClick={onSendEmailNotification} 
+                disabled={sendingEmail || !quoteId || quoteId.startsWith("draft-")}
+              >
+                {sendingEmail ? "✉ Dispatching..." : "✉ Send Email"}
+              </button>
+              <button
+                className="catalogues-primary"
+                style={{ background: "#10b981" }}
+                onClick={() =>
+                  router.push(
+                    `/checkout?quoteId=${encodeURIComponent(quoteId || "DRAFT")}&total=${encodeURIComponent(String(grandTotal))}&name=${encodeURIComponent(contactName)}&email=${encodeURIComponent(email)}&organization=${encodeURIComponent(institutionName || organization)}&address=${encodeURIComponent(address)}&state=${encodeURIComponent(stateName)}&pincode=${encodeURIComponent(pincode)}&gst=${encodeURIComponent(gstNumber)}&subject=${encodeURIComponent(selectedRows[0]?.subject || "Subscription")}`
+                  )
+                }
+              >
+                ⚡ Pay Now
+              </button>
             </div>
-
-            <p className="proforma-words">
-              Amount in Words: <strong>{amountInWords(grandTotal)} {currency === "INR" ? "Rupees Only" : "US Dollars Only"}</strong>
-            </p>
-
-            <ol className="proforma-notes">
-              <li>Subscription will be activated post payment confirmation.</li>
-              <li>All disputes are subject to Delhi jurisdiction only.</li>
-              <li>18% GST applicable as per Government of India rules.</li>
-              <li>Quotation is valid for 30 days.</li>
-            </ol>
-          </article>
-
-            <div className="proforma-preview-actions">
-            <button className="catalogues-ghost" onClick={() => setStep(2)}>← Edit</button>
-            <button className="catalogues-primary" onClick={onDownloadInvoicePdf}>⬇ Download PDF</button>
-            <button 
-              className="catalogues-ghost" 
-              onClick={onSendEmailNotification} 
-              disabled={sendingEmail || !quoteId || quoteId.startsWith("draft-")}
-            >
-              {sendingEmail ? "✉ Dispatching..." : "✉ Send Email"}
-            </button>
-            <button
-              className="catalogues-primary"
-              onClick={() =>
-                router.push(
-                  `/checkout?quoteId=${encodeURIComponent(quoteId || "DRAFT")}&total=${encodeURIComponent(String(grandTotal))}&name=${encodeURIComponent(contactName)}&email=${encodeURIComponent(email)}&organization=${encodeURIComponent(institutionName || organization)}&address=${encodeURIComponent(address)}&state=${encodeURIComponent(stateName)}&pincode=${encodeURIComponent(pincode)}&gst=${encodeURIComponent(gstNumber)}&subject=${encodeURIComponent(selectedRows[0]?.subject || "Subscription")}`
-                )
-              }
-            >
-              ⚡ Pay Now
-            </button>
-          </div>
-          {emailSuccessMsg ? <p className="auth-success" style={{ textAlign: "center", color: "green", marginTop: "10px" }}>{emailSuccessMsg}</p> : null}
-          {error ? <p className="auth-error" style={{ textAlign: "center", color: "red", marginTop: "10px" }}>{error}</p> : null}
-        </section>
-      ) : null}
+            {emailSuccessMsg ? <p className="auth-success" style={{ textAlign: "center", color: "green", marginTop: "10px" }}>{emailSuccessMsg}</p> : null}
+            {error ? <p className="auth-error" style={{ textAlign: "center", color: "red", marginTop: "10px" }}>{error}</p> : null}
+          </section>
+        );
+      })() : null}
     </main>
   );
 }

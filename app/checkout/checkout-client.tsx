@@ -72,16 +72,73 @@ export default function CheckoutClient() {
     };
   }, []);
 
-  const cartSubtotal = useMemo(() => items.reduce((s, i) => s + i.unitPrice * i.qty, 0), [items]);
-  
-  // Secure Pricing Hierarchy:
-  const subtotal = quoteData ? quoteData.subtotal : (queryTotal > 0 ? queryTotal : cartSubtotal);
-  const discount = quoteData ? quoteData.discount : (queryTotal > 0 ? 0 : Math.round((subtotal * discountPercent) / 100));
-  
-  const taxable = subtotal - discount;
-  const cgst = Math.round(taxable * 0.09 * 10) / 10;
-  const sgst = Math.round(taxable * 0.09 * 10) / 10;
-  const total = Math.round((taxable + cgst + sgst) * 10) / 10;
+  // Secure Pricing Hierarchy with identical itemized GST calculations
+  const calculatedFinances = useMemo(() => {
+    // Determine product sources
+    const sourceItems = quoteData ? (quoteData.items || []) : items;
+    
+    // Resolve applied discount percentage
+    let activeDiscountPercent = discountPercent;
+    if (quoteData) {
+      activeDiscountPercent = quoteData.couponPercent || 0;
+    }
+
+    let calcSubtotal = 0;
+    let calcDiscount = 0;
+    let calcTaxable = 0;
+    let calcCgst = 0;
+    let calcSgst = 0;
+
+    sourceItems.forEach((it: any) => {
+      const unitPrice = Number(it.unitPrice || 0);
+      const qty = Number(it.qty || 1);
+      const totalItemPrice = unitPrice * qty;
+      
+      const itemDiscount = (totalItemPrice * activeDiscountPercent) / 100;
+      const itemTaxable = totalItemPrice - itemDiscount;
+
+      const rawPlan = it.plan || it.selectedPlan || "";
+      const isDigital = rawPlan === "ONLINE" || rawPlan === "PRINT_ONLINE";
+      // Direct checkout natively triggers Razorpay (INR)
+      const isINR = quoteData ? (quoteData.currency === "INR") : true;
+      const itemGstRate = (isINR && isDigital) ? 18 : 0;
+
+      const itemGst = itemTaxable * (itemGstRate / 100);
+      const itemCgst = itemGst / 2;
+      const itemSgst = itemGst / 2;
+
+      calcSubtotal += totalItemPrice;
+      calcDiscount += itemDiscount;
+      calcTaxable += itemTaxable;
+      calcCgst += itemCgst;
+      calcSgst += itemSgst;
+    });
+
+    // Guard fallback for direct query parameters
+    if (!quoteData && items.length === 0 && queryTotal > 0) {
+      const fallbackCgst = Math.round(queryTotal * 0.09 * 10) / 10;
+      const fallbackSgst = Math.round(queryTotal * 0.09 * 10) / 10;
+      return {
+        subtotal: queryTotal,
+        discount: 0,
+        taxable: queryTotal,
+        cgst: fallbackCgst,
+        sgst: fallbackSgst,
+        total: Math.round((queryTotal + fallbackCgst + fallbackSgst) * 10) / 10
+      };
+    }
+
+    return {
+      subtotal: Math.round(calcSubtotal * 100) / 100,
+      discount: Math.round(calcDiscount * 100) / 100,
+      taxable: Math.round(calcTaxable * 100) / 100,
+      cgst: Math.round(calcCgst * 100) / 100,
+      sgst: Math.round(calcSgst * 100) / 100,
+      total: Math.round((calcTaxable + calcCgst + calcSgst) * 100) / 100
+    };
+  }, [quoteData, items, discountPercent, queryTotal]);
+
+  const { subtotal, discount, taxable, cgst, sgst, total } = calculatedFinances;
 
   const money = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 

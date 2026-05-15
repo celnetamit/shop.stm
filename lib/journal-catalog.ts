@@ -25,6 +25,10 @@ export type JournalCatalogItem = {
   abbreviation: string | null;
   focusScopeItems: FocusScopeItem[];
   indexing: string | null;
+  indexingLogoImg: string | null;
+  indexingLogoUrl: string | null;
+  icvValue: string | null;
+  icvUrl: string | null;
 };
 
 type CsvRow = Record<string, string>;
@@ -276,7 +280,11 @@ export async function getJournalCatalog(): Promise<JournalCatalogItem[]> {
       focusAndScope: csv?.["Focus and Scope (Keywords)"] || null,
       abbreviation: abbreviation || null,
       focusScopeItems,
-      indexing: r.Indexing || csv?.Indexing || null
+      indexing: r.Indexing || csv?.Indexing || null,
+      indexingLogoImg: csv?.["Indexing Logo Img"] || null,
+      indexingLogoUrl: csv?.["Indexing Logo URL"] || null,
+      icvValue: csv?.["ICV Value"] || null,
+      icvUrl: csv?.["ICV URL"] || null
     };
   });
 }

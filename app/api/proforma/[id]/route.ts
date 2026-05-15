@@ -29,12 +29,39 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       // non-blocking background failure
     }
 
-    const subtotal = quote.items.reduce((sum, i) => sum + i.unitPrice, 0);
-    const discountAmt = Math.round((subtotal * (quote.couponPercent || 0)) / 100);
-    const taxable = subtotal - discountAmt;
-    const cgst = Math.round(taxable * 0.09 * 10) / 10;
-    const sgst = Math.round(taxable * 0.09 * 10) / 10;
-    const total = Math.round((taxable + cgst + sgst) * 10) / 10;
+    const appliedDiscountPercent = quote.couponPercent || 0;
+    let calcSubtotal = 0;
+    let calcDiscountAmt = 0;
+    let calcTaxable = 0;
+    let calcCgst = 0;
+    let calcSgst = 0;
+
+    quote.items.forEach((it) => {
+      const unitPrice = it.unitPrice;
+      const itemDiscount = (unitPrice * appliedDiscountPercent) / 100;
+      const itemTaxable = unitPrice - itemDiscount;
+
+      const isDigital = it.selectedPlan === "ONLINE" || it.selectedPlan === "PRINT_ONLINE";
+      const isINR = quote.currency === "INR";
+      const itemGstRate = isINR && isDigital ? 18 : 0;
+
+      const itemGst = itemTaxable * (itemGstRate / 100);
+      const itemCgst = itemGst / 2;
+      const itemSgst = itemGst / 2;
+
+      calcSubtotal += unitPrice;
+      calcDiscountAmt += itemDiscount;
+      calcTaxable += itemTaxable;
+      calcCgst += itemCgst;
+      calcSgst += itemSgst;
+    });
+
+    const subtotal = Math.round(calcSubtotal * 100) / 100;
+    const discountAmt = Math.round(calcDiscountAmt * 100) / 100;
+    const taxable = Math.round(calcTaxable * 100) / 100;
+    const cgst = Math.round(calcCgst * 100) / 100;
+    const sgst = Math.round(calcSgst * 100) / 100;
+    const total = Math.round((taxable + cgst + sgst) * 100) / 100;
 
     return NextResponse.json({
       ok: true,

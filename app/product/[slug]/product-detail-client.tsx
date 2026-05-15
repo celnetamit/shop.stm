@@ -25,6 +25,10 @@ type Journal = {
   abbreviation: string | null;
   focusScopeItems: FocusScopeItem[];
   indexing: string | null;
+  indexingLogoImg: string | null;
+  indexingLogoUrl: string | null;
+  icvValue: string | null;
+  icvUrl: string | null;
 };
 
 type Props = {
@@ -95,7 +99,6 @@ export default function ProductDetailClient({ journal, domains, description, abo
                 {journal.issn ? `ISSN: ${journal.issn}` : "ISSN: N/A"}
                 {journal.frequency ? ` • ${journal.frequency}` : ""}
               </p>
-              <p className="product-v2-copy">{description}</p>
               {journal.abbreviation && (
                 <a 
                   href={`https://journals.stmjournals.com/editorial-board/${journal.abbreviation.toLowerCase()}`}
@@ -222,7 +225,6 @@ export default function ProductDetailClient({ journal, domains, description, abo
                     <tr><th>Frequency</th><td>{journal.frequency || "N/A"}</td></tr>
                   </tbody>
                 </table>
-                <p>{about}</p>
               </div>
             ) : null}
 
@@ -242,44 +244,148 @@ export default function ProductDetailClient({ journal, domains, description, abo
             ) : null}
 
             {tab === "INDEXING" ? (
-              <div className="product-indexing-container" style={{ padding: "4px" }}>
-                <h3 style={{ fontSize: "1.2rem", color: "#1e293b", fontWeight: "650", marginBottom: "1.25rem", display: "flex", alignItems: "center", gap: "8px" }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                  </svg>
-                  Indexing and Impact Platforms
-                </h3>
-                {journal.indexing ? (
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
-                            {journal.indexing.split(",").map((item, idx) => {
-                              const clean = item.trim();
-                              if (!clean) return null;
-                              return (
-                                <div key={idx} style={{
-                                  padding: "0.75rem 1.25rem",
-                                  background: "#ffffff",
-                                  border: "1.5px solid #f1f5f9",
-                                  borderRadius: "10px",
-                                  fontWeight: "600",
-                                  color: "#334155",
-                                  boxShadow: "0 2px 5px rgba(0,0,0,0.03)",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "8px",
-                                  fontSize: "0.9rem",
-                                  transition: "all 0.2s ease-out"
-                                }}
-                                className="indexing-badge-card">
-                                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#2563eb", flexShrink: 0 }}></span>
-                                  {clean}
-                                </div>
-                              );
-                            })}
+              <div className="product-indexing-container" style={{ padding: "4px", display: "flex", flexDirection: "column", gap: "2rem" }}>
+                
+                {/* Top Stats / Badges Row */}
+                {(journal.icvValue || journal.indexingLogoImg) && (
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+                    gap: "1.5rem",
+                    marginBottom: "0.5rem"
+                  }}>
+                    
+                    {/* ICV KPI Card */}
+                    {journal.icvValue && (
+                      <div style={{
+                        background: "#ffffff",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "8px",
+                        padding: "1.5rem",
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "space-between",
+                        gap: "12px",
+                        position: "relative",
+                        overflow: "hidden"
+                      }}>
+                        {/* Decorative stripe on left */}
+                        <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: "4px", background: "#f59e0b" }}></div>
+                        <div>
+                          <span style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: "700", color: "#64748b" }}>
+                            Impact Score
+                          </span>
+                          <h4 style={{ fontSize: "1.05rem", color: "#0f172a", fontWeight: "700", marginTop: "4px", marginBottom: 0 }}>
+                            Index Copernicus Value (ICV)
+                          </h4>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
+                          <span style={{ fontSize: "2.5rem", fontWeight: "800", color: "#0f172a", fontFamily: "serif", lineHeight: 1 }}>
+                            {journal.icvValue}
+                          </span>
+                        </div>
+                        {journal.icvUrl && (
+                          <a href={journal.icvUrl} target="_blank" rel="noopener noreferrer" style={{
+                            alignSelf: "flex-start",
+                            fontSize: "0.8rem",
+                            fontWeight: "600",
+                            color: "#2563eb",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            textDecoration: "underline"
+                          }}>
+                            Verify Benchmark
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                              <polyline points="15 3 21 3 21 9"></polyline>
+                              <line x1="10" y1="14" x2="21" y2="3"></line>
+                            </svg>
+                          </a>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Indexing Logo Card */}
+                    {journal.indexingLogoImg && (
+                      <div style={{
+                        background: "#ffffff",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "8px",
+                        padding: "1.5rem",
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "flex-start",
+                        justifyContent: "center",
+                        gap: "12px",
+                        minHeight: "160px"
+                      }}>
+                        <span style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: "700", color: "#64748b", marginBottom: "4px", width: "100%" }}>
+                          Certified Partner
+                        </span>
+                        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", width: "100%" }}>
+                          {journal.indexingLogoUrl ? (
+                            <a href={journal.indexingLogoUrl} target="_blank" rel="noopener noreferrer" style={{ display: "block", transition: "transform 0.2s ease" }} className="hover-scale-logo">
+                              <img 
+                                src={journal.indexingLogoImg} 
+                                alt="Indexing Partner Logo" 
+                                style={{ maxHeight: "80px", maxWidth: "100%", objectFit: "contain" }}
+                              />
+                            </a>
+                          ) : (
+                            <img 
+                              src={journal.indexingLogoImg} 
+                              alt="Indexing Partner Logo" 
+                              style={{ maxHeight: "80px", maxWidth: "100%", objectFit: "contain" }}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <p style={{ color: "#64748b", fontStyle: "italic" }}>Indexing information is currently undergoing validation and updates.</p>
                 )}
+
+                <div>
+                  <h3 style={{ fontSize: "1.2rem", color: "#0f172a", fontWeight: "700", marginBottom: "1.25rem", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    Indexing & Citations Network
+                  </h3>
+                  {journal.indexing ? (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+                      {journal.indexing.split(",").map((item, idx) => {
+                        const clean = item.trim();
+                        if (!clean) return null;
+                        return (
+                          <div key={idx} style={{
+                            padding: "0.75rem 1.25rem",
+                            background: "#ffffff",
+                            border: "1.5px solid #e2e8f0",
+                            borderRadius: "6px",
+                            fontWeight: "600",
+                            color: "#334155",
+                            boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            fontSize: "0.875rem",
+                            transition: "all 0.2s ease-out"
+                          }}
+                          className="indexing-badge-card hover-shadow-badge">
+                            <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#2563eb", flexShrink: 0 }}></span>
+                            {clean}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p style={{ color: "#64748b", fontStyle: "italic" }}>Indexing information is currently undergoing validation and updates.</p>
+                  )}
+                </div>
               </div>
             ) : null}
           </section>
