@@ -86,7 +86,8 @@ export default function AdminJournalsPage() {
       issn: "",
       frequency: "",
       Indexing: "",
-      imageUrl: ""
+      imageUrl: "",
+      aboutJournal: ""
     });
     setIsModalOpen(true);
   };
@@ -692,6 +693,18 @@ export default function AdminJournalsPage() {
                       value={editingJournal.Indexing || ""}
                       onChange={(e) => handleFieldChange("Indexing", e.target.value)}
                       placeholder="e.g., Google Scholar, Citefactor, Index Copernicus"
+                    />
+                  </div>
+
+                  <div className="form-group form-full">
+                    <label htmlFor="aboutJournal">About Journal (Description)</label>
+                    <textarea 
+                      id="aboutJournal"
+                      rows={4}
+                      value={editingJournal.aboutJournal || ""}
+                      onChange={(e) => handleFieldChange("aboutJournal", e.target.value)}
+                      placeholder="Provide a detailed description of the journal..."
+                      style={{ resize: "vertical" }}
                     />
                   </div>
 
