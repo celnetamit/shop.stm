@@ -3,6 +3,7 @@ import HomeSections from "@/app/components/home-sections";
 import ScrollReveal from "@/app/components/scroll-reveal";
 import WaterRipples from "@/app/components/water-ripples";
 import InteractiveBookshelf from "@/app/components/interactive-bookshelf";
+import HomeContactQueries from "@/app/components/home-contact-queries";
 
 export const dynamic = "force-dynamic";
 
@@ -270,6 +271,8 @@ export default async function HomePage() {
             </div>
           </section>
         </ScrollReveal>
+
+        <HomeContactQueries />
       </main>
     </>
   );
