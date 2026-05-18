@@ -49,9 +49,11 @@ export default async function OrderInvoicePrintPage({ params }: { params: Promis
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
           body { background: white !important; }
-          .site-header, .site-footer, .no-print { display: none !important; }
+          .site-header, .site-footer, .no-print, .admin-sidebar { display: none !important; }
           .invoice-card { box-shadow: none !important; border: none !important; padding: 0 !important; }
-          main { padding: 0 !important; background: white !important; }
+          .admin-layout { display: block !important; background: white !important; min-height: auto !important; padding: 0 !important; }
+          .admin-content { display: block !important; padding: 0 !important; margin: 0 !important; width: 100% !important; max-width: 100% !important; }
+          main { padding: 0 !important; background: white !important; min-height: auto !important; }
         }
       `}} />
 
