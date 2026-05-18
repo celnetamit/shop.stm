@@ -29,6 +29,7 @@ type Journal = {
   indexingLogoUrl: string | null;
   icvValue: string | null;
   icvUrl: string | null;
+  impactFactor: string | null;
 };
 
 type Props = {
@@ -247,13 +248,49 @@ export default function ProductDetailClient({ journal, domains, description, abo
               <div className="product-indexing-container" style={{ padding: "4px", display: "flex", flexDirection: "column", gap: "2rem" }}>
                 
                 {/* Top Stats / Badges Row */}
-                {(journal.icvValue || journal.indexingLogoImg) && (
+                {(journal.icvValue || journal.indexingLogoImg || journal.impactFactor) && (
                   <div style={{
                     display: "grid",
                     gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
                     gap: "1.5rem",
                     marginBottom: "0.5rem"
                   }}>
+                    
+                    {/* Impact Factor KPI Card */}
+                    {journal.impactFactor && (
+                      <div style={{
+                        background: "#ffffff",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "8px",
+                        padding: "1.5rem",
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "space-between",
+                        gap: "12px",
+                        position: "relative",
+                        overflow: "hidden"
+                      }}>
+                        {/* Decorative stripe on left */}
+                        <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: "4px", background: "#10b981" }}></div>
+                        <div>
+                          <span style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: "700", color: "#64748b" }}>
+                            Quality Metric
+                          </span>
+                          <h4 style={{ fontSize: "1.05rem", color: "#0f172a", fontWeight: "700", marginTop: "4px", marginBottom: 0 }}>
+                            Impact Factor
+                          </h4>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
+                          <span style={{ fontSize: "2.5rem", fontWeight: "800", color: "#0f172a", fontFamily: "serif", lineHeight: 1 }}>
+                            {journal.impactFactor}
+                          </span>
+                        </div>
+                        <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "500" }}>
+                          Based on citation database metrics
+                        </span>
+                      </div>
+                    )}
                     
                     {/* ICV KPI Card */}
                     {journal.icvValue && (

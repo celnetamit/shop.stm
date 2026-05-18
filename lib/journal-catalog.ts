@@ -29,6 +29,7 @@ export type JournalCatalogItem = {
   indexingLogoUrl: string | null;
   icvValue: string | null;
   icvUrl: string | null;
+  impactFactor: string | null;
 };
 
 type CsvRow = Record<string, string>;
@@ -284,7 +285,8 @@ export async function getJournalCatalog(): Promise<JournalCatalogItem[]> {
       indexingLogoImg: csv?.["Indexing Logo Img"] || null,
       indexingLogoUrl: csv?.["Indexing Logo URL"] || null,
       icvValue: csv?.["ICV Value"] || null,
-      icvUrl: csv?.["ICV URL"] || null
+      icvUrl: csv?.["ICV URL"] || null,
+      impactFactor: csv?.["Impact Factor"] || null
     };
   });
 }
