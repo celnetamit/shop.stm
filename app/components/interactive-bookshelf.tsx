@@ -94,8 +94,8 @@ const booksData = [
     pattern: "stripes"
   },
   {
-    title: "SOCIAL SCIENCES",
-    category: "Social Sciences",
+    title: "MANAGEMENT",
+    category: "Management",
     color: "linear-gradient(180deg, #1e293b 0%, #475569 100%)",
     accentColor: "#94a3b8",
     tilt: "1.5deg",
