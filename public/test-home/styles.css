@@ -1,0 +1,216 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg-primary: #050a15;
+  --bg-secondary: #0a1628;
+  --accent-cyan: #0ea5e9;
+  --accent-purple: #6366f1;
+  --accent-blue: #2563eb;
+  --accent-amber: #f59e0b;
+  --accent-emerald: #10b981;
+  --accent-rose: #f43f5e;
+  --accent-indigo: #818cf8;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --glass-bg: rgba(10, 22, 40, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --card-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* Custom Cursor */
+#cursor-dot {
+  position: fixed; top: 0; left: 0; z-index: 10000;
+  width: 8px; height: 8px; background: var(--accent-amber);
+  border-radius: 50%; pointer-events: none;
+  transition: transform 0.1s ease;
+  box-shadow: 0 0 15px var(--accent-amber);
+}
+#cursor-ring {
+  position: fixed; top: 0; left: 0; z-index: 9999;
+  width: 40px; height: 40px;
+  border: 1.5px solid rgba(245, 158, 11, 0.5);
+  border-radius: 50%; pointer-events: none;
+  transition: width 0.3s, height 0.3s, border-color 0.3s, transform 0.15s ease-out;
+}
+#cursor-ring.hovering {
+  width: 60px; height: 60px;
+  border-color: var(--accent-cyan);
+  background: rgba(14, 165, 233, 0.1);
+}
+
+/* Canvas */
+#three-canvas {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 0; pointer-events: none;
+}
+
+/* Navigation */
+.nav-bar {
+  position: fixed; top: 0; left: 0; width: 100%; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 15px 50px;
+  background: rgba(5, 10, 21, 0.85);
+  backdrop-filter: blur(25px);
+  border-bottom: 1px solid var(--glass-border);
+}
+.nav-logo {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 24px; font-weight: 800;
+  background: linear-gradient(135deg, var(--accent-amber), var(--accent-rose), var(--accent-blue));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  letter-spacing: -0.02em;
+}
+.nav-links { display: flex; gap: 32px; list-style: none; align-items: center; }
+.nav-links a {
+  color: var(--text-secondary); text-decoration: none;
+  font-size: 14px; font-weight: 600; transition: color 0.3s;
+}
+.nav-links a:hover { color: var(--accent-amber); }
+
+.nav-actions { display: flex; gap: 20px; align-items: center; }
+.cart-icon {
+  position: relative; color: var(--text-primary); text-decoration: none; font-size: 20px;
+}
+.cart-badge {
+  position: absolute; -10px; right: -10px;
+  background: var(--accent-rose); color: white;
+  font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 50px;
+}
+
+/* Hero Section */
+.hero {
+  position: relative; z-index: 2;
+  min-height: 100vh; display: flex;
+  align-items: center; justify-content: center;
+  padding: 120px 50px 80px;
+  background: radial-gradient(circle at 50% 50%, rgba(37, 99, 235, 0.05) 0%, transparent 70%);
+}
+.hero-content { text-align: center; max-width: 900px; }
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 20px; border-radius: 50px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  font-size: 12px; font-weight: 700; color: var(--accent-amber);
+  margin-bottom: 24px;
+}
+.hero h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(40px, 7vw, 90px);
+  font-weight: 800; line-height: 1; margin-bottom: 24px;
+}
+.gradient-text {
+  background: linear-gradient(135deg, var(--accent-amber), var(--accent-rose), var(--accent-indigo));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-size: 200% auto; animation: shine 5s linear infinite;
+}
+@keyframes shine {
+  to { background-position: 200% center; }
+}
+
+/* E-commerce Product Grid */
+.product-section { padding: 80px 50px; position: relative; z-index: 2; }
+.product-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px; margin-top: 40px;
+}
+.product-card {
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+  border-radius: 20px; overflow: hidden; transition: all 0.4s;
+  position: relative; display: flex; flexDirection: column;
+}
+.product-card:hover {
+  transform: translateY(-10px);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+.product-image {
+  height: 240px; background: #111; position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.product-badge {
+  position: absolute; top: 15px; left: 15px;
+  background: var(--accent-rose); color: white;
+  padding: 4px 12px; border-radius: 50px; font-size: 11px; font-weight: 800;
+}
+.product-info { padding: 25px; flex-grow: 1; display: flex; flex-direction: column; }
+.product-category { font-size: 12px; color: var(--accent-cyan); font-weight: 700; margin-bottom: 8px; text-transform: uppercase; }
+.product-title { font-size: 18px; font-weight: 700; margin-bottom: 12px; line-height: 1.4; height: 50px; overflow: hidden; }
+.product-price { display: flex; align-items: baseline; gap: 10px; margin-bottom: 20px; }
+.current-price { font-size: 24px; font-weight: 800; color: #fff; }
+.old-price { font-size: 16px; color: var(--text-secondary); text-decoration: line-through; }
+
+.add-to-cart {
+  width: 100%; padding: 14px; border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-indigo));
+  color: white; border: none; font-weight: 700; font-size: 14px;
+  cursor: pointer; transition: all 0.3s; margin-top: auto;
+}
+.add-to-cart:hover {
+  filter: brightness(1.2); transform: scale(1.02);
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+}
+
+/* Discipline Cards - More Colorful */
+.disc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+.disc-card {
+  padding: 30px; border-radius: 20px; text-align: center;
+  border: 1px solid var(--glass-border); background: var(--glass-bg);
+  transition: all 0.3s; text-decoration: none;
+}
+.disc-card.blue { border-bottom: 4px solid var(--accent-blue); }
+.disc-card.amber { border-bottom: 4px solid var(--accent-amber); }
+.disc-card.emerald { border-bottom: 4px solid var(--accent-emerald); }
+.disc-card.rose { border-bottom: 4px solid var(--accent-rose); }
+.disc-card.indigo { border-bottom: 4px solid var(--accent-indigo); }
+
+.disc-card:hover { transform: translateY(-5px); background: rgba(255,255,255,0.05); }
+.disc-icon { font-size: 40px; margin-bottom: 15px; display: block; }
+
+/* Stats Row - Vibrant */
+.vibrant-stats {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 30px; margin-top: 60px;
+}
+.vibrant-stat-item {
+  padding: 30px; border-radius: 24px; border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.02);
+}
+.vibrant-stat-item.cyan { box-shadow: inset 0 0 20px rgba(14, 165, 233, 0.05); }
+.vibrant-stat-item.amber { box-shadow: inset 0 0 20px rgba(245, 158, 11, 0.05); }
+.vibrant-stat-item.rose { box-shadow: inset 0 0 20px rgba(244, 63, 94, 0.05); }
+
+/* Buttons */
+.btn-primary {
+  padding: 16px 40px; border-radius: 16px; font-weight: 800;
+  background: linear-gradient(135deg, var(--accent-amber), var(--accent-rose));
+  color: white; border: none; text-decoration: none;
+  box-shadow: 0 15px 30px rgba(245, 158, 11, 0.2);
+}
+
+/* Footer - Colorful links */
+.footer-link-group a:nth-child(2) { color: var(--accent-cyan); }
+.footer-link-group a:nth-child(3) { color: var(--accent-emerald); }
+.footer-link-group a:nth-child(4) { color: var(--accent-amber); }
+
+/* Animations */
+.reveal { opacity: 0; transform: translateY(30px); transition: 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+@media (max-width: 768px) {
+  .nav-bar { padding: 15px 20px; }
+  .product-section { padding: 60px 20px; }
+  .hero { padding: 100px 20px; }
+}

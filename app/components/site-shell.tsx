@@ -20,6 +20,33 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
   const hideChrome = pathname.startsWith("/checkout") || pathname.startsWith("/payment");
   const count = items.reduce((s, i) => s + i.qty, 0);
 
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("stm-theme") as "light" | "dark" | null;
+    const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const initialTheme = savedTheme || (systemPrefersDark ? "dark" : "light");
+    setTheme(initialTheme);
+    
+    if (initialTheme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = theme === "light" ? "dark" : "light";
+    setTheme(nextTheme);
+    localStorage.setItem("stm-theme", nextTheme);
+    
+    if (nextTheme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  };
+
   useEffect(() => {
     let active = true;
     fetch("/api/auth/me", { cache: "no-store" })
@@ -98,7 +125,7 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
   return (
     <>
       {!hideChrome ? (
-        <header className="site-header site-main-header" style={{ borderBottom: "1px solid #E2E8F0", position: "sticky", top: 0, zIndex: 50, background: "rgba(255, 255, 255, 0.95)", backdropFilter: "blur(10px)" }}>
+        <header className="site-header site-main-header" style={{ borderBottom: "1px solid var(--line)", position: "sticky", top: 0, zIndex: 50, background: "var(--glass-bg)", backdropFilter: "var(--glass-blur)", transition: "background 0.3s, border-color 0.3s" }}>
           <div className="site-topbar" style={{
             maxWidth: "1300px",
             margin: "0 auto",
@@ -114,7 +141,7 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
               fontWeight: "900",
               fontSize: "26px",
               letterSpacing: "0.02em",
-              color: "#0F172A",
+              color: "var(--text)",
               textDecoration: "none",
               display: "flex",
               alignItems: "center",
@@ -134,42 +161,43 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
                   width: "100%",
                   padding: "12px 20px 12px 44px",
                   borderRadius: "9999px",
-                  border: "1px solid #E2E8F0",
+                  border: "1px solid var(--line)",
                   outline: "none",
                   fontSize: "14px",
                   fontFamily: "Outfit, sans-serif",
                   transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                  background: "#F8FAFC",
+                  background: "var(--surface-soft)",
+                  color: "var(--text)",
                   boxShadow: "inset 0 2px 4px 0 rgba(0, 0, 0, 0.02)"
                 }}
                 onFocus={(e) => {
-                  e.currentTarget.style.borderColor = "#3B82F6";
-                  e.currentTarget.style.boxShadow = "0 0 0 4px rgba(59, 130, 246, 0.1)";
-                  e.currentTarget.style.background = "#ffffff";
+                  e.currentTarget.style.borderColor = "var(--brand)";
+                  e.currentTarget.style.boxShadow = "0 0 0 4px var(--accent-glow)";
+                  e.currentTarget.style.background = "var(--surface)";
                 }}
                 onBlur={(e) => {
                   setTimeout(() => {
                     if (e.target) {
-                      e.target.style.borderColor = "#E2E8F0";
+                      e.target.style.borderColor = "var(--line)";
                       e.target.style.boxShadow = "inset 0 2px 4px 0 rgba(0, 0, 0, 0.02)";
-                      e.target.style.background = "#F8FAFC";
+                      e.target.style.background = "var(--surface-soft)";
                     }
                   }, 200);
                 }}
               />
-              <span style={{ position: "absolute", left: "18px", top: "50%", transform: "translateY(-50%)", color: "#94A3B8", fontSize: "16px" }}>🔍</span>
+              <span style={{ position: "absolute", left: "18px", top: "50%", transform: "translateY(-50%)", color: "var(--muted)", fontSize: "16px" }}>🔍</span>
               {searchQuery.length >= 2 && (
-                <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, right: 0, background: "white", border: "1px solid #E2E8F0", borderRadius: "12px", boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)", zIndex: 100, maxHeight: "400px", overflowY: "auto" }}>
+                <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, right: 0, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "12px", boxShadow: "var(--shadow-md)", zIndex: 100, maxHeight: "400px", overflowY: "auto" }}>
                   {isSearching ? (
-                    <div style={{ padding: "16px", textAlign: "center", color: "#64748B", fontSize: "14px", fontFamily: "Outfit, sans-serif" }}>Searching...</div>
+                    <div style={{ padding: "16px", textAlign: "center", color: "var(--muted)", fontSize: "14px", fontFamily: "Outfit, sans-serif" }}>Searching...</div>
                   ) : searchResults.length === 0 ? (
-                    <div style={{ padding: "16px", textAlign: "center", color: "#64748B", fontSize: "14px", fontFamily: "Outfit, sans-serif" }}>No results found.</div>
+                    <div style={{ padding: "16px", textAlign: "center", color: "var(--muted)", fontSize: "14px", fontFamily: "Outfit, sans-serif" }}>No results found.</div>
                   ) : (
                     <div style={{ padding: "8px" }}>
                       {searchResults.map((res: any) => (
-                        <Link key={res.slug} href={`/product/${res.slug}`} onClick={() => setSearchQuery("")} style={{ display: "block", padding: "10px 12px", textDecoration: "none", color: "#1E293B", borderRadius: "8px", transition: "background 0.2s", fontFamily: "Outfit, sans-serif" }} onMouseOver={e => e.currentTarget.style.background = "#F1F5F9"} onMouseOut={e => e.currentTarget.style.background = "transparent"}>
+                        <Link key={res.slug} href={`/product/${res.slug}`} onClick={() => setSearchQuery("")} style={{ display: "block", padding: "10px 12px", textDecoration: "none", color: "var(--text)", borderRadius: "8px", transition: "background 0.2s", fontFamily: "Outfit, sans-serif" }} onMouseOver={e => e.currentTarget.style.background = "var(--surface-soft)"} onMouseOut={e => e.currentTarget.style.background = "transparent"}>
                           <div style={{ fontSize: "14px", fontWeight: "600", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{res.journalName}</div>
-                          <div style={{ fontSize: "12px", color: "#64748B" }}>{res.subject} {res.issn ? `• ISSN: ${res.issn}` : ""}</div>
+                          <div style={{ fontSize: "12px", color: "var(--muted)" }}>{res.subject} {res.issn ? `• ISSN: ${res.issn}` : ""}</div>
                         </Link>
                       ))}
                     </div>
@@ -179,31 +207,66 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
             </div>
 
             <div className="site-utils" style={{ display: "flex", gap: "20px", alignItems: "center" }}>
+              <button
+                onClick={toggleTheme}
+                className="transition-smooth"
+                aria-label="Toggle theme"
+                style={{
+                  background: "var(--surface-soft)",
+                  border: "1px solid var(--line)",
+                  color: "var(--text)",
+                  borderRadius: "50%",
+                  width: "38px",
+                  height: "38px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  fontSize: "18px",
+                  boxShadow: "var(--shadow-sm)",
+                  padding: "0",
+                  outline: "none",
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "scale(1.08) rotate(15deg)";
+                  e.currentTarget.style.borderColor = "var(--brand)";
+                  e.currentTarget.style.boxShadow = "0 0 12px var(--accent-glow)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "scale(1) rotate(0deg)";
+                  e.currentTarget.style.borderColor = "var(--line)";
+                  e.currentTarget.style.boxShadow = "var(--shadow-sm)";
+                }}
+              >
+                {theme === "light" ? "🌙" : "☀️"}
+              </button>
+
               {user ? (
                 <div style={{ position: "relative" }} ref={accountDropdownRef}>
                   <button 
                     onClick={() => setOpenDropdown(openDropdown === "account" ? null : "account")}
-                    style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", fontFamily: "Outfit, sans-serif", color: "#334155", fontWeight: "600", fontSize: "14px" }}
+                    style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", fontFamily: "Outfit, sans-serif", color: "var(--text)", fontWeight: "600", fontSize: "14px" }}
                   >
-                    <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#E2E8F0", display: "flex", alignItems: "center", justifyContent: "center", color: "#475569", fontWeight: "bold" }}>
+                    <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "var(--surface-soft)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text)", fontWeight: "bold" }}>
                       {user.email.charAt(0).toUpperCase()}
                     </div>
                     My Account ▾
                   </button>
                   {openDropdown === "account" && (
-                    <div style={{ position: "absolute", top: "calc(100% + 12px)", right: 0, width: "220px", background: "white", border: "1px solid #E2E8F0", borderRadius: "12px", boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)", padding: "16px", display: "flex", flexDirection: "column", gap: "10px", zIndex: 100 }}>
-                      <p style={{ margin: 0, color: "#64748B", fontSize: "12px", borderBottom: "1px solid #E2E8F0", paddingBottom: "8px" }}>Signed in as<br/><strong style={{ color: "#0F172A", fontSize: "13px" }}>{user.email}</strong></p>
-                      <Link href="/account" onClick={() => setOpenDropdown(null)} style={{ color: "#3B82F6", textDecoration: "none", fontSize: "13px", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}><span>📊</span> Dashboard</Link>
-                      {user.role === "ADMIN" && <Link href="/admin" onClick={() => setOpenDropdown(null)} style={{ color: "#8B5CF6", textDecoration: "none", fontSize: "13px", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}><span>⚙️</span> Admin Panel</Link>}
-                      <a href="/api/auth/logout" style={{ color: "#EF4444", textDecoration: "none", fontSize: "13px", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px", marginTop: "4px", borderTop: "1px solid #F1F5F9", paddingTop: "10px" }}><span>🚪</span> Logout</a>
+                    <div style={{ position: "absolute", top: "calc(100% + 12px)", right: 0, width: "220px", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "12px", boxShadow: "var(--shadow-md)", padding: "16px", display: "flex", flexDirection: "column", gap: "10px", zIndex: 100 }}>
+                      <p style={{ margin: 0, color: "var(--muted)", fontSize: "12px", borderBottom: "1px solid var(--line)", paddingBottom: "8px" }}>Signed in as<br/><strong style={{ color: "var(--text)", fontSize: "13px" }}>{user.email}</strong></p>
+                      <Link href="/account" onClick={() => setOpenDropdown(null)} style={{ color: "var(--brand)", textDecoration: "none", fontSize: "13px", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}><span>📊</span> Dashboard</Link>
+                      {user.role === "ADMIN" && <Link href="/admin" onClick={() => setOpenDropdown(null)} style={{ color: "var(--accent)", textDecoration: "none", fontSize: "13px", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}><span>⚙️</span> Admin Panel</Link>}
+                      <a href="/api/auth/logout" style={{ color: "#EF4444", textDecoration: "none", fontSize: "13px", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px", marginTop: "4px", borderTop: "1px solid var(--line)", paddingTop: "10px" }}><span>🚪</span> Logout</a>
                     </div>
                   )}
                 </div>
               ) : (
-                <Link href="/login" style={{ fontSize: "14px", fontWeight: "600", color: "#334155", textDecoration: "none", fontFamily: "Outfit, sans-serif" }}>Login</Link>
+                <Link href="/login" style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)", textDecoration: "none", fontFamily: "Outfit, sans-serif" }}>Login</Link>
               )}
               <Link href="/cart" style={{
-                background: "#0F172A",
+                background: "var(--brand)",
                 color: "#ffffff",
                 padding: "10px 20px",
                 borderRadius: "9999px",
@@ -223,48 +286,48 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
                 <svg style={{ width: "16px", height: "16px" }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
-                Cart {count > 0 && <span style={{ background: "#F59E0B", color: "white", borderRadius: "50%", width: "20px", height: "20px", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "11px", marginLeft: "4px" }}>{count}</span>}
+                Cart {count > 0 && <span style={{ background: "var(--accent)", color: "white", borderRadius: "50%", width: "20px", height: "20px", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "11px", marginLeft: "4px" }}>{count}</span>}
               </Link>
             </div>
           </div>
           
-          <div className="site-header-inner" style={{ borderTop: "1px solid #E2E8F0", padding: "0" }}>
+          <div className="site-header-inner" style={{ borderTop: "1px solid var(--line)", padding: "0" }}>
             <nav className="site-nav" style={{ maxWidth: "1300px", margin: "0 auto", padding: "0 20px", display: "flex", gap: "32px", justifyContent: "center", alignItems: "center", minHeight: "50px" }}>
-              <Link href="/" style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", color: "#475569", textDecoration: "none", fontFamily: "Outfit, sans-serif", transition: "color 0.2s" }} onMouseOver={e => e.currentTarget.style.color = "#3B82F6"} onMouseOut={e => e.currentTarget.style.color = "#475569"}>Home</Link>
-              <Link href="/about-us" style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", color: "#475569", textDecoration: "none", fontFamily: "Outfit, sans-serif", transition: "color 0.2s" }} onMouseOver={e => e.currentTarget.style.color = "#3B82F6"} onMouseOut={e => e.currentTarget.style.color = "#475569"}>About Us</Link>
+              <Link href="/" style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text)", textDecoration: "none", fontFamily: "Outfit, sans-serif", transition: "color 0.2s" }} onMouseOver={e => e.currentTarget.style.color = "var(--brand)"} onMouseOut={e => e.currentTarget.style.color = "var(--text)"}>Home</Link>
+              <Link href="/about-us" style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text)", textDecoration: "none", fontFamily: "Outfit, sans-serif", transition: "color 0.2s" }} onMouseOver={e => e.currentTarget.style.color = "var(--brand)"} onMouseOut={e => e.currentTarget.style.color = "var(--text)"}>About Us</Link>
               
               {/* Disciplines Clickable Dropdown */}
               <div style={{ position: "relative", height: "100%", display: "flex", alignItems: "center" }} ref={disciplinesDropdownRef}>
                 <button 
                   onClick={() => setOpenDropdown(openDropdown === "disciplines" ? null : "disciplines")}
-                  style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", color: openDropdown === "disciplines" ? "#3B82F6" : "#475569", textDecoration: "none", fontFamily: "Outfit, sans-serif", display: "inline-flex", alignItems: "center", gap: "6px", background: "none", border: "none", cursor: "pointer", transition: "color 0.2s", padding: 0 }}
-                  onMouseOver={e => e.currentTarget.style.color = "#3B82F6"} 
-                  onMouseOut={e => e.currentTarget.style.color = openDropdown === "disciplines" ? "#3B82F6" : "#475569"}
+                  style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", color: openDropdown === "disciplines" ? "var(--brand)" : "var(--text)", textDecoration: "none", fontFamily: "Outfit, sans-serif", display: "inline-flex", alignItems: "center", gap: "6px", background: "none", border: "none", cursor: "pointer", transition: "color 0.2s", padding: 0 }}
+                  onMouseOver={e => e.currentTarget.style.color = "var(--brand)"} 
+                  onMouseOut={e => e.currentTarget.style.color = openDropdown === "disciplines" ? "var(--brand)" : "var(--text)"}
                 >
                   Browse Disciplines
                   <span style={{ fontSize: "10px", transform: openDropdown === "disciplines" ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>▼</span>
                 </button>
                 
                 {openDropdown === "disciplines" && (
-                  <div style={{ position: "absolute", top: "100%", left: "50%", transform: "translateX(-50%)", width: "900px", background: "white", border: "1px solid #E2E8F0", borderRadius: "16px", boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)", padding: "24px", zIndex: 100 }}>
+                  <div style={{ position: "absolute", top: "100%", left: "50%", transform: "translateX(-50%)", width: "900px", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "16px", boxShadow: "var(--shadow-md)", padding: "24px", zIndex: 100 }}>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
                       {domains.map((d) => (
-                        <Link key={d.domain} href={`/product-category/journals/${encodeURIComponent(d.domain)}`} onClick={() => setOpenDropdown(null)} style={{ padding: "8px 12px", borderRadius: "8px", textDecoration: "none", color: "#1E293B", fontSize: "14px", fontWeight: "500", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#F8FAFC", transition: "all 0.2s" }} onMouseOver={e => {e.currentTarget.style.background = "#EFF6FF"; e.currentTarget.style.color = "#2563EB";}} onMouseOut={e => {e.currentTarget.style.background = "#F8FAFC"; e.currentTarget.style.color = "#1E293B";}}>
-                          {d.domain} <span style={{ fontSize: "12px", color: "#64748B", background: "white", padding: "2px 8px", borderRadius: "99px" }}>{d.count}</span>
+                        <Link key={d.domain} href={`/product-category/journals/${encodeURIComponent(d.domain)}`} onClick={() => setOpenDropdown(null)} style={{ padding: "8px 12px", borderRadius: "8px", textDecoration: "none", color: "var(--text)", fontSize: "14px", fontWeight: "500", display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--surface-soft)", transition: "all 0.2s" }} onMouseOver={e => {e.currentTarget.style.background = "var(--accent-glow)"; e.currentTarget.style.color = "var(--brand)";}} onMouseOut={e => {e.currentTarget.style.background = "var(--surface-soft)"; e.currentTarget.style.color = "var(--text)";}}>
+                          {d.domain} <span style={{ fontSize: "12px", color: "var(--muted)", background: "var(--surface)", padding: "2px 8px", borderRadius: "99px" }}>{d.count}</span>
                         </Link>
                       ))}
                     </div>
                     <div style={{ marginTop: "24px", textAlign: "center" }}>
-                      <Link href="/catalogues-list" onClick={() => setOpenDropdown(null)} style={{ background: "#0F172A", color: "white", padding: "10px 24px", borderRadius: "99px", textDecoration: "none", fontSize: "14px", fontWeight: "bold", display: "inline-block" }}>View Full Catalog</Link>
+                      <Link href="/catalogues-list" onClick={() => setOpenDropdown(null)} style={{ background: "var(--brand)", color: "white", padding: "10px 24px", borderRadius: "99px", textDecoration: "none", fontSize: "14px", fontWeight: "bold", display: "inline-block" }}>View Full Catalog</Link>
                     </div>
                   </div>
                 )}
               </div>
 
-              <Link href="/books" style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", color: "#475569", textDecoration: "none", fontFamily: "Outfit, sans-serif", transition: "color 0.2s" }} onMouseOver={e => e.currentTarget.style.color = "#3B82F6"} onMouseOut={e => e.currentTarget.style.color = "#475569"}>Books</Link>
-              <Link href="/for-librarians" style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", color: "#475569", textDecoration: "none", fontFamily: "Outfit, sans-serif", transition: "color 0.2s" }} onMouseOver={e => e.currentTarget.style.color = "#3B82F6"} onMouseOut={e => e.currentTarget.style.color = "#475569"}>For Librarians</Link>
-              <Link href="/for-agencies" style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", color: "#475569", textDecoration: "none", fontFamily: "Outfit, sans-serif", transition: "color 0.2s" }} onMouseOver={e => e.currentTarget.style.color = "#3B82F6"} onMouseOut={e => e.currentTarget.style.color = "#475569"}>For Agencies</Link>
-              <Link href="/get-proforma-invoice-quote" style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", color: "#F59E0B", textDecoration: "none", fontFamily: "Outfit, sans-serif", transition: "color 0.2s" }} onMouseOver={e => e.currentTarget.style.color = "#D97706"} onMouseOut={e => e.currentTarget.style.color = "#F59E0B"}>Get Proforma/Quote</Link>
+              <Link href="/books" style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text)", textDecoration: "none", fontFamily: "Outfit, sans-serif", transition: "color 0.2s" }} onMouseOver={e => e.currentTarget.style.color = "var(--brand)"} onMouseOut={e => e.currentTarget.style.color = "var(--text)"}>Books</Link>
+              <Link href="/for-librarians" style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text)", textDecoration: "none", fontFamily: "Outfit, sans-serif", transition: "color 0.2s" }} onMouseOver={e => e.currentTarget.style.color = "var(--brand)"} onMouseOut={e => e.currentTarget.style.color = "var(--text)"}>For Librarians</Link>
+              <Link href="/for-agencies" style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text)", textDecoration: "none", fontFamily: "Outfit, sans-serif", transition: "color 0.2s" }} onMouseOver={e => e.currentTarget.style.color = "var(--brand)"} onMouseOut={e => e.currentTarget.style.color = "var(--text)"}>For Agencies</Link>
+              <Link href="/get-proforma-invoice-quote" style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--accent)", textDecoration: "none", fontFamily: "Outfit, sans-serif", transition: "color 0.2s" }} onMouseOver={e => e.currentTarget.style.color = "var(--accent-glow)"} onMouseOut={e => e.currentTarget.style.color = "var(--accent)"}>Get Proforma/Quote</Link>
             </nav>
           </div>
         </header>

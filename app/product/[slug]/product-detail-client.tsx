@@ -59,6 +59,21 @@ export default function ProductDetailClient({ journal, domains, description, abo
     return journal.combinedInr;
   }, [plan, journal]);
 
+  const hsnCode = useMemo(() => {
+    if (plan === "ONLINE") return "998431";
+    const lowerName = (journal.journalName || "").toLowerCase();
+    const lowerSubject = (journal.subject || "").toLowerCase();
+    const isBook =
+      lowerSubject.includes("book") ||
+      lowerSubject.includes("monograph") ||
+      lowerSubject.includes("nstc") ||
+      lowerName.includes("book") ||
+      lowerName.includes("monograph") ||
+      lowerName.includes("handbook") ||
+      lowerName.includes("textbook");
+    return isBook ? "4901" : "4902";
+  }, [plan, journal]);
+
   const selectedItemId = `${journal.slug}-${plan}-${selectedYear}-${selectedIssue}`;
   const selectedQty = items
     .filter((it) => it.id === selectedItemId)
@@ -99,6 +114,7 @@ export default function ProductDetailClient({ journal, domains, description, abo
               <p className="product-v2-meta">
                 {journal.issn ? `ISSN: ${journal.issn}` : "ISSN: N/A"}
                 {journal.frequency ? ` • ${journal.frequency}` : ""}
+                {` • HSN/SAC: ${hsnCode}`}
               </p>
               {journal.abbreviation && (
                 <a 
@@ -174,7 +190,12 @@ export default function ProductDetailClient({ journal, domains, description, abo
                 </div>
               </div>
 
-              <div className="product-v2-current-price">Selected Price: ₹{price.toLocaleString("en-IN")}</div>
+              <div className="product-v2-current-price" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px" }}>
+                <span>Selected Price: ₹{price.toLocaleString("en-IN")}</span>
+                <span style={{ fontSize: "14px", fontWeight: "normal", color: "#64748B", background: "#f1f5f9", padding: "4px 8px", borderRadius: "6px" }}>
+                  HSN/SAC: {hsnCode}
+                </span>
+              </div>
               <div className="product-v2-cart-actions">
                 <button
                   type="button"
@@ -224,6 +245,7 @@ export default function ProductDetailClient({ journal, domains, description, abo
                     <tr><th>ISSN</th><td>{journal.issn || "N/A"}</td></tr>
                     <tr><th>Started Since</th><td>{journal.startedSince || "N/A"}</td></tr>
                     <tr><th>Frequency</th><td>{journal.frequency || "N/A"}</td></tr>
+                    <tr><th>HSN/SAC Code</th><td style={{ fontWeight: "600", color: "var(--brand)" }}>{hsnCode} (Based on selected plan)</td></tr>
                   </tbody>
                 </table>
               </div>

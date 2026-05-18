@@ -6,6 +6,27 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import PrintButton from "@/app/components/print-button";
 
+function isBookProduct(journalName: string, subject: string): boolean {
+  const lowerName = journalName.toLowerCase();
+  const lowerSubject = subject.toLowerCase();
+  return (
+    lowerSubject.includes("book") ||
+    lowerSubject.includes("monograph") ||
+    lowerSubject.includes("nstc") ||
+    lowerName.includes("book") ||
+    lowerName.includes("monograph") ||
+    lowerName.includes("handbook") ||
+    lowerName.includes("textbook") ||
+    lowerName.includes("reference book")
+  );
+}
+
+function getHsnCode(journalName: string, subject: string, plan: "PRINT" | "ONLINE" | "PRINT_ONLINE"): string {
+  if (plan === "ONLINE") return "998431";
+  const isBook = isBookProduct(journalName, subject);
+  return isBook ? "4901" : "4902";
+}
+
 export default async function ProformaPrintPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getCurrentSession();
   if (!session) redirect("/login");
@@ -75,6 +96,7 @@ export default async function ProformaPrintPage({ params }: { params: Promise<{ 
             <tr>
               <th style={{ padding: "12px", textAlign: "left", color: "#334155", fontSize: "14px" }}>S.No</th>
               <th style={{ padding: "12px", textAlign: "left", color: "#334155", fontSize: "14px" }}>Item Description</th>
+              <th style={{ padding: "12px", textAlign: "center", color: "#334155", fontSize: "14px" }}>HSN/SAC</th>
               <th style={{ padding: "12px", textAlign: "center", color: "#334155", fontSize: "14px" }}>Plan</th>
               <th style={{ padding: "12px", textAlign: "right", color: "#334155", fontSize: "14px" }}>Price ({quote.currency})</th>
             </tr>
@@ -86,6 +108,9 @@ export default async function ProformaPrintPage({ params }: { params: Promise<{ 
                 <td style={{ padding: "12px", color: "#0F172A", fontSize: "14px", fontWeight: "500" }}>
                   {item.journalName}
                   <div style={{ color: "#64748B", fontSize: "12px", marginTop: "4px" }}>{item.subject} {item.issn ? `| ISSN: ${item.issn}` : ''}</div>
+                </td>
+                <td style={{ padding: "12px", textAlign: "center", color: "#475569", fontSize: "14px" }}>
+                  {getHsnCode(item.journalName, item.subject, item.selectedPlan)}
                 </td>
                 <td style={{ padding: "12px", textAlign: "center", color: "#475569", fontSize: "14px" }}>{item.selectedPlan}</td>
                 <td style={{ padding: "12px", textAlign: "right", color: "#0F172A", fontSize: "14px" }}>{item.unitPrice.toLocaleString()}</td>

@@ -28,24 +28,25 @@ export default function HomeSections({ domains, journals }: { domains: DomainLin
     <section className="home-sections" style={{ marginTop: "30px", display: "grid", gap: "40px" }}>
       {/* Browse by Discipline */}
       <div className="home-section-block" style={{
-        background: "#ffffff",
-        border: "1px solid #E2E8F0",
-        borderRadius: "8px",
+        background: "var(--surface)",
+        border: "1px solid var(--line)",
+        borderRadius: "12px",
         padding: "40px 24px",
-        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02)"
+        boxShadow: "var(--shadow-md)",
+        transition: "background 0.3s, border-color 0.3s"
       }}>
         <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "32px" }}>
           <h2 style={{
             fontFamily: "'Playfair Display', serif",
             fontSize: "30px",
-            color: "#0F172A",
+            color: "var(--text)",
             fontWeight: "700",
             margin: 0
           }}>Browse by Discipline</h2>
           <p style={{
             fontFamily: "Outfit, sans-serif",
             fontSize: "15px",
-            color: "#64748B",
+            color: "var(--muted)",
             margin: 0
           }}>Explore top research categories shaping the future.</p>
         </div>
@@ -104,7 +105,7 @@ export default function HomeSections({ domains, journals }: { domains: DomainLin
                     overflow: "hidden",
                     aspectRatio: "16/10",
                     display: "block",
-                    boxShadow: "0 4px 12px rgba(15, 23, 42, 0.06)"
+                    boxShadow: "var(--shadow-sm)"
                   }}
                 >
                   <img 
@@ -122,7 +123,7 @@ export default function HomeSections({ domains, journals }: { domains: DomainLin
                   <div style={{
                     position: "absolute",
                     inset: 0,
-                    background: "linear-gradient(to top, rgba(15, 23, 42, 0.8) 0%, rgba(15, 23, 42, 0.35) 40%, rgba(15, 23, 42, 0.1) 100%)",
+                    background: "linear-gradient(to top, rgba(15, 23, 42, 0.85) 0%, rgba(15, 23, 42, 0.4) 40%, rgba(15, 23, 42, 0.1) 100%)",
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "flex-end",
@@ -149,14 +150,14 @@ export default function HomeSections({ domains, journals }: { domains: DomainLin
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                   <div style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: "6px" }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: "6px" }}>
                       <polygon points="12,3 2,21 22,21" />
                     </svg>
                     <p style={{
                       margin: 0,
                       fontSize: "13px",
                       lineHeight: "1.5",
-                      color: "#475569",
+                      color: "var(--muted)",
                       fontFamily: "Outfit, sans-serif"
                     }}>
                       &ldquo;{item.quote}&rdquo;
@@ -169,7 +170,7 @@ export default function HomeSections({ domains, journals }: { domains: DomainLin
                       display: "inline-flex",
                       alignItems: "center",
                       gap: "6px",
-                      color: "#2563EB",
+                      color: "var(--brand)",
                       fontSize: "13.5px",
                       fontWeight: "700",
                       textDecoration: "none",
@@ -177,12 +178,12 @@ export default function HomeSections({ domains, journals }: { domains: DomainLin
                       width: "fit-content"
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.color = "#1D4ED8";
+                      e.currentTarget.style.color = "var(--accent)";
                       const icon = e.currentTarget.querySelector(".arrow-icon") as HTMLElement;
                       if (icon) icon.style.transform = "translateX(4px)";
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.color = "#2563EB";
+                      e.currentTarget.style.color = "var(--brand)";
                       const icon = e.currentTarget.querySelector(".arrow-icon") as HTMLElement;
                       if (icon) icon.style.transform = "translateX(0)";
                     }}
@@ -203,14 +204,14 @@ export default function HomeSections({ domains, journals }: { domains: DomainLin
         <div style={{
           marginTop: "35px",
           textAlign: "center",
-          borderTop: "1px dashed #E2E8F0",
+          borderTop: "1px dashed var(--line)",
           paddingTop: "20px"
         }}>
-          <p style={{ fontFamily: "Outfit, sans-serif", fontSize: "13.5px", color: "#64748B", margin: 0 }}>
+          <p style={{ fontFamily: "Outfit, sans-serif", fontSize: "13.5px", color: "var(--muted)", margin: 0 }}>
             Looking for other academic fields?{" "}
             <a 
               href="/catalogues-list" 
-              style={{ color: "#2563EB", fontWeight: "700", textDecoration: "none" }}
+              style={{ color: "var(--brand)", fontWeight: "700", textDecoration: "none" }}
               onMouseEnter={(e) => e.currentTarget.style.textDecoration = "underline"}
               onMouseLeave={(e) => e.currentTarget.style.textDecoration = "none"}
             >
@@ -222,18 +223,20 @@ export default function HomeSections({ domains, journals }: { domains: DomainLin
 
       {/* Trending Subscriptions */}
       <div className="home-section-block" style={{
-        background: "#ffffff",
-        border: "1px solid #E2E8F0",
-        borderRadius: "4px",
-        padding: "30px 24px"
+        background: "var(--surface)",
+        border: "1px solid var(--line)",
+        borderRadius: "12px",
+        padding: "30px 24px",
+        boxShadow: "var(--shadow-md)",
+        transition: "background 0.3s, border-color 0.3s"
       }}>
         <h2 style={{
           fontFamily: "'Playfair Display', serif",
           fontSize: "24px",
-          color: "#0F172A",
+          color: "var(--text)",
           marginBottom: "20px",
           fontWeight: "700",
-          borderLeft: "4px solid #F59E0B",
+          borderLeft: "4px solid var(--brand)",
           paddingLeft: "12px"
         }}>Trending Subscriptions</h2>
         <div className="home-trending-grid" style={{
@@ -244,25 +247,25 @@ export default function HomeSections({ domains, journals }: { domains: DomainLin
           {journals.map((j) => {
             const plan = planById[j.id] || "PRINT";
             const price = priceFor(j, plan);
-            const originalPrice = Math.floor(price * 1.25);
-            const savings = originalPrice - price;
 
             return (
               <article
                 className="home-trend-card card-hover-lift transition-smooth"
                 key={j.id}
                 style={{
-                  background: "#ffffff",
-                  border: "1px solid #E2E8F0",
-                  borderRadius: "4px",
+                  background: "var(--surface)",
+                  border: "1px solid var(--line)",
+                  borderRadius: "12px",
                   padding: "16px",
                   display: "flex",
                   flexDirection: "column",
-                  position: "relative"
+                  position: "relative",
+                  boxShadow: "var(--shadow-sm)",
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
                 }}
               >
                 {/* Image Frame */}
-                <Link href={`/product/${j.slug}`} style={{ display: "block", marginBottom: "12px", overflow: "hidden", borderRadius: "2px", background: "#f8fafc", height: "180px" }}>
+                <Link href={`/product/${j.slug}`} style={{ display: "block", marginBottom: "12px", overflow: "hidden", borderRadius: "8px", background: "var(--surface-soft)", height: "180px", border: "1px solid var(--line)", transition: "border-color 0.3s" }}>
                   <img
                     src={j.imageUrl || "https://dummyimage.com/360x460/eaf0ff/17366f.png&text=STM+Journal"}
                     alt={j.journalName}
@@ -285,21 +288,21 @@ export default function HomeSections({ domains, journals }: { domains: DomainLin
                 <div style={{ flexGrow: 1, marginBottom: "10px" }}>
                   <h3 style={{
                     margin: "0 0 4px 0",
-                    fontSize: "13px",
+                    fontSize: "13.5px",
                     fontWeight: "700",
-                    lineHeight: "1.4",
+                    lineHeight: "1.45",
                     display: "-webkit-box",
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: "vertical",
                     overflow: "hidden",
                     fontFamily: "Outfit, sans-serif"
                   }}>
-                    <Link href={`/product/${j.slug}`} style={{ color: "#0F172A", textDecoration: "none" }}>{j.journalName}</Link>
+                    <Link href={`/product/${j.slug}`} style={{ color: "var(--text)", textDecoration: "none", transition: "color 0.2s" }} onMouseEnter={e => e.currentTarget.style.color = "var(--brand)"} onMouseLeave={e => e.currentTarget.style.color = "var(--text)"}>{j.journalName}</Link>
                   </h3>
                   <p style={{
                     margin: "0",
                     fontSize: "11px",
-                    color: "#64748b",
+                    color: "var(--muted)",
                     whiteSpace: "nowrap",
                     overflow: "hidden",
                     textOverflow: "ellipsis",
@@ -325,18 +328,20 @@ export default function HomeSections({ domains, journals }: { domains: DomainLin
                       fontSize: "13px",
                       padding: "6px 8px",
                       borderRadius: "8px",
-                      border: "1px solid #CBD5E1",
-                      background: "#ffffff",
+                      border: "1px solid var(--line)",
+                      background: "var(--surface-soft)",
+                      color: "var(--text)",
                       cursor: "pointer",
                       fontFamily: "Outfit, sans-serif",
-                      minWidth: "0"
+                      minWidth: "0",
+                      outline: "none"
                     }}
                   >
                     <option value="PRINT">Print</option>
                     <option value="ONLINE">Online</option>
                     <option value="PRINT_ONLINE">Combined</option>
                   </select>
-                  <strong style={{ fontSize: "15px", color: "#0d3cb1", fontWeight: "800", whiteSpace: "nowrap" }}>₹{price.toLocaleString("en-IN")}</strong>
+                  <strong style={{ fontSize: "15px", color: "var(--brand)", fontWeight: "800", whiteSpace: "nowrap" }}>₹{price.toLocaleString("en-IN")}</strong>
                 </div>
 
                 {/* Solid Blue Add To Cart Button */}
@@ -357,7 +362,7 @@ export default function HomeSections({ domains, journals }: { domains: DomainLin
                   }
                   style={{
                     width: "100%",
-                    background: "#2563EB",
+                    background: "var(--brand)",
                     border: "none",
                     color: "#ffffff",
                     borderRadius: "8px",
@@ -365,13 +370,18 @@ export default function HomeSections({ domains, journals }: { domains: DomainLin
                     fontWeight: "700",
                     fontSize: "13px",
                     cursor: "pointer",
-                    boxShadow: "0 2px 6px rgba(37, 99, 235, 0.1)"
+                    boxShadow: "0 2px 6px rgba(37, 99, 235, 0.15)",
+                    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "#1d4ed8";
+                    e.currentTarget.style.background = "var(--brand-dark)";
+                    e.currentTarget.style.boxShadow = "0 4px 12px var(--accent-glow)";
+                    e.currentTarget.style.transform = "translateY(-1px)";
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "#2563EB";
+                    e.currentTarget.style.background = "var(--brand)";
+                    e.currentTarget.style.boxShadow = "0 2px 6px rgba(37, 99, 235, 0.15)";
+                    e.currentTarget.style.transform = "translateY(0)";
                   }}
                 >
                   Add to Cart
@@ -384,4 +394,3 @@ export default function HomeSections({ domains, journals }: { domains: DomainLin
     </section>
   );
 }
-

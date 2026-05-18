@@ -309,6 +309,39 @@ export default function CheckoutClient() {
 
         <aside className="checkout-summary">
           <h2>Order Summary</h2>
+          <div style={{ marginBottom: "20px", display: "flex", flexDirection: "column", gap: "10px" }}>
+            {(quoteData ? quoteData.items : items).map((it: any) => {
+              const lowerName = (it.journalName || "").toLowerCase();
+              const lowerSubject = (it.subject || "").toLowerCase();
+              const isBook =
+                lowerSubject.includes("book") ||
+                lowerSubject.includes("monograph") ||
+                lowerSubject.includes("nstc") ||
+                lowerName.includes("book") ||
+                lowerName.includes("monograph") ||
+                lowerName.includes("handbook") ||
+                lowerName.includes("textbook");
+              const rawPlan = it.plan || it.selectedPlan || "";
+              const itemHsn = rawPlan === "ONLINE" ? "998431" : isBook ? "4901" : "4902";
+              return (
+                <div key={it.id || it.serialNo} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "15px", paddingBottom: "10px", borderBottom: "1px dashed #cbd5e1" }}>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: "13px", fontWeight: "600", color: "#1e293b" }}>{it.journalName}</h4>
+                    <span style={{ fontSize: "11px", color: "#64748b" }}>
+                      Plan: {rawPlan.replace("_", " + ")} | Qty: {it.qty || 1}
+                    </span>
+                    <span style={{ display: "inline-block", marginLeft: "8px", fontSize: "10.5px", color: "#2563eb", background: "#eff6ff", padding: "1px 5px", borderRadius: "3px", fontWeight: "600" }}>
+                      HSN: {itemHsn}
+                    </span>
+                  </div>
+                  <strong style={{ fontSize: "13px", color: "#0f172a" }}>
+                    {money((it.unitPrice || 0) * (it.qty || 1))}
+                  </strong>
+                </div>
+              );
+            })}
+          </div>
+
           <div className="summary-ledger">
             <p><span>Subtotal</span><strong>{money(subtotal)}</strong></p>
             {discount > 0 && <p><span>Discount {couponCode ? `(${couponCode})` : ""}</span><strong style={{ color: "#ef4444" }}>-{money(discount)}</strong></p>}

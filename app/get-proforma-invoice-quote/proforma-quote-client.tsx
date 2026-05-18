@@ -27,6 +27,21 @@ type Props = {
   canUsePubSubscription: boolean;
 };
 
+function isBookProduct(journalName: string, subject: string): boolean {
+  const lowerName = journalName.toLowerCase();
+  const lowerSubject = subject.toLowerCase();
+  return (
+    lowerSubject.includes("book") ||
+    lowerSubject.includes("monograph") ||
+    lowerSubject.includes("nstc") ||
+    lowerName.includes("book") ||
+    lowerName.includes("monograph") ||
+    lowerName.includes("handbook") ||
+    lowerName.includes("textbook") ||
+    lowerName.includes("reference book")
+  );
+}
+
 export default function ProformaQuoteClient({ journals, canUsePubSubscription }: Props) {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -147,7 +162,11 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
         gstRate,
         itemGst,
         netAmount,
-        hsn: isDigital ? "9984" : "49029020"
+        hsn: plan === "ONLINE"
+          ? "998431"
+          : isBookProduct(row.journalName, row.subject)
+          ? "4901"
+          : "4902"
       };
     });
   }, [selectedRows, plans, currency, appliedDiscountPercent]);

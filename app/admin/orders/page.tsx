@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-type OrderItem = { id: string; journalName: string; selectedPlan: "PRINT" | "ONLINE" | "PRINT_ONLINE"; year: string; issue: string | null; qty: number; unitPrice: number };
+type OrderItem = { id: string; journalName: string; subject: string; selectedPlan: "PRINT" | "ONLINE" | "PRINT_ONLINE"; year: string; issue: string | null; qty: number; unitPrice: number };
 type Order = {
   id: string;
   customerName: string;
@@ -17,6 +17,27 @@ type Order = {
   user: { id: string; email: string } | null;
   items: OrderItem[];
 };
+
+function isBookProduct(journalName: string, subject: string): boolean {
+  const lowerName = journalName.toLowerCase();
+  const lowerSubject = subject.toLowerCase();
+  return (
+    lowerSubject.includes("book") ||
+    lowerSubject.includes("monograph") ||
+    lowerSubject.includes("nstc") ||
+    lowerName.includes("book") ||
+    lowerName.includes("monograph") ||
+    lowerName.includes("handbook") ||
+    lowerName.includes("textbook") ||
+    lowerName.includes("reference book")
+  );
+}
+
+function getHsnCode(journalName: string, subject: string, plan: "PRINT" | "ONLINE" | "PRINT_ONLINE"): string {
+  if (plan === "ONLINE") return "998431";
+  const isBook = isBookProduct(journalName, subject);
+  return isBook ? "4901" : "4902";
+}
 
 export default function AdminOrdersPage() {
   const [rows, setRows] = useState<Order[]>([]);
@@ -138,11 +159,20 @@ export default function AdminOrdersPage() {
                     </div>
                   </div>
                 </td>
-                <td style={{padding:"12px", fontWeight:"bold"}}>{r.currency} {r.total}</td>
-                <td style={{padding:"12px", fontSize:"11px"}}>
-                  {r.items.length === 0 ? "—" : r.items.map((it) => (
-                    <div key={it.id} style={{color:"#475569", marginBottom:"2px"}}>{it.journalName} ({it.selectedPlan}) x{it.qty}</div>
-                  ))}
+                <td style={{padding:"12px", fontSize:"11px", minWidth:"200px"}}>
+                  {r.items.length === 0 ? "—" : r.items.map((it) => {
+                    const hsn = getHsnCode(it.journalName, it.subject || "", it.selectedPlan);
+                    return (
+                      <div key={it.id} style={{color:"#475569", marginBottom:"6px", borderBottom:"1px dashed #f1f5f9", paddingBottom:"4px"}}>
+                        <div style={{fontWeight:"600", color:"#1e293b"}}>{it.journalName}</div>
+                        <div style={{color:"#64748b", fontSize:"10px", marginTop:"2px"}}>
+                          Plan: <span style={{fontWeight:"bold", color:"#0f172a"}}>{it.selectedPlan}</span> | 
+                          HSN/SAC: <span style={{fontWeight:"bold", color:"#2563eb"}}>{hsn}</span> | 
+                          Qty: <span style={{fontWeight:"bold", color:"#0f172a"}}>{it.qty}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </td>
               </tr>
             ))}

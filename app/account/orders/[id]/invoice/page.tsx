@@ -27,10 +27,9 @@ function getHsnCode(journalName: string, subject: string, plan: "PRINT" | "ONLIN
   return isBook ? "4901" : "4902";
 }
 
-export default async function OrderInvoicePrintPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function CustomerOrderInvoicePrintPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getCurrentSession();
   if (!session) redirect("/login");
-  if (session.role !== "ADMIN") redirect("/account");
 
   const resolvedParams = await params;
   const order = await prisma.order.findUnique({
@@ -39,7 +38,19 @@ export default async function OrderInvoicePrintPage({ params }: { params: Promis
   });
 
   if (!order) {
-    return <div style={{ padding: "40px", textAlign: "center" }}>Order not found.</div>;
+    return <div style={{ padding: "40px", textAlign: "center", fontFamily: "sans-serif" }}>Order not found.</div>;
+  }
+
+  // Security verification check: Order owner or email matching session email
+  const isOwner = order.userId === session.sub || order.email.toLowerCase() === session.email.toLowerCase();
+  if (!isOwner) {
+    return (
+      <div style={{ padding: "40px", textAlign: "center", fontFamily: "sans-serif", color: "#EF4444" }}>
+        <h3>Access Denied</h3>
+        <p>You do not have permission to access this order invoice.</p>
+        <Link href="/account" style={{ color: "#2563EB", fontWeight: "bold" }}>Return to Dashboard</Link>
+      </div>
+    );
   }
 
   const hasTransaction = !!order.razorpayPaymentId;
@@ -56,7 +67,7 @@ export default async function OrderInvoicePrintPage({ params }: { params: Promis
       `}} />
 
       <div className="no-print" style={{ maxWidth: "800px", margin: "0 auto 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <Link href="/admin/orders" style={{ color: "#3B82F6", textDecoration: "none", fontWeight: "bold" }}>← Back to Orders</Link>
+        <Link href="/account" style={{ color: "#3B82F6", textDecoration: "none", fontWeight: "bold" }}>← Back to Dashboard</Link>
         <PrintButton />
       </div>
 
@@ -65,7 +76,7 @@ export default async function OrderInvoicePrintPage({ params }: { params: Promis
         {/* Invoice Header */}
         <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "2px solid #E2E8F0", paddingBottom: "20px", marginBottom: "30px" }}>
           <div>
-            <h1 style={{ margin: "0 0 10px 0", color: "#0F172A", fontSize: "28px", fontWeight: "800" }}>ORDER INVOICE</h1>
+            <h1 style={{ margin: "0 0 10px 0", color: "#0F172A", fontSize: "28px", fontWeight: "800" }}>PAID INVOICE</h1>
             <p style={{ margin: "0 0 4px 0", color: "#475569", fontSize: "14px" }}>Order ID: <strong>{order.id}</strong></p>
             <p style={{ margin: "0 0 4px 0", color: "#475569", fontSize: "14px" }}>Date: {new Date(order.createdAt).toLocaleDateString()}</p>
             <p style={{ margin: 0, color: "#475569", fontSize: "14px" }}>
@@ -104,10 +115,10 @@ export default async function OrderInvoicePrintPage({ params }: { params: Promis
             )}
           </div>
 
-          {/* Transaction & Details */}
+          {/* Transaction Details */}
           <div style={{ background: "#F8FAFC", padding: "20px", borderRadius: "8px", border: "1px solid #E2E8F0" }}>
             <h3 style={{ margin: "0 0 12px 0", color: "#0F172A", fontSize: "14px", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: "6px" }}>
-              💳 Transaction Details:
+              💳 Payment Information:
             </h3>
             {hasTransaction ? (
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -119,7 +130,7 @@ export default async function OrderInvoicePrintPage({ params }: { params: Promis
                 </p>
                 {order.razorpayOrderId && (
                   <p style={{ margin: 0, fontSize: "13px", color: "#64748B" }}>
-                    Gateway Ref: <strong style={{ color: "#1E293B", wordBreak: "break-all" }}>{order.razorpayOrderId}</strong>
+                    Order ID Ref: <strong style={{ color: "#1E293B", wordBreak: "break-all" }}>{order.razorpayOrderId}</strong>
                   </p>
                 )}
                 <p style={{ margin: 0, fontSize: "13px", color: "#64748B" }}>
@@ -127,16 +138,16 @@ export default async function OrderInvoicePrintPage({ params }: { params: Promis
                 </p>
                 <p style={{ margin: "4px 0 0 0" }}>
                   <span style={{ background: "#DCFCE7", color: "#15803D", fontSize: "11px", fontWeight: "bold", padding: "4px 8px", borderRadius: "999px" }}>
-                    TRANSACTION SUCCESS
+                    TRANSACTION SUCCESSFUL
                   </span>
                 </p>
               </div>
             ) : (
               <div>
-                <p style={{ margin: 0, fontSize: "13px", color: "#64748B" }}>Payment details unavailable or pending manual confirmation.</p>
+                <p style={{ margin: 0, fontSize: "13px", color: "#64748B" }}>Payment details confirmed manually by administrator.</p>
                 <p style={{ margin: "10px 0 0 0" }}>
-                  <span style={{ background: "#FEF3C7", color: "#B45309", fontSize: "11px", fontWeight: "bold", padding: "4px 8px", borderRadius: "999px" }}>
-                    PENDING GATEWAY HANDSHAKE
+                  <span style={{ background: "#DCFCE7", color: "#15803D", fontSize: "11px", fontWeight: "bold", padding: "4px 8px", borderRadius: "999px" }}>
+                    PAID
                   </span>
                 </p>
               </div>

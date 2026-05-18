@@ -2299,39 +2299,111 @@ a {
   border-radius: 8px;
 }
 
-/* ===== Modern Theme Refresh ===== */
+/* ===== Modern Theme Refresh & Dark/Light System ===== */
 :root {
-  --bg: #fcf8fa;
+  --bg: #f8fafc;
   --surface: #ffffff;
-  --surface-soft: #f6f3f5;
-  --text: #1b1b1d;
-  --muted: #45464d;
+  --surface-soft: #f1f5f9;
+  --text: #0f172a;
+  --muted: #64748b;
   --line: #e2e8f0;
-  --brand: #0f172a; /* Midnight Slate */
-  --brand-strong: #000000;
-  --accent: #f59e0b; /* Soft Saffron */
-  --radius: 4px; /* Crisp Rounding */
+  --brand: #2563eb;
+  --brand-strong: #1e293b;
+  --accent: #f59e0b;
+  --radius: 12px;
   --shadow-sm: 0 4px 12px rgba(15, 23, 42, 0.03);
-  --shadow-md: 0 10px 20px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 10px 20px rgba(15, 23, 42, 0.05);
+  
+  /* Additional premium tokens */
+  --accent-glow: rgba(37, 99, 235, 0.15);
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(226, 232, 240, 0.8);
+  --glass-blur: blur(12px);
+  --card-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+  --card-shadow-hover: 0 20px 40px rgba(15, 23, 42, 0.08);
+  --hero-bg: linear-gradient(135deg, rgba(0, 0, 0, 0.93) 0%, rgba(8, 8, 8, 0.9) 50%, rgba(15, 15, 15, 0.93) 100%), url('/boztay_akimkhan-book-1934675.jpg');
+}
+
+.dark {
+  --bg: #070b13;
+  --surface: #0f172a;
+  --surface-soft: #1e293b;
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --line: rgba(255, 255, 255, 0.08);
+  --brand: #38bdf8;
+  --brand-strong: #ffffff;
+  --accent: #fbbf24;
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 12px 28px rgba(0, 0, 0, 0.5);
+  
+  /* Additional premium tokens for dark mode */
+  --accent-glow: rgba(56, 189, 248, 0.25);
+  --glass-bg: rgba(15, 23, 42, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-blur: blur(12px);
+  --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  --card-shadow-hover: 0 20px 40px rgba(0, 0, 0, 0.5);
+  --hero-bg: linear-gradient(135deg, rgba(0, 0, 0, 0.96) 0%, rgba(5, 5, 5, 0.94) 50%, rgba(10, 10, 10, 0.96) 100%), url('/boztay_akimkhan-book-1934675.jpg');
 }
 
 html,
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   color: var(--text);
   background: var(--bg);
+  scroll-behavior: smooth;
+  transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 h1, h2, h3, h4, .font-serif {
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-family: 'Playfair Display', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }
 
 a {
   color: var(--brand);
-  transition: all 0.2s ease-in-out;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 a:hover {
   color: var(--accent);
+}
+
+/* Custom premium scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 99px;
+  border: 2px solid var(--bg);
+  transition: background 0.3s ease;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--brand);
+}
+
+/* Premium Reveal and Animation styles */
+.reveal-fade-in {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
+              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-fade-in.is-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Dynamic design variables support */
+.transition-smooth {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Custom premium utilities */
@@ -3925,3 +3997,202 @@ input:hover, select:hover, textarea:hover {
   box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
   transform: translateY(-1px);
 }
+
+/* ===== Interactive & Animated Futuristic Hero Polish ===== */
+.home-v3-hero {
+  position: relative !important;
+  overflow: hidden !important;
+  z-index: 1;
+}
+
+.hero-glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.28;
+  pointer-events: none;
+  z-index: -1;
+  transition: all 0.8s ease;
+}
+
+.orb-1 {
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, var(--brand) 0%, transparent 80%);
+  top: -15%;
+  left: 5%;
+  animation: floatOrb1 20s ease-in-out infinite alternate;
+}
+
+.orb-2 {
+  width: 440px;
+  height: 440px;
+  background: radial-gradient(circle, var(--accent) 0%, transparent 80%);
+  bottom: -25%;
+  right: 2%;
+  animation: floatOrb2 22s ease-in-out infinite alternate;
+}
+
+.orb-3 {
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle, #3b82f6 0%, transparent 80%);
+  top: 25%;
+  right: 35%;
+  animation: floatOrb3 16s ease-in-out infinite alternate;
+}
+
+/* High-tech matrix dot grid pattern */
+.hero-grid-pattern {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.85;
+  animation: gridScroll 35s linear infinite;
+}
+
+/* Floating animation paths */
+@keyframes floatOrb1 {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.22;
+  }
+  50% {
+    transform: translate(50px, 40px) scale(1.18);
+    opacity: 0.35;
+  }
+  100% {
+    transform: translate(-30px, -50px) scale(0.85);
+    opacity: 0.18;
+  }
+}
+
+@keyframes floatOrb2 {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.18;
+  }
+  50% {
+    transform: translate(-60px, -30px) scale(0.88);
+    opacity: 0.32;
+  }
+  100% {
+    transform: translate(40px, 50px) scale(1.15);
+    opacity: 0.22;
+  }
+}
+
+@keyframes floatOrb3 {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-40px, 60px) scale(1.22);
+  }
+  100% {
+    transform: translate(50px, -40px) scale(0.9);
+  }
+}
+
+@keyframes gridScroll {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 24px 48px;
+  }
+}
+
+/* Elegant Text Shimmer Glow */
+.hero-glowing-title {
+  background: linear-gradient(135deg, #ffffff 15%, #93c5fd 45%, #fde047 75%, #ffffff 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: titleTextShimmer 7s ease-in-out infinite;
+}
+
+@keyframes titleTextShimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Heartbeat pulse rings for connecting nations marker */
+.pulse-indicator {
+  position: relative;
+}
+.pulse-indicator::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1.5px solid #F59E0B;
+  animation: pulseIndicatorRing 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  opacity: 0;
+}
+
+@keyframes pulseIndicatorRing {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+/* premium button actions */
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.btn-shimmer::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 30%;
+  height: 200%;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.45), transparent);
+  transform: rotate(30deg);
+  transition: none;
+  pointer-events: none;
+}
+
+.btn-shimmer:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 10px 25px rgba(245, 158, 11, 0.4) !important;
+}
+
+.btn-shimmer:hover::after {
+  left: 140%;
+  transition: left 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-glow-outline {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  border: 1.2px solid rgba(255, 255, 255, 0.2) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(8px);
+}
+
+.btn-glow-outline:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.65) !important;
+  box-shadow: 0 10px 25px rgba(255, 255, 255, 0.12);
+  transform: translateY(-3px);
+}
+

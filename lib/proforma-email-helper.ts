@@ -61,8 +61,10 @@ export async function prepareProformaEmailPayload(quoteId: string) {
   `;
 
   quote.items.forEach((it, idx) => {
-    const isDigital = it.selectedPlan === "ONLINE" || it.selectedPlan === "PRINT_ONLINE";
-    const hsn = isDigital ? "9984" : "49029020";
+    const isBook = isBookProduct(it.journalName, it.subject);
+    const hsn = it.selectedPlan === "ONLINE"
+      ? "998431"
+      : (isBook ? "4901" : "4902");
     itemsHtml += `
       <tr style="border-bottom: 1px solid #f1f5f9;">
         <td style="padding:10px; color:#64748b;">${idx + 1}</td>
@@ -130,3 +132,19 @@ export async function prepareProformaEmailPayload(quoteId: string) {
     financialsHtml: financialsHtml
   };
 }
+
+function isBookProduct(journalName: string, subject: string): boolean {
+  const lowerName = journalName.toLowerCase();
+  const lowerSubject = subject.toLowerCase();
+  return (
+    lowerSubject.includes("book") ||
+    lowerSubject.includes("monograph") ||
+    lowerSubject.includes("nstc") ||
+    lowerName.includes("book") ||
+    lowerName.includes("monograph") ||
+    lowerName.includes("handbook") ||
+    lowerName.includes("textbook") ||
+    lowerName.includes("reference book")
+  );
+}
+

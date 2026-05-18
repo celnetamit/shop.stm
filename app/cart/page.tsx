@@ -39,23 +39,42 @@ export default function CartPage() {
       <div className="cart-layout">
         <section className="cart-items">
           {items.length === 0 ? <p>Cart is empty. <Link href="/product-category/journals/agriculture">Browse agriculture journals</Link></p> : null}
-          {items.map((it) => (
-            <article key={it.id} className="cart-row">
-              <img src={it.image} alt={it.journalName} />
-              <div>
-                <h3>{it.journalName}</h3>
-                <p>{it.plan.replace("_", " + ")} | Year {it.year}{it.issue ? ` | Issue ${it.issue}` : ""}</p>
-                <p>₹{it.unitPrice.toLocaleString("en-IN")}</p>
-              </div>
-              <div className="cart-qty">
-                <button onClick={() => setQty(it.id, it.qty - 1)}>-</button>
-                <span>{it.qty}</span>
-                <button onClick={() => setQty(it.id, it.qty + 1)}>+</button>
-              </div>
-              <strong>₹{(it.unitPrice * it.qty).toLocaleString("en-IN")}</strong>
-              <button className="cart-remove" onClick={() => removeItem(it.id)}>x</button>
-            </article>
-          ))}
+          {items.map((it) => {
+            const lowerName = (it.journalName || "").toLowerCase();
+            const lowerSubject = (it.subject || "").toLowerCase();
+            const isBook =
+              lowerSubject.includes("book") ||
+              lowerSubject.includes("monograph") ||
+              lowerSubject.includes("nstc") ||
+              lowerName.includes("book") ||
+              lowerName.includes("monograph") ||
+              lowerName.includes("handbook") ||
+              lowerName.includes("textbook");
+            const itemHsn = it.plan === "ONLINE" ? "998431" : isBook ? "4901" : "4902";
+
+            return (
+              <article key={it.id} className="cart-row">
+                <img src={it.image} alt={it.journalName} />
+                <div>
+                  <h3>{it.journalName}</h3>
+                  <p>{it.plan.replace("_", " + ")} | Year {it.year}{it.issue ? ` | Issue ${it.issue}` : ""}</p>
+                  <p style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center", margin: "4px 0 0 0" }}>
+                    <span>₹{it.unitPrice.toLocaleString("en-IN")}</span>
+                    <span style={{ fontSize: "12px", color: "#64748b", background: "#f1f5f9", padding: "2px 6px", borderRadius: "4px", border: "1px solid #cbd5e1" }}>
+                      HSN/SAC: {itemHsn}
+                    </span>
+                  </p>
+                </div>
+                <div className="cart-qty">
+                  <button onClick={() => setQty(it.id, it.qty - 1)}>-</button>
+                  <span>{it.qty}</span>
+                  <button onClick={() => setQty(it.id, it.qty + 1)}>+</button>
+                </div>
+                <strong>₹{(it.unitPrice * it.qty).toLocaleString("en-IN")}</strong>
+                <button className="cart-remove" onClick={() => removeItem(it.id)}>x</button>
+              </article>
+            );
+          })}
 
           <div className="cart-coupon">
             <input value={coupon} onChange={(e) => setCouponInput(e.target.value)} placeholder="Coupon code" />
