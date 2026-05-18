@@ -65,7 +65,7 @@ const booksData = [
   },
   {
     title: "CHEMICAL SCIENCES",
-    category: "Chemical Sciences",
+    category: "Chemistry",
     color: "linear-gradient(180deg, #be185d 0%, #ec4899 100%)",
     accentColor: "#f472b6",
     tilt: "-1.2deg",
@@ -85,7 +85,7 @@ const booksData = [
   },
   {
     title: "AGRICULTURAL SCI.",
-    category: "Agricultural Sciences",
+    category: "Agriculture",
     color: "linear-gradient(180deg, #78350f 0%, #d97706 100%)",
     accentColor: "#fbbf24",
     tilt: "-2.5deg",
@@ -175,11 +175,11 @@ export default function InteractiveBookshelf() {
             text-orientation: mixed;
             transform: rotate(180deg);
             font-family: 'Plus Jakarta Sans', sans-serif;
-            font-weight: 800;
-            font-size: 11px;
-            letter-spacing: 0.12em;
+            font-weight: 900;
+            font-size: 13.5px;
+            letter-spacing: 0.1em;
             text-align: center;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.9), 0 0 5px rgba(0,0,0,0.5);
             white-space: nowrap;
           }
           
