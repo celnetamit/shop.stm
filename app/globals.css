@@ -4108,7 +4108,17 @@ input:hover, select:hover, textarea:hover {
 
 /* Elegant Text Shimmer Glow */
 .hero-glowing-title {
-  background: linear-gradient(135deg, #ffffff 15%, #93c5fd 45%, #fde047 75%, #ffffff 100%);
+  background: linear-gradient(
+    135deg,
+    #ffffff 0%,
+    #38bdf8 15%,
+    #818cf8 30%,
+    #c084fc 45%,
+    #f472b6 60%,
+    #fb923c 75%,
+    #fde047 90%,
+    #ffffff 100%
+  );
   background-size: 200% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
