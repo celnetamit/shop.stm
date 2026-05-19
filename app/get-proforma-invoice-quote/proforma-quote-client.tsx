@@ -9,7 +9,7 @@ type Journal = {
   serialNo: number;
   subject: string;
   journalName: string;
-  abbreviation: string;
+  abbreviation: string | null;
   issn: string | null;
   frequency: string | null;
   printInr: number;
@@ -18,9 +18,61 @@ type Journal = {
   printUsd: number;
   onlineUsd: number;
   combinedUsd: number;
+  publisher: string | null;
+  imprint: string | null;
+  address: string | null;
+  publisherEmail: string | null;
+  publisherContactNumber: string | null;
 };
 
 type Plan = "PRINT" | "ONLINE" | "PRINT_ONLINE";
+
+type SubscriptionConfig = {
+  id: string;
+  type: "ANNUAL" | "ISSUE_WISE";
+  year: number;
+  plan: Plan;
+  selectedIssues: number[];
+};
+
+function getIssueLabels(totalIssues: number): string[] {
+  if (totalIssues === 2) {
+    return ["Issue 1 (Jan-Jun)", "Issue 2 (Jul-Dec)"];
+  }
+  if (totalIssues === 3) {
+    return ["Issue 1 (Jan-Apr)", "Issue 2 (May-Aug)", "Issue 3 (Sep-Dec)"];
+  }
+  if (totalIssues === 4) {
+    return ["Issue 1 (Jan-Mar)", "Issue 2 (Apr-Jun)", "Issue 3 (Jul-Sep)", "Issue 4 (Oct-Dec)"];
+  }
+  if (totalIssues === 6) {
+    return [
+      "Issue 1 (Jan-Feb)",
+      "Issue 2 (Mar-Apr)",
+      "Issue 3 (May-Jun)",
+      "Issue 4 (Jul-Aug)",
+      "Issue 5 (Sep-Oct)",
+      "Issue 6 (Nov-Dec)"
+    ];
+  }
+  if (totalIssues === 12) {
+    return [
+      "Issue 1 (Jan)",
+      "Issue 2 (Feb)",
+      "Issue 3 (Mar)",
+      "Issue 4 (Apr)",
+      "Issue 5 (May)",
+      "Issue 6 (Jun)",
+      "Issue 7 (Jul)",
+      "Issue 8 (Aug)",
+      "Issue 9 (Sep)",
+      "Issue 10 (Oct)",
+      "Issue 11 (Nov)",
+      "Issue 12 (Dec)"
+    ];
+  }
+  return Array.from({ length: totalIssues }, (_, i) => `Issue ${i + 1}`);
+}
 
 type Props = {
   journals: Journal[];
@@ -40,6 +92,17 @@ function isBookProduct(journalName: string, subject: string): boolean {
     lowerName.includes("textbook") ||
     lowerName.includes("reference book")
   );
+}
+
+function getIssueCountFromFrequency(frequency: string | null): number {
+  if (!frequency) return 2;
+  const cleaned = frequency.trim().toLowerCase();
+  if (cleaned.includes("bi-annual") || cleaned.includes("biannual")) return 2;
+  const match = cleaned.match(/^(\d+)/);
+  if (match) {
+    return parseInt(match[1], 10);
+  }
+  return 2;
 }
 
 export default function ProformaQuoteClient({ journals, canUsePubSubscription }: Props) {
@@ -83,8 +146,70 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
   const [appliedCouponCode, setAppliedCouponCode] = useState("");
   const [appliedDiscountPercent, setAppliedDiscountPercent] = useState(0);
   const [couponMessage, setCouponMessage] = useState("");
-  const [plans, setPlans] = useState<Record<number, Plan>>({});
   const [selected, setSelected] = useState<Record<number, boolean>>({});
+  const [subscriptionConfigs, setSubscriptionConfigs] = useState<Record<number, SubscriptionConfig[]>>({});
+
+  const getConfigsForJournal = (serialNo: number, frequency: string | null): SubscriptionConfig[] => {
+    const totalIssues = getIssueCountFromFrequency(frequency);
+    if (!subscriptionConfigs[serialNo] || subscriptionConfigs[serialNo].length === 0) {
+      return [
+        {
+          id: `initial-${serialNo}`,
+          type: "ANNUAL",
+          year: 2025,
+          plan: "PRINT",
+          selectedIssues: Array.from({ length: totalIssues }, (_, i) => i + 1)
+        }
+      ];
+    }
+    return subscriptionConfigs[serialNo];
+  };
+
+  const addConfigForJournal = (serialNo: number, frequency: string | null) => {
+    const totalIssues = getIssueCountFromFrequency(frequency);
+    const current = getConfigsForJournal(serialNo, frequency);
+    
+    const lastYear = current.length > 0 ? Math.max(...current.map(c => c.year)) : 2025;
+    const nextYear = lastYear + 1;
+
+    const newConfig: SubscriptionConfig = {
+      id: `${serialNo}-${Date.now()}-${Math.random()}`,
+      type: "ANNUAL",
+      year: nextYear <= 2027 ? nextYear : 2025,
+      plan: "PRINT",
+      selectedIssues: Array.from({ length: totalIssues }, (_, i) => i + 1)
+    };
+
+    setSubscriptionConfigs(prev => ({
+      ...prev,
+      [serialNo]: [...current, newConfig]
+    }));
+  };
+
+  const removeConfigForJournal = (serialNo: number, configId: string, frequency: string | null) => {
+    const current = getConfigsForJournal(serialNo, frequency);
+    if (current.length <= 1) return;
+    setSubscriptionConfigs(prev => ({
+      ...prev,
+      [serialNo]: current.filter(c => c.id !== configId)
+    }));
+  };
+
+  const updateConfigForJournal = (serialNo: number, configId: string, updated: Partial<SubscriptionConfig>, frequency: string | null) => {
+    const current = getConfigsForJournal(serialNo, frequency);
+    setSubscriptionConfigs(prev => ({
+      ...prev,
+      [serialNo]: current.map(c => {
+        if (c.id !== configId) return c;
+        const newC = { ...c, ...updated };
+        if (updated.type === "ANNUAL") {
+          const totalIssues = getIssueCountFromFrequency(frequency);
+          newC.selectedIssues = Array.from({ length: totalIssues }, (_, i) => i + 1);
+        }
+        return newC;
+      })
+    }));
+  };
 
   const subjects = useMemo(() => {
     const s = new Set(journals.map((j) => j.subject));
@@ -144,32 +269,65 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
   }
 
   const itemizedTotals = useMemo(() => {
-    return selectedRows.map((row) => {
-      const plan = plans[row.serialNo] || "PRINT";
-      const unitPrice = getPrice(row, plan);
-      const itemDiscount = (unitPrice * appliedDiscountPercent) / 100;
-      const itemTaxable = unitPrice - itemDiscount;
-      const isDigital = plan === "ONLINE" || plan === "PRINT_ONLINE";
-      const gstRate = currency === "INR" && isDigital ? 18 : 0;
-      const itemGst = itemTaxable * (gstRate / 100);
-      const netAmount = itemTaxable + itemGst;
-      return {
-        row,
-        plan,
-        unitPrice,
-        itemDiscount,
-        itemTaxable,
-        gstRate,
-        itemGst,
-        netAmount,
-        hsn: plan === "ONLINE"
-          ? "998431"
-          : isBookProduct(row.journalName, row.subject)
-          ? "4901"
-          : "4902"
-      };
+    const list: Array<{
+      row: Journal;
+      plan: Plan;
+      unitPrice: number;
+      itemDiscount: number;
+      itemTaxable: number;
+      gstRate: number;
+      itemGst: number;
+      netAmount: number;
+      selectedIssues: number;
+      totalIssues: number;
+      hsn: string;
+      year: number;
+      type: "ANNUAL" | "ISSUE_WISE";
+      selectedIssuesList: number[];
+    }> = [];
+
+    selectedRows.forEach((row) => {
+      const totalIssues = getIssueCountFromFrequency(row.frequency);
+      const configs = getConfigsForJournal(row.serialNo, row.frequency);
+
+      configs.forEach((c) => {
+        const plan = c.plan;
+        const annualPrice = getPrice(row, plan);
+        const selectedCount = c.type === "ANNUAL" ? totalIssues : c.selectedIssues.length;
+        const unitPrice = (annualPrice / totalIssues) * selectedCount;
+
+        const itemDiscount = (unitPrice * appliedDiscountPercent) / 100;
+        const itemTaxable = unitPrice - itemDiscount;
+        const isDigital = plan === "ONLINE" || plan === "PRINT_ONLINE";
+        const gstRate = currency === "INR" && isDigital ? 18 : 0;
+        const itemGst = itemTaxable * (gstRate / 100);
+        const netAmount = itemTaxable + itemGst;
+
+        list.push({
+          row,
+          plan,
+          unitPrice,
+          itemDiscount,
+          itemTaxable,
+          gstRate,
+          itemGst,
+          netAmount,
+          selectedIssues: selectedCount,
+          totalIssues,
+          hsn: plan === "ONLINE"
+            ? "998431"
+            : isBookProduct(row.journalName, row.subject)
+            ? "4901"
+            : "4902",
+          year: c.year,
+          type: c.type,
+          selectedIssuesList: c.selectedIssues
+        });
+      });
     });
-  }, [selectedRows, plans, currency, appliedDiscountPercent]);
+
+    return list;
+  }, [selectedRows, subscriptionConfigs, currency, appliedDiscountPercent]);
 
   const subtotal = useMemo(() => itemizedTotals.reduce((sum, item) => sum + item.unitPrice, 0), [itemizedTotals]);
   const discount = useMemo(() => itemizedTotals.reduce((sum, item) => sum + item.itemDiscount, 0), [itemizedTotals]);
@@ -222,16 +380,20 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
     setError("");
     setSubmitting(true);
 
-    const items = selectedRows.map((row) => {
-      const selectedPlan = plans[row.serialNo] || "PRINT";
+    const items = itemizedTotals.map((item) => {
+      const issuesText = item.type === "ANNUAL" 
+        ? "Annual" 
+        : `Issues: ${item.selectedIssuesList.sort((a,b)=>a-b).join(", ")}`;
+      const formattedJournalName = `${item.row.journalName} (${item.year} | ${issuesText})`;
+
       return {
-        serialNo: row.serialNo,
-        subject: row.subject,
-        journalName: row.journalName,
-        abbreviation: row.abbreviation,
-        issn: row.issn,
-        selectedPlan,
-        unitPrice: getPrice(row, selectedPlan)
+        serialNo: item.row.serialNo,
+        subject: item.row.subject,
+        journalName: formattedJournalName,
+        abbreviation: item.row.abbreviation || item.row.journalName.substring(0, 10),
+        issn: item.row.issn,
+        selectedPlan: item.plan,
+        unitPrice: Math.round(item.unitPrice)
       };
     });
 
@@ -580,27 +742,136 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
                 </select>
               </div>
 
-              <div className="proforma-list">
+              <div className="proforma-list" style={{ overflow: "visible", maxHeight: "none" }}>
+                <div className="proforma-list-header">
+                  <div>Add</div>
+                  <div>Journal Identity</div>
+                  <div>Subscription Options</div>
+                  <div style={{ textAlign: "right" }}>Investment ({currency})</div>
+                </div>
                 {filtered.map((j) => {
-                  const plan = plans[j.serialNo] || "PRINT";
-                  const price = getPrice(j, plan);
+                  const configs = getConfigsForJournal(j.serialNo, j.frequency);
+                  const totalIssues = getIssueCountFromFrequency(j.frequency);
+                  const issueLabels = getIssueLabels(totalIssues);
+                  const isChecked = !!selected[j.serialNo];
+                  
                   return (
-                    <div className="proforma-row" key={j.serialNo}>
-                      <input type="checkbox" checked={!!selected[j.serialNo]} onChange={(e) => setSelected((prev) => ({ ...prev, [j.serialNo]: e.target.checked }))} />
+                    <div className="proforma-row-custom" key={j.serialNo}>
+                      <div className="checkbox-container">
+                        <div 
+                          className={`checkbox-custom ${isChecked ? "checked" : ""}`}
+                          onClick={() => setSelected((prev) => ({ ...prev, [j.serialNo]: !prev[j.serialNo] }))}
+                        >
+                          {isChecked && (
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
+                      
                       <div className="proforma-row-title">
                         <strong>{j.journalName}</strong>
                         <div>
                           <span className="proforma-tag">{j.subject}</span>
                           <span>ISSN: {j.issn || "-"}</span>
-                          <span>{j.frequency || "3 Issues"}</span>
+                          <span>{j.frequency || "2 Issues"}</span>
                         </div>
                       </div>
-                      <select value={plan} onChange={(e) => setPlans((prev) => ({ ...prev, [j.serialNo]: e.target.value as Plan }))}>
-                        <option value="PRINT">Print</option>
-                        <option value="ONLINE">Online</option>
-                        <option value="PRINT_ONLINE">Print + Online</option>
-                      </select>
-                      <div className="proforma-row-price">{fmt(price)}</div>
+
+                      <div className="proforma-configs-container">
+                        {configs.map((config) => {
+                          const isAnnual = config.type === "ANNUAL";
+                          return (
+                            <div className="proforma-config-card" key={config.id}>
+                              {configs.length > 1 && (
+                                <button 
+                                  type="button" 
+                                  className="proforma-config-delete-btn" 
+                                  onClick={() => removeConfigForJournal(j.serialNo, config.id, j.frequency)}
+                                >
+                                  ✕
+                                </button>
+                              )}
+                              
+                              <div className="proforma-config-card-header">
+                                <select 
+                                  value={config.type} 
+                                  onChange={(e) => updateConfigForJournal(j.serialNo, config.id, { type: e.target.value as "ANNUAL" | "ISSUE_WISE" }, j.frequency)}
+                                >
+                                  <option value="ANNUAL">Annual</option>
+                                  <option value="ISSUE_WISE">Issue Wise</option>
+                                </select>
+                                
+                                <select 
+                                  value={config.year} 
+                                  onChange={(e) => updateConfigForJournal(j.serialNo, config.id, { year: parseInt(e.target.value, 10) }, j.frequency)}
+                                >
+                                  <option value="2024">2024</option>
+                                  <option value="2025">2025</option>
+                                  <option value="2026">2026</option>
+                                  <option value="2027">2027</option>
+                                </select>
+                                
+                                <select 
+                                  value={config.plan} 
+                                  onChange={(e) => updateConfigForJournal(j.serialNo, config.id, { plan: e.target.value as Plan }, j.frequency)}
+                                >
+                                  <option value="PRINT">Print Only</option>
+                                  <option value="ONLINE">Digital Only</option>
+                                  <option value="PRINT_ONLINE">Print + Digital</option>
+                                </select>
+                              </div>
+
+                              {!isAnnual && (
+                                <div className="proforma-config-issues-section">
+                                  <span className="proforma-config-issues-title">Select Issues:</span>
+                                  <div className="proforma-config-issues-list">
+                                    {Array.from({ length: totalIssues }, (_, issueIdx) => {
+                                      const issueNum = issueIdx + 1;
+                                      const isSelected = config.selectedIssues.includes(issueNum);
+                                      const label = issueLabels[issueIdx] || `Issue ${issueNum}`;
+                                      
+                                      return (
+                                        <div 
+                                          key={issueNum}
+                                          className={`proforma-issue-pill ${isSelected ? "selected" : ""}`}
+                                          onClick={() => {
+                                            const newSelected = isSelected 
+                                              ? config.selectedIssues.filter(n => n !== issueNum)
+                                              : [...config.selectedIssues, issueNum];
+                                            updateConfigForJournal(j.serialNo, config.id, { selectedIssues: newSelected }, j.frequency);
+                                          }}
+                                        >
+                                          {label}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+
+                        <button 
+                          type="button" 
+                          className="proforma-add-config-btn"
+                          onClick={() => addConfigForJournal(j.serialNo, j.frequency)}
+                        >
+                          + Add Another Year / Config
+                        </button>
+                      </div>
+
+                      <div className="proforma-row-price" style={{ fontSize: "16px", color: "#1b2f69", fontWeight: "700" }}>
+                        {fmt(
+                          configs.reduce((sum, config) => {
+                            const annualPrice = getPrice(j, config.plan);
+                            const selectedCount = config.type === "ANNUAL" ? totalIssues : config.selectedIssues.length;
+                            return sum + (annualPrice / totalIssues) * selectedCount;
+                          }, 0)
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -639,6 +910,54 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
         const activeCgst = gst / 2;
         const activeSgst = gst / 2;
 
+        const isJournalsPub = selectedRows.length > 0
+          ? selectedRows.some(row => row.publisher?.toLowerCase() === "journalspub")
+          : subscriptionType === "PUB";
+
+        const brand = isJournalsPub ? {
+          logoText: "JP",
+          title: "Journals Pub",
+          subtitle: "A Division of Dhruv Infosystems Private Limited",
+          address: "A-118, Level 2, Sector 63, Noida, Uttar Pradesh, India - 201301",
+          bankName: "HDFC Bank",
+          bankAddress: "Sector-62, Noida, U.P., India",
+          accountNumber: "03942000003077",
+          ifscCode: "HDFC0002649",
+          swiftCode: "HDFCINBBXXX",
+          accountHolder: "Dhruv Infosystems Private Limited",
+          gstin: "09AAACD3800F2ZJ",
+          pan: "AAACD3800F",
+          cin: "U72900DL2009PTC193581",
+          legalName: "Dhruv Infosystems Private Limited",
+          email: "subscriptions@journalspub.com",
+          phone: "+91-120-4781200",
+          regdOffice: "Office No. 6, First Floor, DDC Pocket-E, Mayur Vihar Phase-II, New Delhi - 110091",
+          tel: "0120 - 4781200",
+          mob: "+91-9810078958",
+          website: "journalspub.com"
+        } : {
+          logoText: "STM",
+          title: "STM Journals",
+          subtitle: "Consortium e-Learning Network Pvt. Ltd.,",
+          address: "A-118 1st Floor, Sector 63, Noida, Uttar Pradesh, India - 201301",
+          bankName: "HDFC Bank",
+          bankAddress: "Sector-62, Noida, U.P., India",
+          accountNumber: "03942000001153",
+          ifscCode: "HDFC0002649",
+          swiftCode: "HDFCINBBXXX",
+          accountHolder: "Consortium eLearning Network Pvt. Ltd.",
+          gstin: "09AACCC6494M1Z1",
+          pan: "AACCC6494M",
+          cin: "U80302DL2005PTC138759",
+          legalName: "Consortium e-Learning Network Pvt. Ltd.",
+          email: "subscriptions@stmjournals.com",
+          phone: "+91-120-4781200",
+          regdOffice: "Office No. 4, First Floor, CSC Pocket -E, Mayur Vihar, Phase-II, New Delhi-110091",
+          tel: "01120 - 4781206",
+          mob: "+91-9810078958",
+          website: "shop.stmjournals.com"
+        };
+
         return (
           <section className="proforma-preview-wrap" style={{ background: "#f1f5f9", padding: "2rem 1rem", display: "flex", flexDirection: "column", alignItems: "center" }}>
             <article id="invoice-capture-area" className="proforma-invoice" style={{
@@ -662,12 +981,16 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
                 {/* Header Row */}
                 <div style={{ display: "flex", alignItems: "center", borderBottom: "1px solid #94a3b8", padding: "15px 20px" }}>
                   <div style={{ width: "15%", display: "flex", justifyContent: "center" }}>
-                    <img src="/stmlogo.png" alt="STM" style={{ maxHeight: "65px", objectFit: "contain" }} onError={(e) => { (e.target as HTMLImageElement).src = "https://dummyimage.com/100x100/1e3a8a/ffffff.png&text=STM"; }} />
+                    {isJournalsPub ? (
+                      <img src="/journalspub-logo.svg" alt="Journals Pub" style={{ maxHeight: "65px", objectFit: "contain" }} />
+                    ) : (
+                      <img src="/stmlogo.png" alt="STM" style={{ maxHeight: "65px", objectFit: "contain" }} onError={(e) => { (e.target as HTMLImageElement).src = "https://dummyimage.com/100x100/1e3a8a/ffffff.png&text=STM"; }} />
+                    )}
                   </div>
                   <div style={{ width: "85%", textAlign: "center", paddingRight: "10%" }}>
-                    <h1 style={{ fontSize: "34px", fontWeight: "700", color: "#0f172a", margin: "0 0 4px 0", letterSpacing: "0.5px" }}>STM Journals</h1>
-                    <p style={{ fontSize: "12px", fontWeight: "600", margin: "0", color: "#334155" }}>Consortium e-Learning Network Pvt. Ltd.,</p>
-                    <p style={{ fontSize: "11px", color: "#64748b", margin: "2px 0 0 0" }}>A-118 1st Floor, Sector 63, Noida, Uttar Pradesh, India - 201301</p>
+                    <h1 style={{ fontSize: "34px", fontWeight: "700", color: "#0f172a", margin: "0 0 4px 0", letterSpacing: "0.5px" }}>{brand.title}</h1>
+                    <p style={{ fontSize: "12px", fontWeight: "600", margin: "0", color: "#334155" }}>{brand.subtitle}</p>
+                    <p style={{ fontSize: "11px", color: "#64748b", margin: "2px 0 0 0" }}>{brand.address}</p>
                   </div>
                 </div>
 
@@ -688,21 +1011,21 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
                   <div style={{ padding: "12px 15px", borderRight: "1px solid #94a3b8", fontSize: "11px" }}>
                     <span style={{ fontSize: "10px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.03em", color: "#475569", display: "block", marginBottom: "6px" }}>BANK DETAILS:</span>
                     <div style={{ display: "grid", gridTemplateColumns: "90px 1fr", gap: "4px 2px" }}>
-                      <strong style={{ color: "#475569" }}>Bank Name :</strong> <span>HDFC Bank</span>
-                      <strong style={{ color: "#475569" }}>Bank Address :</strong> <span>Sector-62, Noida, U.P., India</span>
-                      <strong style={{ color: "#475569" }}>A/C. Number :</strong> <span style={{ fontWeight: "700", color: "#0f172a" }}>03942000001153</span>
-                      <strong style={{ color: "#475569" }}>IFSC Code :</strong> <span>HDFC0002649</span>
-                      <strong style={{ color: "#475569" }}>Swift Code :</strong> <span>HDFCINBBXXX</span>
-                      <strong style={{ color: "#475569" }}>A/C. Holder :</strong> <span style={{ fontWeight: "600" }}>Consortium eLearning Network Pvt. Ltd.</span>
+                      <strong style={{ color: "#475569" }}>Bank Name :</strong> <span>{brand.bankName}</span>
+                      <strong style={{ color: "#475569" }}>Bank Address :</strong> <span>{brand.bankAddress}</span>
+                      <strong style={{ color: "#475569" }}>A/C. Number :</strong> <span style={{ fontWeight: "700", color: "#0f172a" }}>{brand.accountNumber}</span>
+                      <strong style={{ color: "#475569" }}>IFSC Code :</strong> <span>{brand.ifscCode}</span>
+                      <strong style={{ color: "#475569" }}>Swift Code :</strong> <span>{brand.swiftCode}</span>
+                      <strong style={{ color: "#475569" }}>A/C. Holder :</strong> <span style={{ fontWeight: "600" }}>{brand.accountHolder}</span>
                     </div>
                   </div>
                   {/* Col 3 */}
                   <div style={{ padding: "12px 15px", fontSize: "11px" }}>
                     <div style={{ display: "grid", gridTemplateColumns: "90px 1fr", gap: "8px 2px" }}>
-                      <strong style={{ color: "#475569", fontSize: "10px", textTransform: "uppercase" }}>GSTIN :</strong> <span style={{ fontWeight: "700", color: "#0f172a" }}>09AACCC6494M1Z1</span>
-                      <strong style={{ color: "#475569", fontSize: "10px", textTransform: "uppercase" }}>PAN No. :</strong> <span style={{ fontWeight: "700", color: "#0f172a" }}>AACCC6494M</span>
-                      <strong style={{ color: "#475569", fontSize: "10px", textTransform: "uppercase" }}>CIN No. :</strong> <span style={{ fontWeight: "700", color: "#0f172a" }}>U80302DL2005PTC138759</span>
-                      <strong style={{ color: "#475569", fontSize: "10px", textTransform: "uppercase" }}>Legal Name :</strong> <span>Consortium e-Learning Network Pvt. Ltd.</span>
+                      <strong style={{ color: "#475569", fontSize: "10px", textTransform: "uppercase" }}>GSTIN :</strong> <span style={{ fontWeight: "700", color: "#0f172a" }}>{brand.gstin}</span>
+                      <strong style={{ color: "#475569", fontSize: "10px", textTransform: "uppercase" }}>PAN No. :</strong> <span style={{ fontWeight: "700", color: "#0f172a" }}>{brand.pan}</span>
+                      <strong style={{ color: "#475569", fontSize: "10px", textTransform: "uppercase" }}>CIN No. :</strong> <span style={{ fontWeight: "700", color: "#0f172a" }}>{brand.cin}</span>
+                      <strong style={{ color: "#475569", fontSize: "10px", textTransform: "uppercase" }}>Legal Name :</strong> <span>{brand.legalName}</span>
                     </div>
                   </div>
                 </div>
@@ -743,11 +1066,12 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
                         }
                       </span>
                       <strong style={{ color: "#64748b" }}>Contact :</strong> <span>{sameAsBilling ? phone : shippingPhone || phone}</span>
+                      <strong style={{ color: "#64748b" }}>IEC No. :</strong> <span style={{ fontWeight: "700", color: "#0f172a" }}>AACCC6494M</span>
                     </div>
 
                     <div style={{ borderTop: "1px dashed #cbd5e1", marginTop: "12px", paddingTop: "8px", fontSize: "11.5px" }}>
                       <span style={{ fontSize: "9px", fontWeight: "700", color: "#2563eb", textTransform: "uppercase" }}>ORDER INFORMATION:</span>
-                      <div style={{ marginTop: "4px" }}><strong style={{ color: "#64748b" }}>Order Placed By :</strong> <span style={{ fontWeight: "750", color: "#0f172a", textTransform: "uppercase" }}>{contactName}</span></div>
+                      <div style={{ marginTop: "4px" }}><strong style={{ color: "#64748b" }}>Order Placed By :</strong> <span style={{ fontWeight: "750", color: "#0f172a", textTransform: "uppercase" }}>{institutionName || organization || contactName}</span></div>
                     </div>
                   </div>
                 </div>
@@ -772,12 +1096,12 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
                     {itemizedTotals.map((it, idx) => {
                       const planLabel = it.plan === "PRINT_ONLINE" ? "Print + Digital Subscription" : it.plan === "ONLINE" ? "Online Subscription" : "Print Subscription";
                       return (
-                        <tr key={it.row.serialNo} style={{ borderBottom: "1px solid #e2e8f0", fontSize: "11.5px" }}>
+                        <tr key={`${it.row.serialNo}-${idx}`} style={{ borderBottom: "1px solid #e2e8f0", fontSize: "11.5px" }}>
                           <td style={{ borderRight: "1px solid #94a3b8", textAlign: "center", color: "#475569" }}>{idx + 1}</td>
                           <td style={{ borderRight: "1px solid #94a3b8", textAlign: "left", fontWeight: "600", color: "#1e293b", lineHeight: "1.3", padding: "8px 6px" }}>
                             {it.row.journalName}
                             <div style={{ fontSize: "9px", fontWeight: "400", color: "#64748b", marginTop: "2px" }}>
-                              ({new Date().getFullYear()} TO Dec-{new Date().getFullYear()} | {planLabel})
+                              {it.year} | {planLabel} {it.type === "ANNUAL" ? "| Annual (Full Year)" : `| Issue Wise (${it.selectedIssuesList.map(issueNum => `Issue ${issueNum}`).join(", ")})`}
                             </div>
                           </td>
                           <td style={{ borderRight: "1px solid #94a3b8", textAlign: "center" }}>{it.hsn}</td>
@@ -849,7 +1173,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
                     </ol>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", textAlign: "center" }}>
-                    <strong style={{ color: "#0f172a", fontSize: "11px", marginBottom: "45px" }}>For, STM JOURNALS</strong>
+                    <strong style={{ color: "#0f172a", fontSize: "11px", marginBottom: "45px" }}>For, {brand.title.toUpperCase()}</strong>
                     <div style={{ width: "180px", borderBottom: "1px solid #64748b" }}></div>
                     <span style={{ fontSize: "9px", fontWeight: "800", textTransform: "uppercase", marginTop: "5px", letterSpacing: "0.05em", color: "#334155" }}>AUTHORISED SIGNATORY</span>
                   </div>
@@ -861,18 +1185,18 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginTop: "20px", fontSize: "10px", borderTop: "1px solid #cbd5e1", paddingTop: "10px" }}>
                 <div>
                   <strong style={{ color: "#64748b", textTransform: "uppercase" }}>REGD. OFFICE:</strong>
-                  <p style={{ margin: "2px 0", color: "#475569" }}>Office No. 4, First Floor, CSC Pocket -E, Mayur Vihar, Phase-II, New Delhi-110091</p>
+                  <p style={{ margin: "2px 0", color: "#475569" }}>{brand.regdOffice}</p>
                 </div>
                 <div>
                   <strong style={{ color: "#64748b", textTransform: "uppercase" }}>SALES & ADMIN OFFICE:</strong>
-                  <p style={{ margin: "2px 0", color: "#475569" }}>STM Journals, A Division of Consortium e-Learning Network Pvt. Ltd., A-118 1st Floor, Sector 63, Noida, Uttar Pradesh, India - 201301</p>
+                  <p style={{ margin: "2px 0", color: "#475569" }}>{brand.title}, {brand.subtitle}, {brand.address}</p>
                 </div>
               </div>
 
               <div style={{ textAlign: "center", borderTop: "1px dashed #cbd5e1", marginTop: "12px", paddingTop: "8px", fontSize: "10px", color: "#64748b" }}>
-                Tel: 01120 - 4781206 &nbsp;|&nbsp; Mob: +91-9810078958 &nbsp;|&nbsp; E-mail: subscriptions@stmjournals.com &nbsp;|&nbsp; Website: shop.stmjournals.com
+                Tel: {brand.tel} &nbsp;|&nbsp; Mob: {brand.mob} &nbsp;|&nbsp; E-mail: {brand.email} &nbsp;|&nbsp; Website: {brand.website}
                 <div style={{ fontSize: "8px", marginTop: "6px", color: "#94a3b8" }}>
-                  This computer generated invoice is available online at: {window.location.origin}/invoice.aspx?I=PRO-2026
+                  This computer generated invoice is available online at: {window.location.origin}/invoice.aspx?I={quoteId || "PRO-2026"}
                 </div>
               </div>
 

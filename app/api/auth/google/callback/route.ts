@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { exchangeGoogleCode, fetchGoogleProfile } from "@/lib/auth/google";
+import { exchangeGoogleCode, exchangeGoogleCodeForOrigin, fetchGoogleProfile } from "@/lib/auth/google";
 import { prisma } from "@/lib/prisma";
 import { AUTH_COOKIE_NAME, signSession } from "@/lib/auth/session";
 import { roleForEmail } from "@/lib/auth/admin-emails";
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(`${appBase}/login?error=google_state`);
     }
 
-    const accessToken = await exchangeGoogleCode(code);
+    const accessToken = await exchangeGoogleCodeForOrigin(code, appBase);
     const profile = await fetchGoogleProfile(accessToken);
     const normalizedEmail = profile.email.toLowerCase();
     const role = roleForEmail(normalizedEmail);

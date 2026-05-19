@@ -8,6 +8,14 @@ export async function prepareProformaEmailPayload(quoteId: string) {
 
   if (!quote) return null;
 
+  const { getJournalCatalog } = await import("@/lib/journal-catalog");
+  const catalog = await getJournalCatalog();
+  const catalogMap = new Map(catalog.map((c) => [Number(c.id), c]));
+  const isJournalsPub = quote.items.some((it) => {
+    const item = catalogMap.get(it.serialNo);
+    return item?.publisher?.toLowerCase() === "journalspub";
+  });
+
   const appliedDiscountPercent = quote.couponPercent || 0;
   const currency = quote.currency || "INR";
   const symbol = currency === "INR" ? "₹" : "$";
@@ -129,7 +137,8 @@ export async function prepareProformaEmailPayload(quoteId: string) {
     couponUsed: quote.couponCode ? `${quote.couponCode} (${quote.couponPercent}%)` : "None",
     total: `${symbol}${grandTotal.toLocaleString()}`,
     itemsTableHtml: itemsHtml,
-    financialsHtml: financialsHtml
+    financialsHtml: financialsHtml,
+    isJournalsPub: isJournalsPub ? "true" : "false"
   };
 }
 

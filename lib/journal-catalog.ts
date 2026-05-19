@@ -19,6 +19,9 @@ export type JournalCatalogItem = {
   printInr: number;
   onlineInr: number;
   combinedInr: number;
+  printUsd: number;
+  onlineUsd: number;
+  combinedUsd: number;
   imageUrl: string | null;
   aboutJournal: string | null;
   focusAndScope: string | null;
@@ -30,6 +33,11 @@ export type JournalCatalogItem = {
   icvValue: string | null;
   icvUrl: string | null;
   impactFactor: string | null;
+  publisher: string | null;
+  imprint: string | null;
+  address: string | null;
+  publisherEmail: string | null;
+  publisherContactNumber: string | null;
 };
 
 type CsvRow = Record<string, string>;
@@ -276,6 +284,9 @@ export async function getJournalCatalog(): Promise<JournalCatalogItem[]> {
       printInr: r["Subscription\n[Print]"],
       onlineInr: r["Subscription\n[Online]"],
       combinedInr: r["Subscription\n[Print+Online]"],
+      printUsd: r["Subscription\n[Print] USD"] || 0,
+      onlineUsd: r["Subscription\n[Online] USD"] || 0,
+      combinedUsd: r["Subscription\n[Print+Online] USD"] || 0,
       imageUrl: r.imageUrl || csv?.["Journal Image URL"] || null,
       aboutJournal: r.aboutJournal || csv?.["About Journal"] || null,
       focusAndScope: csv?.["Focus and Scope (Keywords)"] || null,
@@ -286,7 +297,12 @@ export async function getJournalCatalog(): Promise<JournalCatalogItem[]> {
       indexingLogoUrl: csv?.["Indexing Logo URL"] || null,
       icvValue: csv?.["ICV Value"] || null,
       icvUrl: csv?.["ICV URL"] || null,
-      impactFactor: csv?.["Impact Factor"] || null
+      impactFactor: csv?.["Impact Factor"] || null,
+      publisher: csv?.["Publisher"] || null,
+      imprint: csv?.["Imprint"] || null,
+      address: csv?.["Address"] || null,
+      publisherEmail: csv?.["Publisher Email"] || null,
+      publisherContactNumber: csv?.["Publisher Contact Number"] || null
     };
   });
 }

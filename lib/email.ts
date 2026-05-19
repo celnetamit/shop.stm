@@ -21,9 +21,22 @@ function getFromEmail() {
 }
 
 
-function buildModernEmailTemplate(content: string, title: string): string {
+function buildModernEmailTemplate(content: string, title: string, isJournalsPub?: boolean): string {
   // Use direct verified external asset link as requested by user to guarantee live resolution.
-  const logoUrl = `https://journals.stmjournals.com/wp-content/uploads/2023/12/c67ba4c3-logo_stm-1.png`;
+  const logoUrl = isJournalsPub
+    ? "https://journals.stmjournals.com/wp-content/uploads/2023/12/c67ba4c3-logo_stm-1.png" // using same verified high-res stm logo base or any other
+    : "https://journals.stmjournals.com/wp-content/uploads/2023/12/c67ba4c3-logo_stm-1.png";
+
+  const brandTitle = isJournalsPub ? "JOURNALS PUB" : "STM JOURNALS";
+  const brandSubtitle = isJournalsPub
+    ? "A Division of Dhruv Infosystems Private Limited"
+    : "A Division of Consortium eLearning Network Pvt. Ltd.";
+  
+  const brandRegardsName = isJournalsPub ? "Journals Pub Support Team" : "STM Support Team";
+  const brandRegardsCompany = isJournalsPub ? "Dhruv Infosystems Private Limited" : "Consortium eLearning Network Pvt. Ltd.";
+
+  const brandCopyright = isJournalsPub ? "Dhruv Infosystems Private Limited" : "Consortium eLearning Network Pvt. Ltd.";
+  const brandEmail = isJournalsPub ? "subscriptions@journalspub.com" : "info@stmjournals.in";
 
   return `
 <!DOCTYPE html>
@@ -55,12 +68,22 @@ function buildModernEmailTemplate(content: string, title: string): string {
             <table role="presentation" width="100%">
               <tr>
                 <td align="center">
-                  <img src="${logoUrl}" alt="STM Logo" width="72" height="72" style="border-radius: 50%; background: #ffffff; padding: 4px; margin-bottom: 12px; display:block;">
+                  ${isJournalsPub ? `
+                    <div style="width:72px; height:72px; border-radius:50%; background:#ffffff; padding:4px; margin-bottom:12px; display:inline-block; box-sizing:border-box;">
+                      <table role="presentation" width="100%" height="100%">
+                        <tr>
+                          <td align="center" valign="middle" style="background:#0f2b5c; border-radius:50%; color:#ffffff; font-family:Arial, sans-serif; font-size:26px; font-weight:bold; line-height:1; text-align:center;">JP</td>
+                        </tr>
+                      </table>
+                    </div>
+                  ` : `
+                    <img src="${logoUrl}" alt="STM Logo" width="72" height="72" style="border-radius: 50%; background: #ffffff; padding: 4px; margin-bottom: 12px; display:block; margin: 0 auto;">
+                  `}
                 </td>
               </tr>
             </table>
-            <h1 style="margin:0; color:#ffffff; font-size:26px; letter-spacing: 1px; text-transform: uppercase; font-family: Arial, sans-serif;">STM JOURNALS</h1>
-            <p style="margin:6px 0 0; color:#bfdbfe; font-size:13px; font-family: Arial, sans-serif;">A Division of Consortium eLearning Network Pvt. Ltd.</p>
+            <h1 style="margin:0; color:#ffffff; font-size:26px; letter-spacing: 1px; text-transform: uppercase; font-family: Arial, sans-serif;">${brandTitle}</h1>
+            <p style="margin:6px 0 0; color:#bfdbfe; font-size:13px; font-family: Arial, sans-serif;">${brandSubtitle}</p>
             <table role="presentation" align="center" style="margin-top: 14px;">
               <tr>
                 <td style="background-color: #15803d; border-radius: 20px; padding: 6px 15px;">
@@ -83,8 +106,8 @@ function buildModernEmailTemplate(content: string, title: string): string {
             <tr>
               <td style="color: #64748b; font-size: 14px; line-height: 1.5;">
                 <strong>Warm regards,</strong><br/>
-                STM Support Team<br/>
-                Consortium eLearning Network Pvt. Ltd.
+                ${brandRegardsName}<br/>
+                ${brandRegardsCompany}
               </td>
             </tr>
           </table>
@@ -93,8 +116,8 @@ function buildModernEmailTemplate(content: string, title: string): string {
       <tr>
         <td class="footer" style="background-color: #0f172a; border-radius: 0 0 12px 12px; padding: 20px; text-align:center;">
           <p style="margin:0 0 6px; color:#ffffff; font-weight:600; font-family: Arial, sans-serif; letter-spacing: 0.5px;">Empowering Scientific Innovation</p>
-          <p style="margin:0; color:#94a3b8; font-size:11px;">&copy; ${new Date().getFullYear()} Consortium eLearning Network Pvt. Ltd.</p>
-          <p style="margin:4px 0 0; color:#94a3b8; font-size:11px;">Sector-63, Noida, U.P. | <a href="mailto:info@stmjournals.in" style="color:#38bdf8; text-decoration:none;">info@stmjournals.in</a></p>
+          <p style="margin:0; color:#94a3b8; font-size:11px;">&copy; ${new Date().getFullYear()} ${brandCopyright}</p>
+          <p style="margin:4px 0 0; color:#94a3b8; font-size:11px;">Sector-63, Noida, U.P. | <a href="mailto:${brandEmail}" style="color:#38bdf8; text-decoration:none;">${brandEmail}</a></p>
         </td>
       </tr>
     </table>
@@ -149,7 +172,8 @@ export async function sendTemplatedEmail(key: string, to: string, data: Record<s
     }
     
     // 4. Wrap in aesthetic container
-    const finalBody = buildModernEmailTemplate(interpolatedBody, finalSubject);
+    const isJournalsPub = data.isJournalsPub === "true";
+    const finalBody = buildModernEmailTemplate(interpolatedBody, finalSubject, isJournalsPub);
 
     // 5. Construct command
     const command = new SendEmailCommand({

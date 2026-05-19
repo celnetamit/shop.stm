@@ -4206,3 +4206,203 @@ input:hover, select:hover, textarea:hover {
   transform: translateY(-3px);
 }
 
+/* Proforma Custom Subscription Config Box */
+.proforma-list-header {
+  display: grid;
+  grid-template-columns: 48px 1.5fr 2.5fr 1fr;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #f8fafc;
+  border-bottom: 2px solid #e2e8f0;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 0.05em;
+}
+
+.proforma-row-custom {
+  display: grid;
+  grid-template-columns: 48px 1.5fr 2.5fr 1fr;
+  gap: 12px;
+  align-items: flex-start;
+  border-bottom: 1px solid #edf1f7;
+  padding: 20px 16px;
+  background: #fff;
+  transition: background-color 0.2s ease;
+}
+
+.proforma-row-custom:hover {
+  background-color: #fafbfc;
+}
+
+.proforma-row-custom .checkbox-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-top: 4px;
+}
+
+.proforma-row-custom .checkbox-custom {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 2px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.proforma-row-custom .checkbox-custom.checked {
+  background-color: #2563eb;
+  border-color: #2563eb;
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+}
+
+.proforma-row-custom .checkbox-custom svg {
+  color: #fff;
+  width: 14px;
+  height: 14px;
+}
+
+.proforma-configs-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.proforma-config-card {
+  position: relative;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  background-color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+
+.proforma-config-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+}
+
+.proforma-config-card-header {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.proforma-config-card-header select {
+  font-size: 13px !important;
+  color: #1e293b !important;
+  background-color: #fff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  padding: 6px 28px 6px 12px !important;
+  cursor: pointer;
+  height: 36px;
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.proforma-config-issues-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px dashed #e2e8f0;
+  padding-top: 10px;
+}
+
+.proforma-config-issues-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: #3b82f6;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.proforma-config-issues-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.proforma-issue-pill {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  background-color: #e2e8f0;
+  color: #475569;
+  border: 1px solid transparent;
+}
+
+.proforma-issue-pill.selected {
+  background-color: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+}
+
+.proforma-issue-pill:hover {
+  transform: translateY(-1px);
+}
+
+.proforma-issue-pill:active {
+  transform: translateY(0);
+}
+
+.proforma-config-delete-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #ef4444;
+  color: #fff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.4);
+  transition: all 0.2s ease;
+}
+
+.proforma-config-delete-btn:hover {
+  background-color: #dc2626;
+  transform: scale(1.1);
+}
+
+.proforma-add-config-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px dashed #cbd5e1;
+  background: transparent;
+  color: #2563eb;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.proforma-add-config-btn:hover {
+  background-color: #eff6ff;
+  border-color: #2563eb;
+}
+
+
