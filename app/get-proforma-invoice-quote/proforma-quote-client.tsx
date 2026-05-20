@@ -1052,6 +1052,8 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
         
         const activeCgst = gst / 2;
         const activeSgst = gst / 2;
+        const invoiceBaseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://shop.stmjournals.in";
+        const invoiceUrl = `${invoiceBaseUrl}/invoice.aspx?I=${quoteId || "PRO-2026"}`;
 
         const isJournalsPub = selectedRows.length > 0
           ? selectedRows.some(row => isJournalsPubPublisher(row.publisher))
@@ -1195,7 +1197,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
                     <div style={{ position: "absolute", right: "15px", top: "15px", border: "1px solid #cbd5e1", padding: "4px", textAlign: "center", width: "60px" }}>
                       <span style={{ fontSize: "7px", fontWeight: "700", display: "block", marginBottom: "2px" }}>SCAN INVOICE</span>
                       <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(`${window.location.origin}/invoice.aspx?I=${quoteId || "PRO-2026"}`)}`}
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(invoiceUrl)}`}
                         alt="Invoice QR Code"
                         style={{ width: "35px", height: "35px", border: "1px dashed #cbd5e1", background: "#fff" }}
                       />
@@ -1355,7 +1357,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
               <div style={{ textAlign: "center", borderTop: "1px dashed #cbd5e1", marginTop: "12px", paddingTop: "8px", fontSize: "10px", color: "#64748b" }}>
                 Tel: {brand.tel} &nbsp;|&nbsp; Mob: {brand.mob} &nbsp;|&nbsp; E-mail: {brand.email} &nbsp;|&nbsp; Website: {brand.website}
                 <div style={{ fontSize: "8px", marginTop: "6px", color: "#94a3b8" }}>
-                  This computer generated invoice is available online at: {window.location.origin}/invoice.aspx?I={quoteId || "PRO-2026"}
+                  This computer generated invoice is available online at: {invoiceUrl}
                 </div>
               </div>
 
