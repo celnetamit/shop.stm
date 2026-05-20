@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { fetchPrefillUser, loadDraft, saveDraft } from "@/lib/client/form-prefill";
 
 export default function ForAgenciesPage() {
   const [formData, setFormData] = useState({
@@ -17,6 +18,26 @@ export default function ForAgenciesPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const draft = loadDraft<typeof formData>("draft:for-agencies");
+    if (Object.keys(draft).length) {
+      setFormData((prev) => ({ ...prev, ...draft }));
+    }
+    (async () => {
+      const u = await fetchPrefillUser();
+      if (!u) return;
+      setFormData((prev) => ({
+        ...prev,
+        contactPerson: prev.contactPerson || u.name || prev.contactPerson,
+        email: prev.email || u.email || prev.email
+      }));
+    })();
+  }, []);
+
+  useEffect(() => {
+    saveDraft("draft:for-agencies", formData);
+  }, [formData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,16 +58,7 @@ export default function ForAgenciesPage() {
       }
 
       setSuccess(true);
-      setFormData({
-        agencyName: "",
-        contactPerson: "",
-        email: "",
-        phone: "",
-        country: "",
-        website: "",
-        specialization: "Science",
-        message: ""
-      });
+      setFormData((prev) => ({ ...prev, message: "" }));
     } catch (err: any) {
       setError(err.message || "Failed to submit query.");
     } finally {

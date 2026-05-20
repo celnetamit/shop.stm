@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useRouter } from "next/navigation";
+import { fetchPrefillUser, loadDraft, saveDraft } from "@/lib/client/form-prefill";
 
 type Journal = {
   serialNo: number;
@@ -256,6 +257,120 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
     setDomain("All Subjects");
     setKeyword("");
   }, [subscriptionType]);
+
+  useEffect(() => {
+    const draft = loadDraft<{
+      organization: string;
+      contactName: string;
+      email: string;
+      phone: string;
+      address: string;
+      gstNumber: string;
+      city: string;
+      stateName: string;
+      pincode: string;
+      designation: string;
+      institutionName: string;
+      country: string;
+      sameAsBilling: boolean;
+      subscriptionType: "STM" | "PUB";
+      subscriberCategory: "COLLEGE" | "AGENCY" | "SCHOLAR";
+      shippingRecipientName: string;
+      shippingAddress: string;
+      shippingInstitute: string;
+      shippingPincode: string;
+      shippingCity: string;
+      shippingState: string;
+      shippingCountry: string;
+      shippingPhone: string;
+      remarks: string;
+    }>("draft:proforma-form");
+    if (draft.organization) setOrganization(draft.organization);
+    if (draft.contactName) setContactName(draft.contactName);
+    if (draft.email) setEmail(draft.email);
+    if (draft.phone) setPhone(draft.phone);
+    if (draft.address) setAddress(draft.address);
+    if (draft.gstNumber) setGstNumber(draft.gstNumber);
+    if (draft.city) setCity(draft.city);
+    if (draft.stateName) setStateName(draft.stateName);
+    if (draft.pincode) setPincode(draft.pincode);
+    if (draft.designation) setDesignation(draft.designation);
+    if (draft.institutionName) setInstitutionName(draft.institutionName);
+    if (draft.country) setCountry(draft.country);
+    if (typeof draft.sameAsBilling === "boolean") setSameAsBilling(draft.sameAsBilling);
+    if (draft.subscriptionType) setSubscriptionType(draft.subscriptionType);
+    if (draft.subscriberCategory) setSubscriberCategory(draft.subscriberCategory);
+    if (draft.shippingRecipientName) setShippingRecipientName(draft.shippingRecipientName);
+    if (draft.shippingAddress) setShippingAddress(draft.shippingAddress);
+    if (draft.shippingInstitute) setShippingInstitute(draft.shippingInstitute);
+    if (draft.shippingPincode) setShippingPincode(draft.shippingPincode);
+    if (draft.shippingCity) setShippingCity(draft.shippingCity);
+    if (draft.shippingState) setShippingState(draft.shippingState);
+    if (draft.shippingCountry) setShippingCountry(draft.shippingCountry);
+    if (draft.shippingPhone) setShippingPhone(draft.shippingPhone);
+    if (draft.remarks) setRemarks(draft.remarks);
+
+    (async () => {
+      const u = await fetchPrefillUser();
+      if (!u) return;
+      if (!draft.contactName && u.name) setContactName(u.name);
+      if (!draft.email && u.email) setEmail(u.email);
+    })();
+  }, []);
+
+  useEffect(() => {
+    saveDraft("draft:proforma-form", {
+      organization,
+      contactName,
+      email,
+      phone,
+      address,
+      gstNumber,
+      city,
+      stateName,
+      pincode,
+      designation,
+      institutionName,
+      country,
+      sameAsBilling,
+      subscriptionType,
+      subscriberCategory,
+      shippingRecipientName,
+      shippingAddress,
+      shippingInstitute,
+      shippingPincode,
+      shippingCity,
+      shippingState,
+      shippingCountry,
+      shippingPhone,
+      remarks
+    });
+  }, [
+    organization,
+    contactName,
+    email,
+    phone,
+    address,
+    gstNumber,
+    city,
+    stateName,
+    pincode,
+    designation,
+    institutionName,
+    country,
+    sameAsBilling,
+    subscriptionType,
+    subscriberCategory,
+    shippingRecipientName,
+    shippingAddress,
+    shippingInstitute,
+    shippingPincode,
+    shippingCity,
+    shippingState,
+    shippingCountry,
+    shippingPhone,
+    remarks
+  ]);
 
   const subjects = useMemo(() => {
     const s = new Set(visibleJournals.map((j) => j.subject));

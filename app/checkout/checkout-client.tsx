@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useCart } from "@/app/components/cart-store";
+import { fetchPrefillUser, loadDraft, saveDraft } from "@/lib/client/form-prefill";
 
 declare global {
   interface Window {
@@ -33,6 +34,27 @@ export default function CheckoutClient() {
 
   const [quoteData, setQuoteData] = useState<any>(null);
   const [isLoadingQuote, setIsLoadingQuote] = useState(!!queryQuoteId);
+
+  useEffect(() => {
+    const draft = loadDraft<{ name: string; email: string; organization: string; address: string; state: string; pincode: string; gst: string }>("draft:checkout");
+    if (draft.name) setName(draft.name);
+    if (draft.email) setEmail(draft.email);
+    if (draft.organization) setOrganization(draft.organization);
+    if (draft.address) setAddress(draft.address);
+    if (draft.state) setState(draft.state);
+    if (draft.pincode) setPincode(draft.pincode);
+    if (draft.gst) setGst(draft.gst);
+    (async () => {
+      const u = await fetchPrefillUser();
+      if (!u) return;
+      if (!draft.name && u.name) setName(u.name);
+      if (!draft.email && u.email) setEmail(u.email);
+    })();
+  }, []);
+
+  useEffect(() => {
+    saveDraft("draft:checkout", { name, email, organization, address, state, pincode, gst });
+  }, [name, email, organization, address, state, pincode, gst]);
 
   // 1. Fetch Locked Quote if present in system to secure pricing & pre-fill.
   useEffect(() => {

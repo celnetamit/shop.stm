@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useEffect } from "react";
+import { fetchPrefillUser, loadDraft, saveDraft } from "@/lib/client/form-prefill";
 
 export default function ContactUsPage() {
   const [name, setName] = useState("");
@@ -10,6 +12,25 @@ export default function ContactUsPage() {
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const draft = loadDraft<{ name: string; email: string; phone: string; subject: string; message: string }>("draft:contact-us");
+    if (draft.name) setName(draft.name);
+    if (draft.email) setEmail(draft.email);
+    if (draft.phone) setPhone(draft.phone);
+    if (draft.subject) setSubject(draft.subject);
+    if (draft.message) setMessage(draft.message);
+    (async () => {
+      const u = await fetchPrefillUser();
+      if (!u) return;
+      if (!draft.name && u.name) setName(u.name);
+      if (!draft.email && u.email) setEmail(u.email);
+    })();
+  }, []);
+
+  useEffect(() => {
+    saveDraft("draft:contact-us", { name, email, phone, subject, message });
+  }, [name, email, phone, subject, message]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -29,10 +50,6 @@ export default function ContactUsPage() {
       return;
     }
 
-    setName("");
-    setEmail("");
-    setPhone("");
-    setSubject("");
     setMessage("");
     setStatus("Thank you. Your enquiry was submitted successfully.");
   }

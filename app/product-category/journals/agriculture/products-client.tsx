@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/app/components/cart-store";
+import { fetchPrefillUser, loadDraft, saveDraft } from "@/lib/client/form-prefill";
 
 type Journal = {
   id: string;
@@ -46,6 +47,25 @@ export default function AgricultureCatalogClient({ journals }: { journals: Journ
     }
   }, [subjectName]);
 
+  useEffect(() => {
+    const draft = loadDraft<{ name: string; email: string; phone: string; subject: string; message: string }>("draft:category-query");
+    if (draft.name) setName(draft.name);
+    if (draft.email) setEmail(draft.email);
+    if (draft.phone) setPhone(draft.phone);
+    if (draft.subject) setSubject(draft.subject);
+    if (draft.message) setMessage(draft.message);
+    (async () => {
+      const u = await fetchPrefillUser();
+      if (!u) return;
+      if (!draft.name && u.name) setName(u.name);
+      if (!draft.email && u.email) setEmail(u.email);
+    })();
+  }, []);
+
+  useEffect(() => {
+    saveDraft("draft:category-query", { name, email, phone, subject, message });
+  }, [name, email, phone, subject, message]);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return journals;
@@ -75,9 +95,6 @@ export default function AgricultureCatalogClient({ journals }: { journals: Journ
         return;
       }
 
-      setName("");
-      setEmail("");
-      setPhone("");
       setMessage("");
       setStatus("Thank you! Your enquiry was submitted successfully.");
     } catch (err) {

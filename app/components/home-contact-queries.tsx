@@ -1,11 +1,31 @@
 "use client";
 
 import { useState } from "react";
+import { useEffect } from "react";
+import { fetchPrefillUser, loadDraft, saveDraft } from "@/lib/client/form-prefill";
 
 export default function HomeContactQueries() {
   const [formData, setFormData] = useState({ name: "", email: "", phone: "", subject: "Homepage Enquiry", message: "" });
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  useEffect(() => {
+    const draft = loadDraft<typeof formData>("draft:home-contact");
+    if (Object.keys(draft).length) setFormData((prev) => ({ ...prev, ...draft }));
+    (async () => {
+      const u = await fetchPrefillUser();
+      if (!u) return;
+      setFormData((prev) => ({
+        ...prev,
+        name: prev.name || u.name || prev.name,
+        email: prev.email || u.email || prev.email
+      }));
+    })();
+  }, []);
+
+  useEffect(() => {
+    saveDraft("draft:home-contact", formData);
+  }, [formData]);
 
   async function handleHomeSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -24,7 +44,7 @@ export default function HomeContactQueries() {
       const data = await res.json();
       if (data.ok) {
         setStatus({ type: "success", text: "🎉 Thank you! Your query has been recorded. Our team will contact you shortly." });
-        setFormData({ name: "", email: "", phone: "", subject: "Homepage Enquiry", message: "" });
+        setFormData((prev) => ({ ...prev, message: "" }));
       } else {
         setStatus({ type: "error", text: data.error || "Enquiry submission failed." });
       }
