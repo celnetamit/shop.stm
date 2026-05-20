@@ -22,7 +22,6 @@ export async function POST(req: NextRequest) {
       address?: string;
       gstNumber?: string;
       currency?: "INR" | "USD";
-      remarks?: string;
     };
 
     if (!body.organization || !body.contactName || !body.email || !body.phone || !body.country) {
@@ -40,7 +39,6 @@ export async function POST(req: NextRequest) {
           address: body.address?.trim() || null,
           gstNumber: body.gstNumber?.trim() || null,
           currency: body.currency === "USD" ? "USD" : "INR",
-          remarks: body.remarks?.trim() || null,
           createdByUserId: session?.sub || null
         }
       });
