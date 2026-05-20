@@ -23,8 +23,9 @@ function getFromEmail() {
 
 function buildModernEmailTemplate(content: string, title: string, isJournalsPub?: boolean): string {
   // Use direct verified external asset link as requested by user to guarantee live resolution.
+  const publicBaseUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://shop.stmjournals.in").replace(/\/$/, "");
   const logoUrl = isJournalsPub
-    ? "https://journals.stmjournals.com/wp-content/uploads/2023/12/c67ba4c3-logo_stm-1.png" // using same verified high-res stm logo base or any other
+    ? `${publicBaseUrl}/journalspub-logo.png`
     : "https://journals.stmjournals.com/wp-content/uploads/2023/12/c67ba4c3-logo_stm-1.png";
 
   const brandTitle = isJournalsPub ? "JOURNALS PUB" : "STM JOURNALS";
@@ -69,13 +70,7 @@ function buildModernEmailTemplate(content: string, title: string, isJournalsPub?
               <tr>
                 <td align="center">
                   ${isJournalsPub ? `
-                    <div style="width:72px; height:72px; border-radius:50%; background:#ffffff; padding:4px; margin-bottom:12px; display:inline-block; box-sizing:border-box;">
-                      <table role="presentation" width="100%" height="100%">
-                        <tr>
-                          <td align="center" valign="middle" style="background:#0f2b5c; border-radius:50%; color:#ffffff; font-family:Arial, sans-serif; font-size:26px; font-weight:bold; line-height:1; text-align:center;">JP</td>
-                        </tr>
-                      </table>
-                    </div>
+                    <img src="${logoUrl}" alt="Journals Pub Logo" width="180" style="margin-bottom: 12px; display:block; margin-left:auto; margin-right:auto; background:#fff; padding:6px; border-radius:6px;">
                   ` : `
                     <img src="${logoUrl}" alt="STM Logo" width="72" height="72" style="border-radius: 50%; background: #ffffff; padding: 4px; margin-bottom: 12px; display:block; margin: 0 auto;">
                   `}
@@ -150,7 +145,7 @@ export async function sendTemplatedEmail(key: string, to: string, data: Record<s
     if (!template) throw new Error(`Template missing: ${key}`);
 
     // 3. Interpolate strings
-    const finalSubject = replaceTemplate(template.subject, data);
+    let finalSubject = replaceTemplate(template.subject, data);
     let interpolatedBody = replaceTemplate(template.body, data);
     
     // Fail-safe injection: Ensure items and financial tables are present in institutional quotes
@@ -171,8 +166,18 @@ export async function sendTemplatedEmail(key: string, to: string, data: Record<s
       }
     }
     
-    // 4. Wrap in aesthetic container
     const isJournalsPub = data.isJournalsPub === "true";
+    if (isJournalsPub && key.startsWith("PROFORMA_CREATED")) {
+      finalSubject = finalSubject.replace(/STM Journals/gi, "Journals Pub");
+      if (!/Journals Pub/i.test(finalSubject)) {
+        finalSubject = `${finalSubject} - Journals Pub`;
+      }
+      interpolatedBody = interpolatedBody
+        .replace(/Greetings from\s*<strong>\s*STM Journals\s*<\/strong>\s*!/gi, "Greetings from <strong>Journals Pub</strong>!")
+        .replace(/Greetings from\s*STM Journals\s*!/gi, "Greetings from Journals Pub!");
+    }
+    
+    // 4. Wrap in aesthetic container
     const finalBody = buildModernEmailTemplate(interpolatedBody, finalSubject, isJournalsPub);
 
     // 5. Construct command
