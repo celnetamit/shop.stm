@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useRouter } from "next/navigation";
@@ -105,6 +105,36 @@ function getIssueCountFromFrequency(frequency: string | null): number {
   return 2;
 }
 
+function isJournalsPubPublisher(publisher: string | null | undefined): boolean {
+  const normalized = (publisher || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  return normalized === "journalspub";
+}
+
+function getIssueMonthRange(totalIssues: number, issueNum: number): { startMonth: number; endMonth: number } {
+  if (totalIssues === 2) return issueNum === 1 ? { startMonth: 1, endMonth: 6 } : { startMonth: 7, endMonth: 12 };
+  if (totalIssues === 3) {
+    if (issueNum === 1) return { startMonth: 1, endMonth: 4 };
+    if (issueNum === 2) return { startMonth: 5, endMonth: 8 };
+    return { startMonth: 9, endMonth: 12 };
+  }
+  if (totalIssues === 4) {
+    const startMonth = (issueNum - 1) * 3 + 1;
+    return { startMonth, endMonth: Math.min(12, startMonth + 2) };
+  }
+  if (totalIssues === 6) {
+    const startMonth = (issueNum - 1) * 2 + 1;
+    return { startMonth, endMonth: Math.min(12, startMonth + 1) };
+  }
+  if (totalIssues === 12) return { startMonth: issueNum, endMonth: issueNum };
+  const span = Math.max(1, Math.floor(12 / Math.max(1, totalIssues)));
+  const startMonth = (issueNum - 1) * span + 1;
+  return { startMonth, endMonth: Math.min(12, startMonth + span - 1) };
+}
+
+function monthShort(month: number): string {
+  return ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][month - 1] || "";
+}
+
 export default function ProformaQuoteClient({ journals, canUsePubSubscription }: Props) {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -138,6 +168,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
   const [shippingState, setShippingState] = useState("");
   const [shippingCountry, setShippingCountry] = useState("India");
   const [shippingPhone, setShippingPhone] = useState("");
+  const [remarks, setRemarks] = useState("");
 
   const [currency, setCurrency] = useState<"INR" | "USD">("INR");
   const [keyword, setKeyword] = useState("");
@@ -211,23 +242,38 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
     }));
   };
 
+  const visibleJournals = useMemo(() => {
+    if (!canUsePubSubscription) return journals;
+    if (subscriptionType === "PUB") {
+      return journals.filter((j) => isJournalsPubPublisher(j.publisher));
+    }
+    return journals.filter((j) => !isJournalsPubPublisher(j.publisher));
+  }, [journals, canUsePubSubscription, subscriptionType]);
+
+  useEffect(() => {
+    setSelected({});
+    setSubscriptionConfigs({});
+    setDomain("All Subjects");
+    setKeyword("");
+  }, [subscriptionType]);
+
   const subjects = useMemo(() => {
-    const s = new Set(journals.map((j) => j.subject));
+    const s = new Set(visibleJournals.map((j) => j.subject));
     return ["All Subjects", ...Array.from(s).sort((a, b) => a.localeCompare(b))];
-  }, [journals]);
+  }, [visibleJournals]);
 
   const filtered = useMemo(() => {
     const q = keyword.trim().toLowerCase();
-    return journals.filter((j) => {
+    return visibleJournals.filter((j) => {
       const byDomain = domain === "All Subjects" || j.subject === domain;
       if (!byDomain) return false;
       if (!q) return true;
       const hay = `${j.journalName} ${j.subject} ${j.abbreviation} ${j.issn || ""}`.toLowerCase();
       return hay.includes(q);
     });
-  }, [journals, keyword, domain]);
+  }, [visibleJournals, keyword, domain]);
 
-  const selectedRows = useMemo(() => journals.filter((j) => selected[j.serialNo]), [journals, selected]);
+  const selectedRows = useMemo(() => visibleJournals.filter((j) => selected[j.serialNo]), [visibleJournals, selected]);
 
   function getPrice(j: Journal, plan: Plan) {
     if (currency === "INR") {
@@ -284,6 +330,8 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
       year: number;
       type: "ANNUAL" | "ISSUE_WISE";
       selectedIssuesList: number[];
+      periodStart: number;
+      periodEnd: number;
     }> = [];
 
     selectedRows.forEach((row) => {
@@ -302,6 +350,15 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
         const gstRate = currency === "INR" && isDigital ? 18 : 0;
         const itemGst = itemTaxable * (gstRate / 100);
         const netAmount = itemTaxable + itemGst;
+        let periodStart = c.year * 12;
+        let periodEnd = c.year * 12 + 11;
+        if (c.type === "ISSUE_WISE" && c.selectedIssues.length > 0) {
+          const ranges = c.selectedIssues.map((issueNum) => getIssueMonthRange(totalIssues, issueNum));
+          const startMonth = Math.min(...ranges.map((r) => r.startMonth));
+          const endMonth = Math.max(...ranges.map((r) => r.endMonth));
+          periodStart = c.year * 12 + (startMonth - 1);
+          periodEnd = c.year * 12 + (endMonth - 1);
+        }
 
         list.push({
           row,
@@ -321,13 +378,56 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
             : "4902",
           year: c.year,
           type: c.type,
-          selectedIssuesList: c.selectedIssues
+          selectedIssuesList: c.selectedIssues,
+          periodStart,
+          periodEnd
         });
       });
     });
 
     return list;
   }, [selectedRows, subscriptionConfigs, currency, appliedDiscountPercent]);
+
+  const mergedItemizedTotals = useMemo(() => {
+    if (!itemizedTotals.length) return [];
+    const sorted = [...itemizedTotals].sort((a, b) => {
+      if (a.row.serialNo !== b.row.serialNo) return a.row.serialNo - b.row.serialNo;
+      if (a.plan !== b.plan) return a.plan.localeCompare(b.plan);
+      return a.periodStart - b.periodStart;
+    });
+    const merged: Array<(typeof itemizedTotals)[number] & { rangeLabel: string }> = [];
+    for (const current of sorted) {
+      const last = merged[merged.length - 1];
+      const canMerge =
+        !!last &&
+        last.row.serialNo === current.row.serialNo &&
+        last.plan === current.plan &&
+        last.hsn === current.hsn &&
+        current.periodStart <= last.periodEnd + 1;
+      if (canMerge && last) {
+        last.unitPrice += current.unitPrice;
+        last.itemDiscount += current.itemDiscount;
+        last.itemTaxable += current.itemTaxable;
+        last.itemGst += current.itemGst;
+        last.netAmount += current.netAmount;
+        last.periodEnd = Math.max(last.periodEnd, current.periodEnd);
+        last.type = "ISSUE_WISE";
+      } else {
+        merged.push({ ...current, rangeLabel: "" });
+      }
+    }
+    return merged.map((it) => {
+      const startYear = Math.floor(it.periodStart / 12);
+      const startMonth = (it.periodStart % 12) + 1;
+      const endYear = Math.floor(it.periodEnd / 12);
+      const endMonth = (it.periodEnd % 12) + 1;
+      const rangeLabel =
+        startYear === endYear && startMonth === 1 && endMonth === 12
+          ? `${startYear}`
+          : `${monthShort(startMonth)} ${startYear} to ${monthShort(endMonth)} ${endYear}`;
+      return { ...it, rangeLabel };
+    });
+  }, [itemizedTotals]);
 
   const subtotal = useMemo(() => itemizedTotals.reduce((sum, item) => sum + item.unitPrice, 0), [itemizedTotals]);
   const discount = useMemo(() => itemizedTotals.reduce((sum, item) => sum + item.itemDiscount, 0), [itemizedTotals]);
@@ -359,7 +459,8 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
         country,
         address: `${address}${city ? `, ${city}` : ""}${stateName ? `, ${stateName}` : ""}${pincode ? ` - ${pincode}` : ""}`,
         gstNumber,
-        currency
+        currency,
+        remarks
       })
     });
 
@@ -380,11 +481,8 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
     setError("");
     setSubmitting(true);
 
-    const items = itemizedTotals.map((item) => {
-      const issuesText = item.type === "ANNUAL" 
-        ? "Annual" 
-        : `Issues: ${item.selectedIssuesList.sort((a,b)=>a-b).join(", ")}`;
-      const formattedJournalName = `${item.row.journalName} (${item.year} | ${issuesText})`;
+    const items = mergedItemizedTotals.map((item) => {
+      const formattedJournalName = `${item.row.journalName} (${item.rangeLabel} | ${item.plan === "PRINT_ONLINE" ? "Print + Digital" : item.plan === "ONLINE" ? "Digital" : "Print"})`;
 
       return {
         serialNo: item.row.serialNo,
@@ -567,9 +665,48 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
       <p className="proforma-subtitle">Generate GST-compliant institutional quotations.</p>
 
       <div className="proforma-steps">
-        <span className={step === 1 ? "active" : ""}><i>1</i> SUBSCRIBER INFO</span>
-        <span className={step === 2 ? "active" : ""}><i>2</i> JOURNAL CART</span>
-        <span className={step === 3 ? "active" : ""}><i>3</i> PREVIEW</span>
+        <span
+          className={step === 1 ? "active" : ""}
+          onClick={() => setStep(1)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") setStep(1);
+          }}
+          style={{ cursor: "pointer" }}
+        >
+          <i>1</i> SUBSCRIBER INFO
+        </span>
+        <span
+          className={step === 2 ? "active" : ""}
+          onClick={() => {
+            if (quoteId) setStep(2);
+          }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if ((e.key === "Enter" || e.key === " ") && quoteId) setStep(2);
+          }}
+          title={!quoteId ? "Complete Subscriber Info first" : "Edit Journal Cart"}
+          style={{ cursor: quoteId ? "pointer" : "not-allowed" }}
+        >
+          <i>2</i> JOURNAL CART
+        </span>
+        <span
+          className={step === 3 ? "active" : ""}
+          onClick={() => {
+            if (quoteId && itemizedTotals.length > 0) setStep(3);
+          }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if ((e.key === "Enter" || e.key === " ") && quoteId && itemizedTotals.length > 0) setStep(3);
+          }}
+          title={!quoteId || itemizedTotals.length === 0 ? "Build the quote first" : "Open Preview"}
+          style={{ cursor: quoteId && itemizedTotals.length > 0 ? "pointer" : "not-allowed" }}
+        >
+          <i>3</i> PREVIEW
+        </span>
       </div>
 
       {step === 1 ? (
@@ -652,6 +789,12 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
             <input value={stateName} onChange={(e) => setStateName(e.target.value)} placeholder="State" />
             <input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Country" />
             <input value={gstNumber} onChange={(e) => setGstNumber(e.target.value)} placeholder="GSTIN Optional" />
+            <textarea
+              value={remarks}
+              onChange={(e) => setRemarks(e.target.value)}
+              placeholder="Remark (optional)"
+              className="proforma-full"
+            />
 
             <div className="proforma-currency-line proforma-full">
               <span>Currency</span>
@@ -911,30 +1054,30 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
         const activeSgst = gst / 2;
 
         const isJournalsPub = selectedRows.length > 0
-          ? selectedRows.some(row => row.publisher?.toLowerCase() === "journalspub")
+          ? selectedRows.some(row => isJournalsPubPublisher(row.publisher))
           : subscriptionType === "PUB";
 
         const brand = isJournalsPub ? {
           logoText: "JP",
           title: "Journals Pub",
-          subtitle: "A Division of Dhruv Infosystems Private Limited",
-          address: "A-118, Level 2, Sector 63, Noida, Uttar Pradesh, India - 201301",
+          subtitle: "Dhruv Infosystems Private Limited,",
+          address: "A-118, Level 1, Sector 63, Noida - 201301, INDIA.",
           bankName: "HDFC Bank",
           bankAddress: "Sector-62, Noida, U.P., India",
-          accountNumber: "03942000003077",
+          accountNumber: "03942000001077",
           ifscCode: "HDFC0002649",
           swiftCode: "HDFCINBBXXX",
           accountHolder: "Dhruv Infosystems Private Limited",
-          gstin: "09AAACD3800F2ZJ",
-          pan: "AAACD3800F",
-          cin: "U72900DL2009PTC193581",
+          gstin: "09AACCD1689F2ZJ",
+          pan: "AACCD1689F",
+          cin: "U74999DL2005PTC136381",
           legalName: "Dhruv Infosystems Private Limited",
           email: "subscriptions@journalspub.com",
-          phone: "+91-120-4781200",
-          regdOffice: "Office No. 6, First Floor, DDC Pocket-E, Mayur Vihar Phase-II, New Delhi - 110091",
-          tel: "0120 - 4781200",
+          phone: "+91-120-4781206",
+          regdOffice: "Office No. 4, First Floor, CSC Pocket - E, Mayur Vihar, Phase-II, New Delhi-110091",
+          tel: "91 (0)120 - 4781206",
           mob: "+91-9810078958",
-          website: "journalspub.com"
+          website: "www.journalspub.com"
         } : {
           logoText: "STM",
           title: "STM Journals",
@@ -982,7 +1125,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
                 <div style={{ display: "flex", alignItems: "center", borderBottom: "1px solid #94a3b8", padding: "15px 20px" }}>
                   <div style={{ width: "15%", display: "flex", justifyContent: "center" }}>
                     {isJournalsPub ? (
-                      <img src="/journalspub-logo.svg" alt="Journals Pub" style={{ maxHeight: "65px", objectFit: "contain" }} />
+                      <img src="/journalspub-logo.png" alt="Journals Pub" style={{ maxHeight: "65px", objectFit: "contain" }} />
                     ) : (
                       <img src="/stmlogo.png" alt="STM" style={{ maxHeight: "65px", objectFit: "contain" }} onError={(e) => { (e.target as HTMLImageElement).src = "https://dummyimage.com/100x100/1e3a8a/ffffff.png&text=STM"; }} />
                     )}
@@ -990,6 +1133,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
                   <div style={{ width: "85%", textAlign: "center", paddingRight: "10%" }}>
                     <h1 style={{ fontSize: "34px", fontWeight: "700", color: "#0f172a", margin: "0 0 4px 0", letterSpacing: "0.5px" }}>{brand.title}</h1>
                     <p style={{ fontSize: "12px", fontWeight: "600", margin: "0", color: "#334155" }}>{brand.subtitle}</p>
+                    <p style={{ fontSize: "11px", fontWeight: "700", margin: "4px 0 0 0", color: "#1e293b", letterSpacing: "0.04em" }}>PROFORMA INVOICE</p>
                     <p style={{ fontSize: "11px", color: "#64748b", margin: "2px 0 0 0" }}>{brand.address}</p>
                   </div>
                 </div>
@@ -1035,7 +1179,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
                   {/* Billed Column */}
                   <div style={{ padding: "15px", borderRight: "1px solid #94a3b8" }}>
                     <h4 style={{ fontSize: "10px", fontWeight: "750", textTransform: "uppercase", borderBottom: "1.5px solid #334155", paddingBottom: "4px", margin: "0 0 12px 0", display: "inline-block", color: "#1e293b" }}>
-                      BILLED TO / DETAILS OF RECEIVER:
+                      BILL TO / DETAILS OF RECEIVER:
                     </h4>
                     <div style={{ display: "grid", gridTemplateColumns: "85px 1fr", gap: "6px 4px", fontSize: "11.5px" }}>
                       <strong style={{ color: "#64748b" }}>Name :</strong> <span style={{ fontWeight: "700", color: "#0f172a" }}>{contactName}</span>
@@ -1050,11 +1194,15 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
                     {/* QR Box Overlay */}
                     <div style={{ position: "absolute", right: "15px", top: "15px", border: "1px solid #cbd5e1", padding: "4px", textAlign: "center", width: "60px" }}>
                       <span style={{ fontSize: "7px", fontWeight: "700", display: "block", marginBottom: "2px" }}>SCAN INVOICE</span>
-                      <div style={{ height: "35px", background: "#f8fafc", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "8px", color: "#94a3b8", fontWeight: "600", border: "1px dashed #cbd5e1" }}>QR</div>
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(`${window.location.origin}/invoice.aspx?I=${quoteId || "PRO-2026"}`)}`}
+                        alt="Invoice QR Code"
+                        style={{ width: "35px", height: "35px", border: "1px dashed #cbd5e1", background: "#fff" }}
+                      />
                     </div>
 
                     <h4 style={{ fontSize: "10px", fontWeight: "750", textTransform: "uppercase", borderBottom: "1.5px solid #334155", paddingBottom: "4px", margin: "0 0 12px 0", display: "inline-block", color: "#1e293b" }}>
-                      SHIPPED TO / DELIVERY ADDRESS:
+                      SHIP TO / DELIVERY ADDRESS:
                     </h4>
 
                     <div style={{ display: "grid", gridTemplateColumns: "85px 1fr", gap: "6px 4px", fontSize: "11.5px", paddingRight: "70px" }}>
@@ -1071,7 +1219,8 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
 
                     <div style={{ borderTop: "1px dashed #cbd5e1", marginTop: "12px", paddingTop: "8px", fontSize: "11.5px" }}>
                       <span style={{ fontSize: "9px", fontWeight: "700", color: "#2563eb", textTransform: "uppercase" }}>ORDER INFORMATION:</span>
-                      <div style={{ marginTop: "4px" }}><strong style={{ color: "#64748b" }}>Order Placed By :</strong> <span style={{ fontWeight: "750", color: "#0f172a", textTransform: "uppercase" }}>{institutionName || organization || contactName}</span></div>
+                      <div style={{ marginTop: "4px" }}><strong style={{ color: "#64748b" }}>Contact Person :</strong> <span style={{ fontWeight: "700", color: "#0f172a" }}>{contactName || "N/A"}</span></div>
+                      <div><strong style={{ color: "#64748b" }}>Order Placed By :</strong> <span style={{ fontWeight: "750", color: "#0f172a", textTransform: "uppercase" }}>{sameAsBilling ? (institutionName || organization || contactName) : (shippingInstitute || institutionName || organization || contactName)}</span></div>
                     </div>
                   </div>
                 </div>
@@ -1093,7 +1242,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
                     </tr>
                   </thead>
                   <tbody>
-                    {itemizedTotals.map((it, idx) => {
+                    {mergedItemizedTotals.map((it, idx) => {
                       const planLabel = it.plan === "PRINT_ONLINE" ? "Print + Digital Subscription" : it.plan === "ONLINE" ? "Online Subscription" : "Print Subscription";
                       return (
                         <tr key={`${it.row.serialNo}-${idx}`} style={{ borderBottom: "1px solid #e2e8f0", fontSize: "11.5px" }}>
@@ -1101,7 +1250,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
                           <td style={{ borderRight: "1px solid #94a3b8", textAlign: "left", fontWeight: "600", color: "#1e293b", lineHeight: "1.3", padding: "8px 6px" }}>
                             {it.row.journalName}
                             <div style={{ fontSize: "9px", fontWeight: "400", color: "#64748b", marginTop: "2px" }}>
-                              {it.year} | {planLabel} {it.type === "ANNUAL" ? "| Annual (Full Year)" : `| Issue Wise (${it.selectedIssuesList.map(issueNum => `Issue ${issueNum}`).join(", ")})`}
+                              {it.rangeLabel} | {planLabel}
                             </div>
                           </td>
                           <td style={{ borderRight: "1px solid #94a3b8", textAlign: "center" }}>{it.hsn}</td>
@@ -1160,6 +1309,11 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
                 <div style={{ padding: "12px 15px", borderBottom: "1px solid #94a3b8", background: "#f8fafc", fontStyle: "italic", color: "#334155", fontSize: "11px" }}>
                   The sum of {currency} {Math.round(grandTotal)}/- is a payment on account of subscription by NEFT/RTGS.
                 </div>
+                {remarks.trim() ? (
+                  <div style={{ padding: "10px 15px", borderBottom: "1px solid #94a3b8", fontSize: "11px", color: "#334155" }}>
+                    <strong style={{ color: "#1e293b" }}>Remark:</strong> {remarks}
+                  </div>
+                ) : null}
 
                 {/* Terms & Signature Block */}
                 <div style={{ display: "grid", gridTemplateColumns: "3fr 2fr", padding: "15px" }}>
@@ -1173,7 +1327,12 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
                     </ol>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", textAlign: "center" }}>
-                    <strong style={{ color: "#0f172a", fontSize: "11px", marginBottom: "45px" }}>For, {brand.title.toUpperCase()}</strong>
+                    <strong style={{ color: "#0f172a", fontSize: "11px", marginBottom: "8px" }}>For, {brand.title.toUpperCase()}</strong>
+                    <img
+                      src="/authorized-signature.png"
+                      alt="Authorised Signature"
+                      style={{ width: "130px", height: "auto", objectFit: "contain", marginBottom: "6px" }}
+                    />
                     <div style={{ width: "180px", borderBottom: "1px solid #64748b" }}></div>
                     <span style={{ fontSize: "9px", fontWeight: "800", textTransform: "uppercase", marginTop: "5px", letterSpacing: "0.05em", color: "#334155" }}>AUTHORISED SIGNATORY</span>
                   </div>

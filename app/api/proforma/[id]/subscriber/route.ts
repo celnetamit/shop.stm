@@ -22,6 +22,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       address?: string;
       gstNumber?: string;
       currency?: "INR" | "USD";
+      remarks?: string;
     };
 
     if (!body.organization || !body.contactName || !body.email || !body.phone || !body.country) {
@@ -46,6 +47,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           address: body.address?.trim() || null,
           gstNumber: body.gstNumber?.trim() || null,
           currency: body.currency === "USD" ? "USD" : "INR",
+          remarks: body.remarks?.trim() || null,
           createdByUserId: session?.sub || undefined
         }
       });
@@ -61,4 +63,3 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     );
   }
 }
-
