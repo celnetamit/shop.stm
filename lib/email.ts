@@ -141,7 +141,9 @@ function replaceTemplate(str: string, data: Record<string, string>) {
   for (const key in data) {
     const escaped = escapeRegExp(key);
     const regex = new RegExp(`\\{\\{${escaped}\\}\\}`, "gi");
-    output = output.replace(regex, escapeHtml(data[key]));
+    const isHtml = /html$/i.test(key);
+    const value = isHtml ? data[key] : escapeHtml(data[key]);
+    output = output.replace(regex, value);
   }
   return output;
 }
