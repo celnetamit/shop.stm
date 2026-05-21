@@ -72,7 +72,7 @@ function buildModernEmailTemplate(content: string, title: string, isJournalsPub?
                   ${isJournalsPub ? `
                     <img src="${logoUrl}" alt="Journals Pub Logo" width="180" style="margin-bottom: 12px; display:block; margin-left:auto; margin-right:auto; background:#fff; padding:6px; border-radius:6px;">
                   ` : `
-                    <img src="${logoUrl}" alt="STM Logo" width="72" height="72" style="border-radius: 50%; background: #ffffff; padding: 4px; margin-bottom: 12px; display:block; margin: 0 auto;">
+                    <img src="${logoUrl}" alt="STM Logo" width="180" style="background:#ffffff; padding:6px; border-radius:6px; object-fit:contain; max-width:180px; height:auto; margin-bottom: 12px; display:block; margin-left:auto; margin-right:auto;">
                   `}
                 </td>
               </tr>
@@ -113,6 +113,7 @@ function buildModernEmailTemplate(content: string, title: string, isJournalsPub?
           <p style="margin:0 0 6px; color:#ffffff; font-weight:600; font-family: Arial, sans-serif; letter-spacing: 0.5px;">Empowering Scientific Innovation</p>
           <p style="margin:0; color:#94a3b8; font-size:11px;">&copy; ${new Date().getFullYear()} ${brandCopyright}</p>
           <p style="margin:4px 0 0; color:#94a3b8; font-size:11px;">Sector-63, Noida, U.P. | <a href="mailto:${brandEmail}" style="color:#38bdf8; text-decoration:none;">${brandEmail}</a></p>
+          <p style="margin:6px 0 0; color:#94a3b8; font-size:11px;">+91-9810078950 (M) | +91-0120-4781200 / 206 (L)</p>
         </td>
       </tr>
     </table>

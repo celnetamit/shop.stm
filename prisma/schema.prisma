@@ -10,6 +10,10 @@ datasource db {
 enum UserRole {
   USER
   ADMIN
+  LIBRARIAN
+  AGENCY
+  STUDENT
+  SCHOLAR
 }
 
 enum QuoteStatus {
@@ -71,6 +75,9 @@ model ProformaQuote {
   contactName   String
   email         String
   phone         String
+  subscriberCategory String?       @default("COLLEGE")
+  institutionName String?
+  designation   String?
   country       String
   address       String?
   gstNumber     String?
@@ -204,4 +211,3 @@ model EmailTemplate {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
-

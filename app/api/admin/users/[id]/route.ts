@@ -12,8 +12,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   try {
     const { id } = await params;
-    const body = (await req.json()) as { role?: "USER" | "ADMIN" };
-    if (!body.role || (body.role !== "USER" && body.role !== "ADMIN")) {
+    const body = (await req.json()) as { role?: "USER" | "ADMIN" | "LIBRARIAN" | "AGENCY" | "STUDENT" | "SCHOLAR" };
+    const allowedRoles = new Set(["USER", "ADMIN", "LIBRARIAN", "AGENCY", "STUDENT", "SCHOLAR"]);
+    if (!body.role || !allowedRoles.has(body.role)) {
       return NextResponse.json({ ok: false, error: "Invalid role" }, { status: 400 });
     }
 
@@ -44,4 +45,3 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     return NextResponse.json({ ok: false, error: error instanceof Error ? error.message : "Deletion Failed" }, { status: 500 });
   }
 }
-

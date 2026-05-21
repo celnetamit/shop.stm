@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 type Order = { id: string; customerName: string; email: string; total: number; currency: "INR" | "USD"; status: "PENDING" | "PAID" | "CANCELLED"; createdAt: string };
 type Proforma = { id: string; organization: string; contactName: string; email: string; status: "DRAFT" | "SUBMITTED"; createdAt: string; items: Array<{ id: string }> };
 type ContactEntry = { id: string; name: string; email: string; subject: string; message: string; status: "NEW" | "IN_PROGRESS" | "RESOLVED"; createdAt: string };
-type User = { id: string; name: string | null; email: string; role: "USER" | "ADMIN"; createdAt: string };
+type User = { id: string; name: string | null; email: string; role: "USER" | "ADMIN" | "LIBRARIAN" | "AGENCY" | "STUDENT" | "SCHOLAR"; createdAt: string };
 type Coupon = { id: string; code: string; discount: number; isActive: boolean; createdAt: string };
 
 export default function AdminDashboard() {
@@ -182,6 +182,10 @@ export default function AdminDashboard() {
             <select value={user.role} onChange={(e) => void updateUserRole(user.id, e.target.value as User["role"])}>
               <option value="USER">USER</option>
               <option value="ADMIN">ADMIN</option>
+              <option value="LIBRARIAN">LIBRARIAN</option>
+              <option value="AGENCY">AGENCY</option>
+              <option value="STUDENT">STUDENT</option>
+              <option value="SCHOLAR">SCHOLAR</option>
             </select>
           </div>
         ))}

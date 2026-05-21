@@ -18,6 +18,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       contactName?: string;
       email?: string;
       phone?: string;
+      subscriberCategory?: string;
+      institutionName?: string;
+      designation?: string;
       country?: string;
       address?: string;
       gstNumber?: string;
@@ -50,6 +53,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           contactName: body.contactName.trim(),
           email: body.email.trim().toLowerCase(),
           phone: body.phone.trim(),
+          subscriberCategory: body.subscriberCategory?.trim() || "COLLEGE",
+          institutionName: body.institutionName?.trim() || null,
+          designation: body.designation?.trim() || null,
           country: body.country.trim(),
           address: body.address?.trim() || null,
           gstNumber: body.gstNumber?.trim() || null,

@@ -8,7 +8,7 @@ import { useEffect, useState, useRef } from "react";
 type SessionUser = {
   id: string;
   email: string;
-  role: "USER" | "ADMIN";
+  role: "USER" | "ADMIN" | "LIBRARIAN" | "AGENCY" | "STUDENT" | "SCHOLAR";
 };
 type DomainCount = { domain: string; count: number };
 

@@ -160,7 +160,21 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
   const [country, setCountry] = useState("India");
   const [sameAsBilling, setSameAsBilling] = useState(true);
   const [subscriptionType, setSubscriptionType] = useState<"STM" | "PUB">("STM");
-  const [subscriberCategory, setSubscriberCategory] = useState<"COLLEGE" | "AGENCY" | "SCHOLAR">("COLLEGE");
+  const [subscriberCategory, setSubscriberCategory] = useState<"COLLEGE" | "AGENCY" | "SCHOLAR" | "EXISTING_PI">("COLLEGE");
+  const [existingPiQuery, setExistingPiQuery] = useState("");
+  const [existingPiResults, setExistingPiResults] = useState<Array<{
+    id: string;
+    organization: string;
+    institutionName: string | null;
+    contactName: string;
+    email: string;
+    phone: string;
+    country: string;
+    address: string | null;
+    gstNumber: string | null;
+    subscriberCategory: string | null;
+    designation: string | null;
+  }>>([]);
   const [shippingRecipientName, setShippingRecipientName] = useState("");
   const [shippingAddress, setShippingAddress] = useState("");
   const [shippingInstitute, setShippingInstitute] = useState("");
@@ -274,7 +288,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
       country: string;
       sameAsBilling: boolean;
       subscriptionType: "STM" | "PUB";
-      subscriberCategory: "COLLEGE" | "AGENCY" | "SCHOLAR";
+      subscriberCategory: "COLLEGE" | "AGENCY" | "SCHOLAR" | "EXISTING_PI";
       shippingRecipientName: string;
       shippingAddress: string;
       shippingInstitute: string;
@@ -317,6 +331,21 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
       if (!draft.email && u.email) setEmail(u.email);
     })();
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function searchPi() {
+      if (subscriberCategory !== "EXISTING_PI" || existingPiQuery.trim().length < 2) {
+        setExistingPiResults([]);
+        return;
+      }
+      const res = await fetch(`/api/proforma/pi-search?q=${encodeURIComponent(existingPiQuery.trim())}`, { cache: "no-store" });
+      const json = (await res.json()) as { ok: boolean; items?: typeof existingPiResults };
+      if (!cancelled) setExistingPiResults(json.ok ? (json.items || []) : []);
+    }
+    void searchPi();
+    return () => { cancelled = true; };
+  }, [existingPiQuery, subscriberCategory]);
 
   useEffect(() => {
     saveDraft("draft:proforma-form", {
@@ -462,7 +491,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
         const itemDiscount = (unitPrice * appliedDiscountPercent) / 100;
         const itemTaxable = unitPrice - itemDiscount;
         const isDigital = plan === "ONLINE" || plan === "PRINT_ONLINE";
-        const gstRate = currency === "INR" && isDigital ? 18 : 0;
+        const gstRate = currency === "INR" && isDigital && subscriberCategory !== "COLLEGE" && subscriberCategory !== "EXISTING_PI" ? 18 : 0;
         const itemGst = itemTaxable * (gstRate / 100);
         const netAmount = itemTaxable + itemGst;
         let periodStart = c.year * 12;
@@ -501,7 +530,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
     });
 
     return list;
-  }, [selectedRows, subscriptionConfigs, currency, appliedDiscountPercent]);
+  }, [selectedRows, subscriptionConfigs, currency, appliedDiscountPercent, subscriberCategory]);
 
   const mergedItemizedTotals = useMemo(() => {
     if (!itemizedTotals.length) return [];
@@ -574,6 +603,9 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
         country,
         address: `${address}${city ? `, ${city}` : ""}${stateName ? `, ${stateName}` : ""}${pincode ? ` - ${pincode}` : ""}`,
         gstNumber,
+        subscriberCategory,
+        institutionName,
+        designation,
         currency,
         remarks
       })
@@ -889,7 +921,53 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
                 />
                 <span>Individual Scholar</span>
               </label>
+              <label className={`proforma-pill-option ${subscriberCategory === "EXISTING_PI" ? "active" : ""}`}>
+                <input
+                  type="radio"
+                  name="subscriberCategory"
+                  value="EXISTING_PI"
+                  checked={subscriberCategory === "EXISTING_PI"}
+                  onChange={() => setSubscriberCategory("EXISTING_PI")}
+                />
+                <span>Existing PI Data</span>
+              </label>
             </div>
+            {subscriberCategory === "EXISTING_PI" ? (
+              <div className="proforma-full">
+                <input
+                  value={existingPiQuery}
+                  onChange={(e) => setExistingPiQuery(e.target.value)}
+                  placeholder="Search by email / college / name"
+                />
+                <select
+                  style={{ marginTop: "8px" }}
+                  defaultValue=""
+                  onChange={(e) => {
+                    const selectedId = e.target.value;
+                    const pi = existingPiResults.find((r) => r.id === selectedId);
+                    if (!pi) return;
+                    setOrganization(pi.organization || "");
+                    setInstitutionName(pi.institutionName || pi.organization || "");
+                    setContactName(pi.contactName || "");
+                    setEmail(pi.email || "");
+                    setPhone(pi.phone || "");
+                    setCountry(pi.country || "India");
+                    setAddress(pi.address || "");
+                    setGstNumber(pi.gstNumber || "");
+                    setDesignation(pi.designation || "");
+                    setQuoteId(pi.id);
+                    setStep(2);
+                  }}
+                >
+                  <option value="">Select existing PI user details</option>
+                  {existingPiResults.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.contactName} | {r.email} | {r.institutionName || r.organization}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : null}
 
             <h3 className="proforma-section-title proforma-full">Billing Details</h3>
             <input value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder="Contact Name *" required />
@@ -1000,7 +1078,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
                 </select>
               </div>
 
-              <div className="proforma-list" style={{ overflow: "visible", maxHeight: "none" }}>
+              <div className="proforma-list">
                 <div className="proforma-list-header">
                   <div>Add</div>
                   <div>Journal Identity</div>
@@ -1287,6 +1365,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
                       <strong style={{ color: "#475569", fontSize: "10px", textTransform: "uppercase" }}>PAN No. :</strong> <span style={{ fontWeight: "700", color: "#0f172a" }}>{brand.pan}</span>
                       <strong style={{ color: "#475569", fontSize: "10px", textTransform: "uppercase" }}>CIN No. :</strong> <span style={{ fontWeight: "700", color: "#0f172a" }}>{brand.cin}</span>
                       <strong style={{ color: "#475569", fontSize: "10px", textTransform: "uppercase" }}>Legal Name :</strong> <span>{brand.legalName}</span>
+                      <strong style={{ color: "#475569", fontSize: "10px", textTransform: "uppercase" }}>IEC No. :</strong> <span style={{ fontWeight: "700", color: "#0f172a" }}>AACCC6494M</span>
                     </div>
                   </div>
                 </div>
@@ -1331,13 +1410,12 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
                         }
                       </span>
                       <strong style={{ color: "#64748b" }}>Contact :</strong> <span>{sameAsBilling ? phone : shippingPhone || phone}</span>
-                      <strong style={{ color: "#64748b" }}>IEC No. :</strong> <span style={{ fontWeight: "700", color: "#0f172a" }}>AACCC6494M</span>
                     </div>
 
                     <div style={{ borderTop: "1px dashed #cbd5e1", marginTop: "12px", paddingTop: "8px", fontSize: "11.5px" }}>
-                      <span style={{ fontSize: "9px", fontWeight: "700", color: "#2563eb", textTransform: "uppercase" }}>ORDER INFORMATION:</span>
+                      <span style={{ fontSize: "9px", fontWeight: "700", color: "#2563eb", textTransform: "uppercase" }}>ODER PLACEED BY:</span>
                       <div style={{ marginTop: "4px" }}><strong style={{ color: "#64748b" }}>Contact Person :</strong> <span style={{ fontWeight: "700", color: "#0f172a" }}>{contactName || "N/A"}</span></div>
-                      <div><strong style={{ color: "#64748b" }}>Order Placed By :</strong> <span style={{ fontWeight: "750", color: "#0f172a", textTransform: "uppercase" }}>{sameAsBilling ? (institutionName || organization || contactName) : (shippingInstitute || institutionName || organization || contactName)}</span></div>
+                      <div><strong style={{ color: "#64748b" }}>Institution Name :</strong> <span style={{ fontWeight: "750", color: "#0f172a", textTransform: "uppercase" }}>{sameAsBilling ? (institutionName || organization || contactName) : (shippingInstitute || institutionName || organization || contactName)}</span></div>
                     </div>
                   </div>
                 </div>
@@ -1367,7 +1445,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
                           <td style={{ borderRight: "1px solid #94a3b8", textAlign: "left", fontWeight: "600", color: "#1e293b", lineHeight: "1.3", padding: "8px 6px" }}>
                             {it.row.journalName}
                             <div style={{ fontSize: "9px", fontWeight: "400", color: "#64748b", marginTop: "2px" }}>
-                              {it.rangeLabel} | {planLabel}
+                              {it.rangeLabel} | {planLabel} {it.type === "ANNUAL" ? "(Jan-Dec)" : ""}
                             </div>
                           </td>
                           <td style={{ borderRight: "1px solid #94a3b8", textAlign: "center" }}>{it.hsn}</td>

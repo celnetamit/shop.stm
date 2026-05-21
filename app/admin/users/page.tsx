@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-type User = { id: string; name: string | null; email: string; role: "USER" | "ADMIN"; createdAt: string };
+type User = { id: string; name: string | null; email: string; role: "USER" | "ADMIN" | "LIBRARIAN" | "AGENCY" | "STUDENT" | "SCHOLAR"; createdAt: string };
 
 export default function AdminUsersPage() {
   const [rows, setRows] = useState<User[]>([]);
@@ -87,6 +87,10 @@ export default function AdminUsersPage() {
                         >
                           <option value="USER">👤 USER</option>
                           <option value="ADMIN">🛡️ ADMIN</option>
+                          <option value="LIBRARIAN">📚 LIBRARIAN</option>
+                          <option value="AGENCY">🏢 AGENCY</option>
+                          <option value="STUDENT">🎓 STUDENT</option>
+                          <option value="SCHOLAR">🧪 SCHOLAR</option>
                         </select>
                         <div style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none", fontSize: "10px" }}>▼</div>
                       </div>

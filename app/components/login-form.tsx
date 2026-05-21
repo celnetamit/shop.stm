@@ -24,7 +24,7 @@ export default function LoginForm() {
         body: JSON.stringify({ email, password })
       });
 
-      const json = (await res.json()) as { ok: boolean; error?: string; user?: { role: "USER" | "ADMIN" } };
+      const json = (await res.json()) as { ok: boolean; error?: string; user?: { role: "USER" | "ADMIN" | "LIBRARIAN" | "AGENCY" | "STUDENT" | "SCHOLAR" } };
 
       if (!json.ok || !json.user) {
         setError(json.error || "Login failed");

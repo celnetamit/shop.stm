@@ -8,6 +8,13 @@ type Proforma = {
   organization: string;
   contactName: string;
   email: string;
+  phone?: string;
+  country?: string;
+  address?: string | null;
+  gstNumber?: string | null;
+  subscriberCategory?: string | null;
+  institutionName?: string | null;
+  designation?: string | null;
   status: "DRAFT" | "SUBMITTED" | "PAID";
   hasVisitedCheckout: boolean;
   adminRemarks: string | null;
@@ -20,6 +27,7 @@ export default function AdminProformaPage() {
   const [rows, setRows] = useState<Proforma[]>([]);
   const [error, setError] = useState("");
   const [editingRemarks, setEditingRemarks] = useState<Record<string, string>>({});
+  const [activePi, setActivePi] = useState<Proforma | null>(null);
 
   async function load() {
     const res = await fetch("/api/admin/proforma", { cache: "no-store" });
@@ -51,6 +59,8 @@ export default function AdminProformaPage() {
           <thead>
             <tr style={{background:"#f8fafc", textAlign:"left", fontSize:"13px"}}>
               <th style={{padding:"12px"}}>Organization / Contact</th>
+              <th style={{padding:"12px"}}>PI Details</th>
+              <th style={{padding:"12px"}}>View</th>
               <th style={{padding:"12px"}}>Engagement Status</th>
               <th style={{padding:"12px"}}>Payment Level</th>
               <th style={{padding:"12px"}}>Admin Confirmation</th>
@@ -64,6 +74,21 @@ export default function AdminProformaPage() {
                 <td style={{padding:"12px"}}>
                   <strong>{r.organization}</strong><br />
                   <span style={{fontSize:"12px", color:"#64748b"}}>{r.contactName} ({r.email})</span>
+                </td>
+                <td style={{padding:"12px", fontSize:"12px", color:"#475569"}}>
+                  <div>{r.institutionName || "-"}</div>
+                  <div>{r.designation || "-"}</div>
+                  <div style={{fontWeight:"600"}}>{r.subscriberCategory || "-"}</div>
+                </td>
+                <td style={{padding:"12px"}}>
+                  <button
+                    type="button"
+                    title="View PI details"
+                    onClick={() => setActivePi(r)}
+                    style={{ border: "1px solid #cbd5e1", background: "white", borderRadius: "6px", padding: "4px 8px", cursor: "pointer" }}
+                  >
+                    👁
+                  </button>
                 </td>
                 <td style={{padding:"12px"}}>
                   {r.hasVisitedCheckout ? (
@@ -115,6 +140,28 @@ export default function AdminProformaPage() {
           </tbody>
         </table>
       </div>
+      {activePi ? (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
+          <div style={{ width: "min(760px, 92vw)", background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", padding: "18px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+              <h3 style={{ margin: 0 }}>PI User Details</h3>
+              <button type="button" onClick={() => setActivePi(null)} style={{ border: "none", background: "transparent", fontSize: "20px", cursor: "pointer" }}>×</button>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: "8px", fontSize: "13px" }}>
+              <strong>Name:</strong><span>{activePi.contactName || "-"}</span>
+              <strong>Email:</strong><span>{activePi.email || "-"}</span>
+              <strong>Phone:</strong><span>{activePi.phone || "-"}</span>
+              <strong>Institution:</strong><span>{activePi.institutionName || activePi.organization || "-"}</span>
+              <strong>Designation:</strong><span>{activePi.designation || "-"}</span>
+              <strong>Category:</strong><span>{activePi.subscriberCategory || "-"}</span>
+              <strong>Address:</strong><span>{activePi.address || "-"}</span>
+              <strong>Country:</strong><span>{activePi.country || "-"}</span>
+              <strong>GSTIN:</strong><span>{activePi.gstNumber || "-"}</span>
+              <strong>PI Date:</strong><span>{new Date(activePi.createdAt).toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

@@ -53,7 +53,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
       const isDigital = it.selectedPlan === "ONLINE" || it.selectedPlan === "PRINT_ONLINE";
       const isINR = quote.currency === "INR";
-      const itemGstRate = isINR && isDigital ? 18 : 0;
+      const isGstExemptSubscriber = quote.subscriberCategory === "COLLEGE" || quote.subscriberCategory === "EXISTING_PI";
+      const itemGstRate = isINR && isDigital && !isGstExemptSubscriber ? 18 : 0;
 
       const itemGst = itemTaxable * (itemGstRate / 100);
       const itemCgst = itemGst / 2;

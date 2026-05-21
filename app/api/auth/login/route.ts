@@ -26,13 +26,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, error: "Invalid credentials." }, { status: 401 });
     }
 
-    const forcedRole = roleForEmail(user.email);
-    if (user.role !== forcedRole) {
-      await prisma.user.update({ where: { id: user.id }, data: { role: forcedRole } });
+    const isAdminByEmail = roleForEmail(user.email) === "ADMIN";
+    const effectiveRole = isAdminByEmail ? "ADMIN" : user.role;
+    if (isAdminByEmail && user.role !== "ADMIN") {
+      await prisma.user.update({ where: { id: user.id }, data: { role: "ADMIN" } });
     }
 
-    const token = await signSession({ sub: user.id, email: user.email, role: forcedRole });
-    const res = NextResponse.json({ ok: true, user: { id: user.id, email: user.email, role: forcedRole } });
+    const token = await signSession({ sub: user.id, email: user.email, role: effectiveRole });
+    const res = NextResponse.json({ ok: true, user: { id: user.id, email: user.email, role: effectiveRole } });
     res.cookies.set(AUTH_COOKIE_NAME, token, {
       httpOnly: true,
       sameSite: "lax",

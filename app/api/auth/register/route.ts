@@ -8,7 +8,7 @@ import { roleForEmail } from "@/lib/auth/admin-emails";
 
 export async function POST(req: NextRequest) {
   try {
-    const body = (await req.json()) as { name?: string; email?: string; password?: string };
+    const body = (await req.json()) as { name?: string; email?: string; password?: string; role?: "LIBRARIAN" | "AGENCY" | "STUDENT" | "SCHOLAR" };
     const name = body.name?.trim() || null;
     const email = body.email?.trim().toLowerCase();
     const password = body.password || "";
@@ -23,7 +23,8 @@ export async function POST(req: NextRequest) {
     }
 
     const passwordHash = await hashPassword(password);
-    const role = roleForEmail(email);
+    const requestedRole = body.role;
+    const role = roleForEmail(email) === "ADMIN" ? "ADMIN" : (requestedRole || "USER");
     const user = await prisma.user.create({
       data: { name, email, passwordHash, provider: "credentials", role }
     });

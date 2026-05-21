@@ -6,7 +6,7 @@ export const AUTH_COOKIE_NAME = "auth_token";
 type SessionPayload = {
   sub: string;
   email: string;
-  role: "USER" | "ADMIN";
+  role: "USER" | "ADMIN" | "LIBRARIAN" | "AGENCY" | "STUDENT" | "SCHOLAR";
 };
 
 function getJwtSecret(): Uint8Array {
@@ -31,7 +31,7 @@ export async function verifySession(token: string): Promise<SessionPayload | nul
     return {
       sub: String(payload.sub),
       email: String(payload.email),
-      role: payload.role === "ADMIN" ? "ADMIN" : "USER"
+      role: String(payload.role || "USER") as SessionPayload["role"]
     };
   } catch {
     return null;

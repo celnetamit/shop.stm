@@ -9,6 +9,7 @@ export default function RegisterForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState<"LIBRARIAN" | "AGENCY" | "STUDENT" | "SCHOLAR">("LIBRARIAN");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -21,10 +22,10 @@ export default function RegisterForm() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name, email, password })
+        body: JSON.stringify({ name, email, password, role })
       });
 
-      const json = (await res.json()) as { ok: boolean; error?: string; user?: { role: "USER" | "ADMIN" } };
+      const json = (await res.json()) as { ok: boolean; error?: string; user?: { role: "USER" | "ADMIN" | "LIBRARIAN" | "AGENCY" | "STUDENT" | "SCHOLAR" } };
 
       if (!json.ok || !json.user) {
         setError(json.error || "Registration failed");
@@ -50,6 +51,12 @@ export default function RegisterForm() {
         <input value={name} onChange={(e) => setName(e.target.value)} type="text" placeholder="Name (optional)" />
         <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email" required />
         <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Password (min 8 chars)" required minLength={8} />
+        <select value={role} onChange={(e) => setRole(e.target.value as typeof role)} required>
+          <option value="LIBRARIAN">Librarian</option>
+          <option value="AGENCY">Agency</option>
+          <option value="STUDENT">Students</option>
+          <option value="SCHOLAR">Scholar</option>
+        </select>
         <button className="auth-btn" type="submit" disabled={loading}>{loading ? "Creating..." : "Create account"}</button>
       </form>
       <p>Already have an account? <Link href="/login">Login</Link></p>

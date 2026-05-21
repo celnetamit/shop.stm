@@ -97,6 +97,9 @@ export default async function AccountPage() {
               <p style={{ margin: 0, color: "#64748B", fontSize: "15px" }}>
                 Logged in as <strong style={{ color: "#334155" }}>{session.email}</strong>
               </p>
+              <p style={{ margin: "4px 0 0 0", color: "#64748B", fontSize: "13px" }}>
+                Role: <strong style={{ color: "#334155" }}>{session.role}</strong>
+              </p>
             </div>
           </div>
           <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
