@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getCurrentSession } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await getCurrentSession();
+  if (!session || session.role !== "ADMIN") {
+    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const { id } = await params;
     if (!id || id.startsWith("draft-")) {

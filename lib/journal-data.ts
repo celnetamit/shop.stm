@@ -22,7 +22,11 @@ export type JournalRow = {
 export async function loadJournals(): Promise<JournalRow[]> {
   const filePath = path.join(process.cwd(), "journal-price.json");
   const raw = await readFile(filePath, "utf8");
-  return JSON.parse(raw) as JournalRow[];
+  try {
+    return JSON.parse(raw) as JournalRow[];
+  } catch (parseError) {
+    throw new Error(`Failed to parse journal-price.json: ${parseError instanceof Error ? parseError.message : "Unknown error"}`);
+  }
 }
 
 export async function saveJournals(journals: JournalRow[]): Promise<void> {

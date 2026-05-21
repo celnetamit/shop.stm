@@ -10,8 +10,8 @@ function loadAdminEmails(): Set<string> {
   return new Set(fromEnv.length ? fromEnv : fallback);
 }
 
-export function isAdminEmail(email: string): boolean {
-  return loadAdminEmails().has(email.trim().toLowerCase());
+export function isAdminEmail(email: string | null | undefined): boolean {
+  return loadAdminEmails().has((email ?? "").trim().toLowerCase());
 }
 
 export function roleForEmail(email: string): "ADMIN" | "USER" {

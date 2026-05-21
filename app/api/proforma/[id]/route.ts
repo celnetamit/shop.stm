@@ -2,12 +2,18 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getCurrentSession } from "@/lib/auth/session";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     if (!id || id.startsWith("draft-")) {
       return NextResponse.json({ ok: false, error: "Draft quotes lack persistent storage." }, { status: 404 });
+    }
+
+    const session = await getCurrentSession();
+    if (!session) {
+      return NextResponse.json({ ok: false, error: "Authentication required." }, { status: 401 });
     }
 
     const quote = await prisma.proformaQuote.findUnique({
@@ -19,6 +25,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.json({ ok: false, error: "Requested document missing." }, { status: 404 });
     }
 
+    if (quote.createdByUserId && quote.createdByUserId !== session.sub && session.role !== "ADMIN") {
+      return NextResponse.json({ ok: false, error: "Unauthorized: you do not own this quote." }, { status: 403 });
+    }
+
     // Automatically track that user engaged the checkout interface
     try {
       await prisma.proformaQuote.update({
@@ -26,7 +36,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         data: { hasVisitedCheckout: true }
       });
     } catch (e) {
-      // non-blocking background failure
+      console.error("Failed to track checkout visit", e);
     }
 
     const appliedDiscountPercent = quote.couponPercent || 0;
@@ -100,6 +110,11 @@ function isMissingTableError(error: unknown): boolean {
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const session = await getCurrentSession();
+    if (!session) {
+      return NextResponse.json({ ok: false, error: "Authentication required." }, { status: 401 });
+    }
+
     const { id } = await params;
     const body = (await req.json()) as {
       currency?: "INR" | "USD";
@@ -123,6 +138,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     if (id.startsWith("draft-")) {
       return NextResponse.json({ ok: true, warning: "Draft mode: DB table missing" });
+    }
+
+    const existingQuote = await prisma.proformaQuote.findUnique({ where: { id } });
+    if (existingQuote && existingQuote.createdByUserId && existingQuote.createdByUserId !== session.sub) {
+      return NextResponse.json({ ok: false, error: "Unauthorized: you do not own this quote." }, { status: 403 });
     }
 
     try {

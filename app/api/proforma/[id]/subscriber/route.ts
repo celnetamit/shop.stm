@@ -28,13 +28,21 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ ok: false, error: "Missing required fields" }, { status: 400 });
     }
 
+    const session = await getCurrentSession();
+    if (!session) {
+      return NextResponse.json({ ok: false, error: "Authentication required." }, { status: 401 });
+    }
+
     if (id.startsWith("draft-")) {
       return NextResponse.json({ ok: true, quoteId: id, warning: "Draft mode: DB table missing" });
     }
 
-    const session = await getCurrentSession();
-
     try {
+      const existingQuote = await prisma.proformaQuote.findUnique({ where: { id } });
+      if (existingQuote && existingQuote.createdByUserId && existingQuote.createdByUserId !== session.sub) {
+        return NextResponse.json({ ok: false, error: "Unauthorized: you do not own this quote." }, { status: 403 });
+      }
+
       const quote = await prisma.proformaQuote.update({
         where: { id },
         data: {

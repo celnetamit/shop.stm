@@ -81,6 +81,7 @@ model ProformaQuote {
   couponPercent Int                @default(0)
   hasVisitedCheckout Boolean       @default(false)
   adminRemarks  String?            @db.Text
+  remarks       String?            @db.Text
   createdByUserId String?
   createdBy     User?              @relation("ProformaCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
   createdAt     DateTime           @default(now())

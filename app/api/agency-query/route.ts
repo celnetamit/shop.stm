@@ -10,6 +10,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json({ error: "Invalid email format." }, { status: 400 });
+    }
+
     const query = await prisma.agencyQuery.create({
       data: {
         agencyName,

@@ -6,9 +6,9 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import PrintButton from "@/app/components/print-button";
 
-function isBookProduct(journalName: string, subject: string): boolean {
-  const lowerName = journalName.toLowerCase();
-  const lowerSubject = subject.toLowerCase();
+function isBookProduct(journalName: string | null | undefined, subject: string | null | undefined): boolean {
+  const lowerName = (journalName ?? "").toLowerCase();
+  const lowerSubject = (subject ?? "").toLowerCase();
   return (
     lowerSubject.includes("book") ||
     lowerSubject.includes("monograph") ||
@@ -37,14 +37,19 @@ export default async function ProformaPrintPage({ params }: { params: Promise<{ 
     include: { items: true }
   });
 
-  if (!quote || (quote.createdByUserId !== session.sub && quote.email !== session.email)) {
+  if (!quote || (quote.createdByUserId !== session.sub && quote.email.toLowerCase() !== session.email.toLowerCase())) {
     return <div style={{ padding: "40px", textAlign: "center" }}>Proforma not found or access denied.</div>;
   }
 
   // Calculate Subtotal (since no total column exists in ProformaQuote, we calculate from items)
   const subtotal = quote.items.reduce((sum, item) => sum + item.unitPrice, 0);
   const discountAmount = quote.couponPercent ? (subtotal * quote.couponPercent) / 100 : 0;
-  const total = subtotal - discountAmount;
+  const isDigital = quote.items.some((item) => item.selectedPlan === "ONLINE" || item.selectedPlan === "PRINT_ONLINE");
+  const isINR = quote.currency === "INR";
+  const gstRate = isINR && isDigital ? 18 : 0;
+  const taxable = subtotal - discountAmount;
+  const gst = (taxable * gstRate) / 100;
+  const total = taxable + gst;
 
   return (
     <main style={{ minHeight: "100vh", background: "#F1F5F9", padding: "40px 20px" }}>

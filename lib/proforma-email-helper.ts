@@ -142,9 +142,9 @@ export async function prepareProformaEmailPayload(quoteId: string) {
   };
 }
 
-function isBookProduct(journalName: string, subject: string): boolean {
-  const lowerName = journalName.toLowerCase();
-  const lowerSubject = subject.toLowerCase();
+function isBookProduct(journalName: string | null | undefined, subject: string | null | undefined): boolean {
+  const lowerName = (journalName ?? "").toLowerCase();
+  const lowerSubject = (subject ?? "").toLowerCase();
   return (
     lowerSubject.includes("book") ||
     lowerSubject.includes("monograph") ||

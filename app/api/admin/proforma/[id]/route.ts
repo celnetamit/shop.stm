@@ -13,8 +13,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   try {
     const { id } = await params;
     const body = (await req.json()) as { status?: "DRAFT" | "SUBMITTED" | "PAID"; adminRemarks?: string };
+
+    const validStatuses = ["DRAFT", "SUBMITTED", "PAID"] as const;
+    if (body.status !== undefined && !validStatuses.includes(body.status)) {
+      return NextResponse.json({ ok: false, error: "Invalid status value" }, { status: 400 });
+    }
     
-    const data: any = {};
+    const data: { status?: "DRAFT" | "SUBMITTED" | "PAID"; adminRemarks?: string } = {};
     if (body.status !== undefined) data.status = body.status;
     if (body.adminRemarks !== undefined) data.adminRemarks = body.adminRemarks;
 

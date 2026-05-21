@@ -10,7 +10,7 @@ export default async function DynamicClonePage({ params }: { params: Promise<{ s
   return (
     <main className="clone-wrapper">
       <div className="clone-banner">Mirrored from {page.sourceUrl} ({page.cached ? "cached in PostgreSQL" : "live mode, DB unavailable"})</div>
-      <div dangerouslySetInnerHTML={{ __html: page.htmlContent }} />
+      <div dangerouslySetInnerHTML={{ __html: page.htmlContent }} suppressHydrationWarning />
     </main>
   );
 }

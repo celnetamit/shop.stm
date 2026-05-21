@@ -42,6 +42,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, error: "Missing required contact/total fields" }, { status: 400 });
     }
 
+    const customerName = body.customerName.trim();
+    const email = body.email.trim().toLowerCase();
+    const address = body.address.trim();
+    const state = body.state.trim();
+    const pincode = body.pincode.trim();
+    const razorpayOrderId = body.razorpayOrderId!;
+    const razorpayPaymentId = body.razorpayPaymentId!;
+    const razorpaySignature = body.razorpaySignature!;
+
     // Cryptographically Verify the Razorpay Payment Authenticity
     if (!body.razorpayOrderId || !body.razorpayPaymentId || !body.razorpaySignature) {
       return NextResponse.json({ ok: false, error: "Missing secure payment tokens." }, { status: 400 });
@@ -50,63 +59,85 @@ export async function POST(req: NextRequest) {
     const crypto = await import("crypto");
     const generated_signature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET || "")
-      .update(body.razorpayOrderId + "|" + body.razorpayPaymentId)
+      .update(razorpayOrderId + "|" + razorpayPaymentId)
       .digest("hex");
 
-    if (generated_signature !== body.razorpaySignature) {
+    if (generated_signature !== razorpaySignature) {
       return NextResponse.json({ ok: false, error: "Critical: Payment signature verification failed!" }, { status: 400 });
     }
 
-    const session = await getCurrentSession();
-    const order = await prisma.order.create({
-      data: {
-        userId: session?.sub || null,
-        customerName: body.customerName.trim(),
-        email: body.email.trim().toLowerCase(),
-        organization: body.organization?.trim() || null,
-        address: body.address.trim(),
-        state: body.state.trim(),
-        pincode: body.pincode.trim(),
-        gstNumber: body.gstNumber?.trim() || null,
-        quoteId: body.quoteId?.trim() || null,
-        currency: body.currency === "USD" ? "USD" : "INR",
-        subtotal: Math.max(0, Math.round(body.subtotal || 0)),
-        discount: Math.max(0, Math.round(body.discount || 0)),
-        cgst: Math.max(0, Number(body.cgst || 0)),
-        sgst: Math.max(0, Number(body.sgst || 0)),
-        total: Math.max(0, Number(body.total || 0)),
-        couponCode: body.couponCode?.trim().toUpperCase() || null,
-        status: "PAID", // Verification success explicitly authorizes state promotion to PAID
-        razorpayOrderId: body.razorpayOrderId,
-        razorpayPaymentId: body.razorpayPaymentId,
-        razorpaySignature: body.razorpaySignature,
-        items: {
-          create: (body.items || []).map((it) => ({
-            journalName: it.journalName,
-            subject: it.subject,
-            issn: it.issn || null,
-            image: it.image || null,
-            year: String(it.year),
-            issue: it.issue || null,
-            selectedPlan: it.plan,
-            unitPrice: Math.max(0, Math.round(it.unitPrice || 0)),
-            qty: Math.max(1, Math.round(it.qty || 1))
-          }))
-        }
-      }
+    const existingOrder = await prisma.order.findFirst({
+      where: { razorpayOrderId }
     });
-
-    // Post-creation logic: Securely increment coupon usage metrics if valid code applied
-    if (order.couponCode) {
-      try {
-        await prisma.coupon.update({
-          where: { code: order.couponCode },
-          data: { usedCount: { increment: 1 } }
-        });
-      } catch (couponErr) {
-        console.error("Optional coupon counter logging error", couponErr);
-      }
+    if (existingOrder) {
+      return NextResponse.json({ ok: false, error: "Payment already processed." }, { status: 409 });
     }
+
+    const items = body.items || [];
+    let calcSubtotal = 0;
+    for (const it of items) {
+      const qty = Math.max(1, Math.round(it.qty || 1));
+      const price = Math.max(0, Math.round(it.unitPrice || 0));
+      calcSubtotal += price * qty;
+    }
+    const discountAmt = Math.max(0, Math.round(body.discount || 0));
+    const taxable = calcSubtotal - discountAmt;
+    const cgstRate = body.currency === "USD" ? 0 : 9;
+    const sgstRate = body.currency === "USD" ? 0 : 9;
+    const calcCgst = (taxable * cgstRate) / 100;
+    const calcSgst = (taxable * sgstRate) / 100;
+    const calcTotal = taxable + calcCgst + calcSgst;
+
+    const session = await getCurrentSession();
+
+    const order = await prisma.$transaction(async (tx) => {
+      const created = await tx.order.create({
+        data: {
+          userId: session?.sub || null,
+          customerName,
+          email,
+          organization: body.organization?.trim() || null,
+          address,
+          state,
+          pincode,
+          gstNumber: body.gstNumber?.trim() || null,
+          quoteId: body.quoteId?.trim() || null,
+          currency: body.currency === "USD" ? "USD" : "INR",
+          subtotal: calcSubtotal,
+          discount: discountAmt,
+          cgst: calcCgst,
+          sgst: calcSgst,
+          total: calcTotal,
+          couponCode: body.couponCode?.trim().toUpperCase() || null,
+          status: "PAID",
+          razorpayOrderId,
+          razorpayPaymentId,
+          razorpaySignature,
+          items: {
+            create: items.map((it) => ({
+              journalName: it.journalName,
+              subject: it.subject,
+              issn: it.issn || null,
+              image: it.image || null,
+              year: String(it.year),
+              issue: it.issue || null,
+              selectedPlan: it.plan,
+              unitPrice: Math.max(0, Math.round(it.unitPrice || 0)),
+              qty: Math.max(1, Math.round(it.qty || 1))
+            }))
+          }
+        }
+      });
+
+      if (created.couponCode) {
+        await tx.coupon.update({
+          where: { code: created.couponCode },
+          data: { usedCount: { increment: 1 } }
+        }).catch(() => {});
+      }
+
+      return created;
+    });
 
     try {
       const { sendTemplatedEmail, sendAdminNotification } = await import("@/lib/email");

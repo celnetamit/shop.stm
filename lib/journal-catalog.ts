@@ -222,7 +222,7 @@ export async function getJournalCatalog(): Promise<JournalCatalogItem[]> {
   for (const r of scopeRows) {
     const abbr1 = (r["Abbreviation"] || "").trim().toLowerCase();
     const abbr2 = (r["Abberiviation"] || "").trim().toLowerCase();
-    const cleanAbbr = abbr1 || (Array.isArray(abbr2) ? abbr2[0] : abbr2);
+    const cleanAbbr = abbr1 || abbr2;
     if (cleanAbbr) {
       scopeByAbbr.set(cleanAbbr, r);
     }

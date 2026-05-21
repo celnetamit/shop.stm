@@ -55,12 +55,25 @@ export async function exchangeGoogleCode(code: string): Promise<string> {
 export async function exchangeGoogleCodeForOrigin(code: string, origin: string): Promise<string> {
   const clientId = requiredEnv("GOOGLE_CLIENT_ID");
   const clientSecret = requiredEnv("GOOGLE_CLIENT_SECRET");
+  const appUrl = requiredEnv("NEXT_PUBLIC_APP_URL");
+  const allowedOrigin = new URL(appUrl).origin;
+
+  let validatedOrigin: string;
+  try {
+    validatedOrigin = new URL(origin).origin;
+  } catch {
+    throw new Error("Invalid origin URL");
+  }
+
+  if (validatedOrigin !== allowedOrigin) {
+    throw new Error("Origin mismatch");
+  }
 
   const body = new URLSearchParams({
     code,
     client_id: clientId,
     client_secret: clientSecret,
-    redirect_uri: `${origin}/api/auth/google/callback`,
+    redirect_uri: `${validatedOrigin}/api/auth/google/callback`,
     grant_type: "authorization_code"
   });
 

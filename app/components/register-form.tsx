@@ -17,22 +17,27 @@ export default function RegisterForm() {
     setError("");
     setLoading(true);
 
-    const res = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ name, email, password })
-    });
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ name, email, password })
+      });
 
-    const json = (await res.json()) as { ok: boolean; error?: string; user?: { role: "USER" | "ADMIN" } };
+      const json = (await res.json()) as { ok: boolean; error?: string; user?: { role: "USER" | "ADMIN" } };
 
-    setLoading(false);
-    if (!json.ok || !json.user) {
-      setError(json.error || "Registration failed");
-      return;
+      if (!json.ok || !json.user) {
+        setError(json.error || "Registration failed");
+        return;
+      }
+
+      router.push(json.user.role === "ADMIN" ? "/admin" : "/");
+      router.refresh();
+    } catch (err) {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    router.push(json.user.role === "ADMIN" ? "/admin" : "/");
-    router.refresh();
   }
 
   return (

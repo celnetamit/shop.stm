@@ -122,18 +122,40 @@ function buildModernEmailTemplate(content: string, title: string, isJournalsPub?
   `;
 }
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+}
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 // Helper to replace templates variables like {{name}} with values in object
 function replaceTemplate(str: string, data: Record<string, string>) {
   let output = str;
   for (const key in data) {
-    const regex = new RegExp(`{{${key}}}`, "gi");
-    output = output.replace(regex, data[key]);
+    const escaped = escapeRegExp(key);
+    const regex = new RegExp(`\\{\\{${escaped}\\}\\}`, "gi");
+    output = output.replace(regex, escapeHtml(data[key]));
   }
   return output;
 }
 
 export async function sendTemplatedEmail(key: string, to: string, data: Record<string, string>) {
   try {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
+      throw new Error(`Invalid email address: ${to}`);
+    }
+
+    if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+      throw new Error("AWS credentials are required for sending emails");
+    }
+
     // 1. Find explicit template from DB
     let template = await prisma.emailTemplate.findUnique({ where: { key } });
     

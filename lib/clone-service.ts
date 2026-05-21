@@ -35,6 +35,29 @@ function rewriteHtml(html: string): string {
     }
   });
 
+  // Remove dangerous elements that can execute code or embed external content
+  $("iframe, object, embed, form, svg, math, video, audio").remove();
+
+  // Strip all inline event handlers (onclick, onload, onerror, etc.)
+  $("*").each((_, el) => {
+    const attribs = (el as any).attribs || {};
+    for (const attr of Object.keys(attribs)) {
+      if (attr.toLowerCase().startsWith("on")) {
+        $(el).removeAttr(attr);
+      }
+    }
+  });
+
+  // Remove javascript: protocol from href/src attributes
+  $("a, link, img, source, iframe").each((_, el) => {
+    for (const attr of ["href", "src", "srcset", "action"]) {
+      const val = $(el).attr(attr);
+      if (val && val.trim().toLowerCase().startsWith("javascript:")) {
+        $(el).removeAttr(attr);
+      }
+    }
+  });
+
   $("a, link").each((_, el) => {
     const attr = el.tagName === "a" ? "href" : "href";
     const val = $(el).attr(attr);
@@ -115,17 +138,22 @@ export async function fetchAndCachePath(pathInput: string) {
   const path = normalizePath(pathInput);
   const sourceUrl = toAbsoluteUrl(path);
   let response: Response;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
   try {
     response = await fetch(sourceUrl, {
       headers: {
         "User-Agent": "Mozilla/5.0 (compatible; STMCloneBot/1.0)"
       },
-      cache: "no-store"
+      cache: "no-store",
+      signal: controller.signal
     });
   } catch (error) {
+    clearTimeout(timeout);
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Failed to fetch ${sourceUrl}: ${message}`);
   }
+  clearTimeout(timeout);
 
   if (!response.ok) {
     throw new Error(`Failed to fetch ${sourceUrl}: ${response.status}`);
