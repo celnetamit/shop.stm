@@ -15,10 +15,13 @@ type Proforma = {
   subscriberCategory?: string | null;
   institutionName?: string | null;
   designation?: string | null;
+  couponCode?: string | null;
+  couponPercent?: number | null;
   status: "DRAFT" | "SUBMITTED" | "PAID";
   hasVisitedCheckout: boolean;
   adminRemarks: string | null;
   createdAt: string;
+  updatedAt?: string;
   items: ProformaItem[];
   createdBy: { id: string; email: string } | null;
 };
@@ -142,7 +145,7 @@ export default function AdminProformaPage() {
       </div>
       {activePi ? (
         <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
-          <div style={{ width: "min(760px, 92vw)", background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", padding: "18px" }}>
+          <div style={{ width: "min(980px, 95vw)", maxHeight: "90vh", overflow: "auto", background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", padding: "18px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
               <h3 style={{ margin: 0 }}>PI User Details</h3>
               <button type="button" onClick={() => setActivePi(null)} style={{ border: "none", background: "transparent", fontSize: "20px", cursor: "pointer" }}>×</button>
@@ -157,7 +160,64 @@ export default function AdminProformaPage() {
               <strong>Address:</strong><span>{activePi.address || "-"}</span>
               <strong>Country:</strong><span>{activePi.country || "-"}</span>
               <strong>GSTIN:</strong><span>{activePi.gstNumber || "-"}</span>
-              <strong>PI Date:</strong><span>{new Date(activePi.createdAt).toLocaleString()}</span>
+              <strong>Coupon:</strong><span>{activePi.couponCode ? `${activePi.couponCode} (${activePi.couponPercent || 0}%)` : "Not Used"}</span>
+              <strong>PI Created:</strong><span>{new Date(activePi.createdAt).toLocaleString()}</span>
+              <strong>Last Updated:</strong><span>{activePi.updatedAt ? new Date(activePi.updatedAt).toLocaleString() : "-"}</span>
+              <strong>Quote ID:</strong><span>{activePi.id}</span>
+            </div>
+
+            <div style={{ marginTop: "16px" }}>
+              <h4 style={{ margin: "0 0 8px 0" }}>Selected Journals, Variants & Price Breakdown</h4>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px", border: "1px solid #e2e8f0" }}>
+                <thead>
+                  <tr style={{ background: "#f8fafc" }}>
+                    <th style={{ padding: "8px", textAlign: "left" }}>#</th>
+                    <th style={{ padding: "8px", textAlign: "left" }}>Journal</th>
+                    <th style={{ padding: "8px", textAlign: "left" }}>Variant</th>
+                    <th style={{ padding: "8px", textAlign: "right" }}>Price</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activePi.items.length === 0 ? (
+                    <tr><td colSpan={4} style={{ padding: "10px", textAlign: "center", color: "#64748b" }}>No journals added yet.</td></tr>
+                  ) : (
+                    activePi.items.map((it, idx) => (
+                      <tr key={it.id} style={{ borderTop: "1px solid #e2e8f0" }}>
+                        <td style={{ padding: "8px" }}>{idx + 1}</td>
+                        <td style={{ padding: "8px" }}>{it.journalName}</td>
+                        <td style={{ padding: "8px" }}>{it.selectedPlan === "PRINT_ONLINE" ? "PRINT + DIGITAL" : it.selectedPlan}</td>
+                        <td style={{ padding: "8px", textAlign: "right" }}>₹{it.unitPrice.toLocaleString("en-IN")}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+                <tfoot>
+                  {(() => {
+                    const subtotal = activePi.items.reduce((sum, it) => sum + (it.unitPrice || 0), 0);
+                    const couponPct = activePi.couponPercent || 0;
+                    const discountAmt = Math.round((subtotal * couponPct) / 100);
+                    const totalAfterDiscount = subtotal - discountAmt;
+                    return (
+                      <>
+                        <tr style={{ borderTop: "1px solid #cbd5e1", background: "#fcfdff" }}>
+                          <td colSpan={3} style={{ padding: "8px", textAlign: "right", fontWeight: 600 }}>Subtotal</td>
+                          <td style={{ padding: "8px", textAlign: "right", fontWeight: 600 }}>₹{subtotal.toLocaleString("en-IN")}</td>
+                        </tr>
+                        <tr>
+                          <td colSpan={3} style={{ padding: "8px", textAlign: "right", color: "#16a34a" }}>
+                            Coupon Discount {activePi.couponCode ? `(${activePi.couponCode} - ${couponPct}%)` : ""}
+                          </td>
+                          <td style={{ padding: "8px", textAlign: "right", color: "#16a34a" }}>-₹{discountAmt.toLocaleString("en-IN")}</td>
+                        </tr>
+                        <tr style={{ borderTop: "1px solid #cbd5e1", background: "#f8fafc" }}>
+                          <td colSpan={3} style={{ padding: "8px", textAlign: "right", fontWeight: 700 }}>Net Amount</td>
+                          <td style={{ padding: "8px", textAlign: "right", fontWeight: 700 }}>₹{totalAfterDiscount.toLocaleString("en-IN")}</td>
+                        </tr>
+                      </>
+                    );
+                  })()}
+                </tfoot>
+              </table>
             </div>
           </div>
         </div>
