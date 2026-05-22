@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
+import { headers } from "next/headers";
 import { AUTH_COOKIE_NAME } from "@/lib/auth/session";
 
 function clearAuthCookie(res: NextResponse) {
@@ -20,7 +21,15 @@ export async function POST() {
 }
 
 export async function GET(request: Request) {
-  const url = new URL("/login", request.url);
+  const hdrs = await headers();
+  const forwardedProto = hdrs.get("x-forwarded-proto");
+  const forwardedHost = hdrs.get("x-forwarded-host");
+  const host = hdrs.get("host");
+  const fallbackUrl = new URL(request.url);
+
+  const proto = forwardedProto || fallbackUrl.protocol.replace(":", "");
+  const resolvedHost = forwardedHost || host || fallbackUrl.host;
+  const url = new URL(`${proto}://${resolvedHost}/login`);
   const res = NextResponse.redirect(url);
   clearAuthCookie(res);
   return res;
