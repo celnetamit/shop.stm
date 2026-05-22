@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
           createdByUserId: session?.sub || null
         }
       });
-      return NextResponse.json({ ok: true, quoteId: quote.id });
+      return NextResponse.json({ ok: true, quoteId: quote.id, quoteCreatedAt: quote.createdAt });
     } catch (dbError) {
       if (!isMissingTableError(dbError)) throw dbError;
       // Graceful fallback for environments where migrations are not applied yet.

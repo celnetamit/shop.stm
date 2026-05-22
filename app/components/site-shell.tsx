@@ -263,7 +263,40 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
                   )}
                 </div>
               ) : (
-                <Link href="/login" style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)", textDecoration: "none", fontFamily: "Outfit, sans-serif" }}>Login</Link>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <Link
+                    href="/login"
+                    style={{
+                      fontSize: "14px",
+                      fontWeight: "700",
+                      color: "var(--text)",
+                      textDecoration: "none",
+                      fontFamily: "Outfit, sans-serif",
+                      padding: "9px 14px",
+                      borderRadius: "999px",
+                      border: "1px solid var(--line)",
+                      background: "var(--surface)"
+                    }}
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/register"
+                    style={{
+                      fontSize: "14px",
+                      fontWeight: "700",
+                      color: "#ffffff",
+                      textDecoration: "none",
+                      fontFamily: "Outfit, sans-serif",
+                      padding: "9px 15px",
+                      borderRadius: "999px",
+                      border: "1px solid transparent",
+                      background: "linear-gradient(135deg, #1d4ed8, #2563eb)"
+                    }}
+                  >
+                    Register
+                  </Link>
+                </div>
               )}
               <Link href="/cart" style={{
                 background: "var(--brand)",
@@ -370,7 +403,7 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
                 <li><Link href="/for-reviewers" style={{ color: "#8b9ebd", textDecoration: "none", fontSize: "12px", display: "flex", alignItems: "center", gap: "10px" }}><span>✅</span> For Reviewers</Link></li>
                 <li><Link href="/for-librarians" style={{ color: "#8b9ebd", textDecoration: "none", fontSize: "12px", display: "flex", alignItems: "center", gap: "10px" }}><span>🏛️</span> Information for Librarians</Link></li>
                 <li><Link href="/for-agencies" style={{ color: "#8b9ebd", textDecoration: "none", fontSize: "12px", display: "flex", alignItems: "center", gap: "10px" }}><span>🤝</span> Agency Partnership</Link></li>
-                <li><Link href="/catalogues-list" style={{ color: "#8b9ebd", textDecoration: "none", fontSize: "12px", display: "flex", alignItems: "center", gap: "10px" }}><span>📄</span> Download catalogue</Link></li>
+                <li><Link href="/catalogues" style={{ color: "#8b9ebd", textDecoration: "none", fontSize: "12px", display: "flex", alignItems: "center", gap: "10px" }}><span>📄</span> Department Catalogs</Link></li>
               </ul>
             </div>
 
@@ -378,8 +411,8 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
             <div>
               <h3 style={{ fontSize: "12px", fontWeight: "700", color: "#3B82F6", marginBottom: "20px", textTransform: "uppercase", borderBottom: "1px solid #1E293B", paddingBottom: "10px" }}>PRICING & SUPPORT</h3>
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "14px" }}>
-                <li><Link href="/catalogues-list" style={{ color: "#8b9ebd", textDecoration: "none", fontSize: "12px", display: "flex", alignItems: "center", gap: "10px" }}><span>🏷️</span> Pricing List (INR)</Link></li>
-                <li><Link href="/catalogues-list" style={{ color: "#8b9ebd", textDecoration: "none", fontSize: "12px", display: "flex", alignItems: "center", gap: "10px" }}><span>🌐</span> International Pricing (USD)</Link></li>
+                <li><Link href="/catalogues?currency=INR" style={{ color: "#8b9ebd", textDecoration: "none", fontSize: "12px", display: "flex", alignItems: "center", gap: "10px" }}><span>🏷️</span> Pricing List (INR)</Link></li>
+                <li><Link href="/catalogues?currency=USD" style={{ color: "#8b9ebd", textDecoration: "none", fontSize: "12px", display: "flex", alignItems: "center", gap: "10px" }}><span>🌐</span> International Pricing (USD)</Link></li>
                 <li><Link href="/contact-us" style={{ color: "#8b9ebd", textDecoration: "none", fontSize: "12px", display: "flex", alignItems: "center", gap: "10px" }}><span>💬</span> Contact Support</Link></li>
                 <li><Link href="/faq" style={{ color: "#8b9ebd", textDecoration: "none", fontSize: "12px", display: "flex", alignItems: "center", gap: "10px" }}><span>⏱️</span> FAQ Center</Link></li>
                 <li><Link href="/shipping-delivery-policy" style={{ color: "#8b9ebd", textDecoration: "none", fontSize: "12px", display: "flex", alignItems: "center", gap: "10px" }}><span>🚚</span> Shipping & Delivery</Link></li>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useState } from "react";
+import { formatPiNumber } from "@/lib/pi-number";
 
 type PiItem = { id: string; journalName: string; selectedPlan: "PRINT" | "ONLINE" | "PRINT_ONLINE"; unitPrice: number };
 type PiEntry = {
@@ -17,7 +18,7 @@ type PiUser = { email: string; name: string; collegeName: string; latestAt: stri
 export default function AdminPiUsersPage() {
   const [rows, setRows] = useState<PiUser[]>([]);
   const [open, setOpen] = useState<Record<string, boolean>>({});
-  const [activeItems, setActiveItems] = useState<{ quoteId: string; items: PiItem[]; couponCode?: string | null; couponPercent?: number | null } | null>(null);
+  const [activeItems, setActiveItems] = useState<{ quoteId: string; createdAt: string; items: PiItem[]; couponCode?: string | null; couponPercent?: number | null } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -71,12 +72,12 @@ export default function AdminPiUsersPage() {
                         <tbody>
                           {r.entries.map((e) => (
                             <tr key={e.id} style={{ borderTop: "1px solid #e2e8f0", fontSize: "12px" }}>
-                              <td style={{ padding: "8px" }}>{e.id}</td>
+                              <td style={{ padding: "8px" }}>{formatPiNumber({ id: e.id, createdAt: e.createdAt })}</td>
                               <td style={{ padding: "8px" }}>{new Date(e.createdAt).toLocaleString()}</td>
                               <td style={{ padding: "8px" }}>{e.subscriberCategory || "-"}</td>
                               <td style={{ padding: "8px" }}>{e.status}</td>
                               <td style={{ padding: "8px" }}>
-                                <button onClick={() => setActiveItems({ quoteId: e.id, items: e.items, couponCode: e.couponCode, couponPercent: e.couponPercent })} style={{ border: "1px solid #cbd5e1", background: "white", borderRadius: "6px", padding: "3px 8px" }}>
+                                <button onClick={() => setActiveItems({ quoteId: e.id, createdAt: e.createdAt, items: e.items, couponCode: e.couponCode, couponPercent: e.couponPercent })} style={{ border: "1px solid #cbd5e1", background: "white", borderRadius: "6px", padding: "3px 8px" }}>
                                   ＋
                                 </button>
                               </td>
@@ -96,7 +97,7 @@ export default function AdminPiUsersPage() {
         <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.55)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
           <div style={{ width: "min(800px, 94vw)", background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", padding: "16px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-              <h3 style={{ margin: 0 }}>Selected Journals & Variants ({activeItems.quoteId})</h3>
+              <h3 style={{ margin: 0 }}>Selected Journals & Variants ({formatPiNumber({ id: activeItems.quoteId, createdAt: activeItems.createdAt })})</h3>
               <button onClick={() => setActiveItems(null)} style={{ border: "none", background: "transparent", fontSize: "20px", cursor: "pointer" }}>×</button>
             </div>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>

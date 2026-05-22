@@ -47,25 +47,32 @@ export default function RegisterForm() {
   }
 
   return (
-    <div className="auth-card">
-      <h1>Register</h1>
+    <div className="auth-card register-card">
+      <div className="register-head">
+        <h1>Create Account</h1>
+        <p>Join STM Journals and manage quotes, subscriptions, and invoices in one place.</p>
+      </div>
       {error ? <p className="auth-error">{error}</p> : null}
       {success ? <p style={{ color: "#166534", fontSize: "14px" }}>{success}</p> : null}
       <a className="auth-google" href="/api/auth/google/start">Continue with Google</a>
       <p className="auth-divider">or create with email</p>
       <form className="auth-form" onSubmit={onSubmit}>
+        <label className="register-field-label">Full Name</label>
         <input value={name} onChange={(e) => setName(e.target.value)} type="text" placeholder="Name (optional)" />
-        <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email" required />
-        <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Password (min 8 chars)" required minLength={8} />
+        <label className="register-field-label">Email Address</label>
+        <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="you@institution.edu" required />
+        <label className="register-field-label">Password</label>
+        <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Minimum 8 characters" required minLength={8} />
+        <label className="register-field-label">Register As</label>
         <select value={role} onChange={(e) => setRole(e.target.value as RegisterRole)} required>
           <option value="LIBRARIAN">Librarian</option>
           <option value="AGENCY">Agency</option>
           <option value="USER">College / Institution</option>
           <option value="SCHOLAR">Scholar / Student</option>
         </select>
-        <button className="auth-btn" type="submit" disabled={loading}>{loading ? "Creating..." : "Create account"}</button>
+        <button className="auth-btn register-submit-btn" type="submit" disabled={loading}>{loading ? "Creating..." : "Create Account"}</button>
       </form>
-      <p>Already have an account? <Link href="/login">Login</Link></p>
+      <p className="register-foot">Already have an account? <Link href="/login">Login</Link></p>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
+import { formatPiNumber } from "@/lib/pi-number";
 
 export const dynamic = "force-dynamic";
 import Link from "next/link";
@@ -50,6 +51,7 @@ export default async function ProformaPrintPage({ params }: { params: Promise<{ 
   const taxable = subtotal - discountAmount;
   const gst = (taxable * gstRate) / 100;
   const total = taxable + gst;
+  const piNumber = formatPiNumber({ id: quote.id, createdAt: quote.createdAt });
 
   return (
     <main style={{ minHeight: "100vh", background: "#F1F5F9", padding: "40px 20px" }}>
@@ -73,7 +75,7 @@ export default async function ProformaPrintPage({ params }: { params: Promise<{ 
         <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "2px solid #E2E8F0", paddingBottom: "20px", marginBottom: "30px" }}>
           <div>
             <h1 style={{ margin: "0 0 10px 0", color: "#0F172A", fontSize: "28px" }}>PROFORMA QUOTE</h1>
-            <p style={{ margin: "0 0 4px 0", color: "#475569", fontSize: "14px" }}>Quote ID: <strong>{quote.id}</strong></p>
+            <p style={{ margin: "0 0 4px 0", color: "#475569", fontSize: "14px" }}>PI Number: <strong>{piNumber}</strong></p>
             <p style={{ margin: "0 0 4px 0", color: "#475569", fontSize: "14px" }}>Date: {new Date(quote.createdAt).toLocaleDateString()}</p>
             <p style={{ margin: 0, color: "#475569", fontSize: "14px" }}>Status: <strong>{quote.status}</strong></p>
           </div>
@@ -147,7 +149,7 @@ export default async function ProformaPrintPage({ params }: { params: Promise<{ 
         {/* Footer Notes */}
         <div style={{ marginTop: "50px", paddingTop: "20px", borderTop: "1px solid #E2E8F0", color: "#64748B", fontSize: "12px", textAlign: "center" }}>
           <p style={{ margin: "0 0 4px 0" }}>This is a computer generated proforma invoice and does not require a signature.</p>
-          <p style={{ margin: 0 }}>Please quote the Proforma ID when making the payment.</p>
+          <p style={{ margin: 0 }}>Please quote PI Number ({piNumber}) when making the payment.</p>
         </div>
 
       </div>

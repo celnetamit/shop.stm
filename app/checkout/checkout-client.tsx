@@ -27,6 +27,7 @@ export default function CheckoutClient() {
   const [pincode, setPincode] = useState(params.get("pincode") || "");
   const [gst, setGst] = useState(params.get("gst") || "");
   const queryQuoteId = params.get("quoteId") || "";
+  const queryPiNumber = params.get("piNumber") || queryQuoteId;
 
   const [placingOrder, setPlacingOrder] = useState(false);
   const [orderMessage, setOrderMessage] = useState("");
@@ -193,7 +194,7 @@ export default function CheckoutClient() {
         amount: orderIntData.amount,
         currency: orderIntData.currency,
         name: "STM Journals",
-        description: queryQuoteId ? `Proforma Quote Ref #${queryQuoteId}` : "Subscription Order",
+        description: queryQuoteId ? `Proforma Quote Ref #${queryPiNumber}` : "Subscription Order",
         image: "/stmlogo.png",
         order_id: orderIntData.id,
         handler: async function (response: any) {

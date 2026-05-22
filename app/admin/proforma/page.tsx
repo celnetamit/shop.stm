@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { formatPiNumber } from "@/lib/pi-number";
 
 type ProformaItem = { id: string; journalName: string; selectedPlan: "PRINT" | "ONLINE" | "PRINT_ONLINE"; unitPrice: number };
 type Proforma = {
@@ -163,7 +164,7 @@ export default function AdminProformaPage() {
               <strong>Coupon:</strong><span>{activePi.couponCode ? `${activePi.couponCode} (${activePi.couponPercent || 0}%)` : "Not Used"}</span>
               <strong>PI Created:</strong><span>{new Date(activePi.createdAt).toLocaleString()}</span>
               <strong>Last Updated:</strong><span>{activePi.updatedAt ? new Date(activePi.updatedAt).toLocaleString() : "-"}</span>
-              <strong>Quote ID:</strong><span>{activePi.id}</span>
+              <strong>PI Number:</strong><span>{formatPiNumber({ id: activePi.id, createdAt: activePi.createdAt })}</span>
             </div>
 
             <div style={{ marginTop: "16px" }}>

@@ -63,7 +63,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           createdByUserId: session?.sub || undefined
         }
       });
-      return NextResponse.json({ ok: true, quoteId: quote.id });
+      return NextResponse.json({ ok: true, quoteId: quote.id, quoteCreatedAt: quote.createdAt });
     } catch (dbError) {
       if (!isMissingTableError(dbError)) throw dbError;
       return NextResponse.json({ ok: true, quoteId: id, warning: "Draft mode: DB table missing" });

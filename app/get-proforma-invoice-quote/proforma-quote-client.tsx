@@ -5,6 +5,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useRouter } from "next/navigation";
 import { fetchPrefillUser, loadDraft, saveDraft } from "@/lib/client/form-prefill";
+import { formatPiNumber } from "@/lib/pi-number";
 
 type Journal = {
   serialNo: number;
@@ -140,6 +141,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
   const router = useRouter();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [quoteId, setQuoteId] = useState<string>("");
+  const [quoteCreatedAt, setQuoteCreatedAt] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
@@ -611,7 +613,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
       })
     });
 
-    const json = (await res.json()) as { ok: boolean; error?: string; quoteId?: string };
+    const json = (await res.json()) as { ok: boolean; error?: string; quoteId?: string; quoteCreatedAt?: string };
     setSaving(false);
 
     if (!json.ok || !json.quoteId) {
@@ -620,6 +622,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
     }
 
     setQuoteId(json.quoteId);
+    if (json.quoteCreatedAt) setQuoteCreatedAt(json.quoteCreatedAt);
     setStep(2);
   }
 
@@ -1245,7 +1248,8 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
         const activeCgst = gst / 2;
         const activeSgst = gst / 2;
         const invoiceBaseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://shop.stmjournals.in";
-        const invoiceUrl = `${invoiceBaseUrl}/invoice.aspx?I=${quoteId || "PRO-2026"}`;
+        const piNumber = formatPiNumber({ id: quoteId || "draft", createdAt: quoteCreatedAt || new Date().toISOString() });
+        const invoiceUrl = `${invoiceBaseUrl}/invoice.aspx?I=${piNumber || "PRO-2026"}`;
 
         const isJournalsPub = selectedRows.length > 0
           ? selectedRows.some(row => isJournalsPubPublisher(row.publisher))
@@ -1337,7 +1341,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
                   {/* Col 1 */}
                   <div style={{ padding: "12px 15px", borderRight: "1px solid #94a3b8" }}>
                     <span style={{ fontSize: "10px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.03em", color: "#475569" }}>PROFORMA INVOICE NUMBER :</span>
-                    <div style={{ fontSize: "17px", fontWeight: "800", color: "#0f172a", margin: "4px 0 10px 0" }}>{quoteId || "PRO-2026-DRAFT"}</div>
+                    <div style={{ fontSize: "17px", fontWeight: "800", color: "#0f172a", margin: "4px 0 10px 0" }}>{piNumber || "PRO-2026-DRAFT"}</div>
                     
                     <span style={{ fontSize: "10px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.03em", color: "#475569" }}>PROFORMA INVOICE DATE :</span>
                     <div style={{ fontSize: "17px", fontWeight: "800", color: "#0f172a", margin: "4px 0 10px 0" }}>{formatDate(today)}</div>
@@ -1573,7 +1577,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
                 style={{ background: "#10b981" }}
                 onClick={() =>
                   router.push(
-                    `/checkout?quoteId=${encodeURIComponent(quoteId || "DRAFT")}&total=${encodeURIComponent(String(grandTotal))}&name=${encodeURIComponent(contactName)}&email=${encodeURIComponent(email)}&organization=${encodeURIComponent(institutionName || organization)}&address=${encodeURIComponent(address)}&state=${encodeURIComponent(stateName)}&pincode=${encodeURIComponent(pincode)}&gst=${encodeURIComponent(gstNumber)}&subject=${encodeURIComponent(selectedRows[0]?.subject || "Subscription")}`
+                    `/checkout?quoteId=${encodeURIComponent(quoteId || "DRAFT")}&total=${encodeURIComponent(String(grandTotal))}&name=${encodeURIComponent(contactName)}&email=${encodeURIComponent(email)}&organization=${encodeURIComponent(institutionName || organization)}&address=${encodeURIComponent(address)}&state=${encodeURIComponent(stateName)}&pincode=${encodeURIComponent(pincode)}&gst=${encodeURIComponent(gstNumber)}&subject=${encodeURIComponent(selectedRows[0]?.subject || "Subscription")}&piNumber=${encodeURIComponent(piNumber)}` as any
                   )
                 }
               >

@@ -361,7 +361,7 @@ export async function seedDefaultTemplates() {
         
         {{financialsHtml}}
 
-        <p style="margin-top:24px; text-align:center;"><a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://shop.stmjournals.in'}/checkout?quoteId={{quoteId}}" style="display:inline-block; background-color:#1e40af; color:white; padding:14px 30px; text-decoration:none; border-radius:6px; font-weight:bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">Proceed to Secure Checkout →</a></p>
+        <p style="margin-top:24px; text-align:center;"><a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://shop.stmjournals.in'}/checkout?quoteId={{quoteDbId}}" style="display:inline-block; background-color:#1e40af; color:white; padding:14px 30px; text-decoration:none; border-radius:6px; font-weight:bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">Proceed to Secure Checkout →</a></p>
       `,
       description: "Sent to users when their institutional quote setup completes."
     },

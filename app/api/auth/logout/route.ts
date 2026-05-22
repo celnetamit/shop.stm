@@ -3,8 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { AUTH_COOKIE_NAME } from "@/lib/auth/session";
 
-export async function POST() {
-  const res = NextResponse.json({ ok: true });
+function clearAuthCookie(res: NextResponse) {
   res.cookies.set(AUTH_COOKIE_NAME, "", {
     httpOnly: true,
     sameSite: "lax",
@@ -12,5 +11,17 @@ export async function POST() {
     path: "/",
     maxAge: 0
   });
+}
+
+export async function POST() {
+  const res = NextResponse.json({ ok: true });
+  clearAuthCookie(res);
+  return res;
+}
+
+export async function GET(request: Request) {
+  const url = new URL("/login", request.url);
+  const res = NextResponse.redirect(url);
+  clearAuthCookie(res);
   return res;
 }

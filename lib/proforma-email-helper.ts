@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { formatPiNumber } from "@/lib/pi-number";
 
 export async function prepareProformaEmailPayload(quoteId: string) {
   const quote = await prisma.proformaQuote.findUnique({
@@ -127,7 +128,8 @@ export async function prepareProformaEmailPayload(quoteId: string) {
   `;
 
   return {
-    quoteId: quote.id,
+    quoteId: formatPiNumber({ id: quote.id, createdAt: quote.createdAt }),
+    quoteDbId: quote.id,
     organization: quote.organization,
     contactName: quote.contactName,
     email: quote.email,

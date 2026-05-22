@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { formatPiNumber } from "@/lib/pi-number";
 
 type Props = {
   contacts: any[];
@@ -166,7 +167,7 @@ export default function AdminDashboardTabs({ contacts, agencies, proformas, orde
                     <tr key={q.id} style={{ borderBottom: "1px solid #F1F5F9", background: i % 2 === 0 ? "transparent" : "#FCFDFE" }}>
                       <td style={{ padding: "18px 24px" }}>
                         <div style={{ fontWeight: "700", color: "#1E293B", fontSize: "14px" }}>{q.organization}</div>
-                        <div style={{ fontSize: "12px", color: "#64748B" }}>Ref: {q.id}</div>
+                        <div style={{ fontSize: "12px", color: "#64748B" }}>Ref: {formatPiNumber({ id: q.id, createdAt: q.createdAt })}</div>
                       </td>
                       <td style={{ padding: "18px 24px" }}>
                         <div style={{ fontSize: "14px", fontWeight: "600", color: "#334155" }}>{q.contactName}</div>

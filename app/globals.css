@@ -465,6 +465,54 @@ a {
   margin-top: 8px;
 }
 
+.register-card {
+  width: min(560px, 96vw);
+  border-radius: 18px;
+  padding: 28px;
+  background:
+    radial-gradient(1200px 300px at 0% -20%, rgba(37, 99, 235, 0.08), transparent 40%),
+    linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.register-head h1 {
+  margin: 0 0 8px 0;
+  color: #0f2747;
+  font-size: clamp(34px, 4vw, 42px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.register-head p {
+  margin: 0 0 10px 0;
+  color: #52627d;
+  font-size: 14px;
+}
+
+.register-field-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #41506a;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.register-submit-btn {
+  margin-top: 14px;
+  min-height: 46px;
+  font-size: 15px;
+}
+
+.register-foot {
+  margin: 14px 0 2px;
+  font-size: 14px;
+  color: #4d5e7a;
+}
+
+.register-foot a {
+  font-weight: 700;
+}
+
 .login-footer {
   margin: 12px 0 2px;
   color: #4d5e7a;
