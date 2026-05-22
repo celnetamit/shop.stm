@@ -75,6 +75,11 @@ export default function LoginForm() {
           Google sign-in failed. Please try again.
         </div>
       )}
+      {searchParams.get("registered") === "1" && (
+        <div style={{ padding: "12px 16px", background: "#F0FDF4", border: "1px solid #DCFCE7", borderRadius: "12px", color: "#166534", fontSize: "14px", marginBottom: "24px", textAlign: "center" }}>
+          Registration completed. Please sign in with your new account.
+        </div>
+      )}
 
       {error && (
         <div style={{ padding: "12px 16px", background: "#FEF2F2", border: "1px solid #FEE2E2", borderRadius: "12px", color: "#B91C1C", fontSize: "14px", marginBottom: "24px", textAlign: "center" }}>

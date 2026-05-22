@@ -1111,7 +1111,6 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
                         <div>
                           <span className="proforma-tag">{j.subject}</span>
                           <span>ISSN: {j.issn || "-"}</span>
-                          <span>{j.frequency || "2 Issues"}</span>
                         </div>
                       </div>
 
@@ -1199,7 +1198,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
                         </button>
                       </div>
 
-                      <div className="proforma-row-price" style={{ fontSize: "16px", color: "#1b2f69", fontWeight: "700" }}>
+                      <div className="proforma-row-price proforma-row-investment">
                         {fmt(
                           configs.reduce((sum, config) => {
                             const annualPrice = getPrice(j, config.plan);

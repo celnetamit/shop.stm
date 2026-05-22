@@ -37,6 +37,8 @@ export async function GET() {
       createdAt: q.createdAt,
       status: q.status,
       subscriberCategory: q.subscriberCategory,
+      couponCode: q.couponCode,
+      couponPercent: q.couponPercent,
       items: q.items.map((it) => ({
         id: it.id,
         journalName: it.journalName,
@@ -49,4 +51,3 @@ export async function GET() {
   const users = Array.from(byEmail.values()).sort((a, b) => +new Date(b.latestAt) - +new Date(a.latestAt));
   return NextResponse.json({ ok: true, users });
 }
-

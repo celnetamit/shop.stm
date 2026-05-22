@@ -3,12 +3,11 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth/password";
-import { signSession, AUTH_COOKIE_NAME } from "@/lib/auth/session";
 import { roleForEmail } from "@/lib/auth/admin-emails";
 
 export async function POST(req: NextRequest) {
   try {
-    const body = (await req.json()) as { name?: string; email?: string; password?: string; role?: "LIBRARIAN" | "AGENCY" | "STUDENT" | "SCHOLAR" };
+    const body = (await req.json()) as { name?: string; email?: string; password?: string; role?: "LIBRARIAN" | "AGENCY" | "USER" | "STUDENT" | "SCHOLAR" };
     const name = body.name?.trim() || null;
     const email = body.email?.trim().toLowerCase();
     const password = body.password || "";
@@ -39,16 +38,7 @@ export async function POST(req: NextRequest) {
       console.error("Auth Email Fail", e);
     }
 
-    const token = await signSession({ sub: user.id, email: user.email, role });
-    const res = NextResponse.json({ ok: true, user: { id: user.id, email: user.email, role } });
-    res.cookies.set(AUTH_COOKIE_NAME, token, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7
-    });
-    return res;
+    return NextResponse.json({ ok: true, user: { id: user.id, email: user.email, role } });
   } catch (error) {
     return NextResponse.json({ ok: false, error: error instanceof Error ? error.message : "Registration failed" }, { status: 500 });
   }

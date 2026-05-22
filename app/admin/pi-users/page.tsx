@@ -3,13 +3,21 @@
 import { Fragment, useEffect, useState } from "react";
 
 type PiItem = { id: string; journalName: string; selectedPlan: "PRINT" | "ONLINE" | "PRINT_ONLINE"; unitPrice: number };
-type PiEntry = { id: string; createdAt: string; status: "DRAFT" | "SUBMITTED" | "PAID"; subscriberCategory?: string | null; items: PiItem[] };
+type PiEntry = {
+  id: string;
+  createdAt: string;
+  status: "DRAFT" | "SUBMITTED" | "PAID";
+  subscriberCategory?: string | null;
+  couponCode?: string | null;
+  couponPercent?: number | null;
+  items: PiItem[];
+};
 type PiUser = { email: string; name: string; collegeName: string; latestAt: string; entries: PiEntry[] };
 
 export default function AdminPiUsersPage() {
   const [rows, setRows] = useState<PiUser[]>([]);
   const [open, setOpen] = useState<Record<string, boolean>>({});
-  const [activeItems, setActiveItems] = useState<{ quoteId: string; items: PiItem[] } | null>(null);
+  const [activeItems, setActiveItems] = useState<{ quoteId: string; items: PiItem[]; couponCode?: string | null; couponPercent?: number | null } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -68,7 +76,7 @@ export default function AdminPiUsersPage() {
                               <td style={{ padding: "8px" }}>{e.subscriberCategory || "-"}</td>
                               <td style={{ padding: "8px" }}>{e.status}</td>
                               <td style={{ padding: "8px" }}>
-                                <button onClick={() => setActiveItems({ quoteId: e.id, items: e.items })} style={{ border: "1px solid #cbd5e1", background: "white", borderRadius: "6px", padding: "3px 8px" }}>
+                                <button onClick={() => setActiveItems({ quoteId: e.id, items: e.items, couponCode: e.couponCode, couponPercent: e.couponPercent })} style={{ border: "1px solid #cbd5e1", background: "white", borderRadius: "6px", padding: "3px 8px" }}>
                                   ＋
                                 </button>
                               </td>
@@ -103,11 +111,37 @@ export default function AdminPiUsersPage() {
                 {activeItems.items.map((it) => (
                   <tr key={it.id} style={{ borderTop: "1px solid #e2e8f0" }}>
                     <td style={{ padding: "8px" }}>{it.journalName}</td>
-                    <td style={{ padding: "8px" }}>{it.selectedPlan}</td>
-                    <td style={{ padding: "8px", textAlign: "right" }}>{it.unitPrice.toLocaleString("en-IN")}</td>
+                    <td style={{ padding: "8px" }}>{it.selectedPlan === "PRINT_ONLINE" ? "PRINT + DIGITAL" : it.selectedPlan}</td>
+                    <td style={{ padding: "8px", textAlign: "right" }}>₹{it.unitPrice.toLocaleString("en-IN")}</td>
                   </tr>
                 ))}
               </tbody>
+              <tfoot>
+                {(() => {
+                  const subtotal = activeItems.items.reduce((sum, it) => sum + (it.unitPrice || 0), 0);
+                  const couponPct = activeItems.couponPercent || 0;
+                  const discount = Math.round((subtotal * couponPct) / 100);
+                  const net = subtotal - discount;
+                  return (
+                    <>
+                      <tr style={{ borderTop: "1px solid #cbd5e1", background: "#fcfdff" }}>
+                        <td colSpan={2} style={{ padding: "8px", textAlign: "right", fontWeight: 600 }}>Subtotal</td>
+                        <td style={{ padding: "8px", textAlign: "right", fontWeight: 600 }}>₹{subtotal.toLocaleString("en-IN")}</td>
+                      </tr>
+                      <tr>
+                        <td colSpan={2} style={{ padding: "8px", textAlign: "right", color: "#16a34a" }}>
+                          Coupon Used: {activeItems.couponCode ? `${activeItems.couponCode} (${couponPct}%)` : "Not Used"}
+                        </td>
+                        <td style={{ padding: "8px", textAlign: "right", color: "#16a34a" }}>-₹{discount.toLocaleString("en-IN")}</td>
+                      </tr>
+                      <tr style={{ borderTop: "1px solid #cbd5e1", background: "#f8fafc" }}>
+                        <td colSpan={2} style={{ padding: "8px", textAlign: "right", fontWeight: 700 }}>Net Amount</td>
+                        <td style={{ padding: "8px", textAlign: "right", fontWeight: 700 }}>₹{net.toLocaleString("en-IN")}</td>
+                      </tr>
+                    </>
+                  );
+                })()}
+              </tfoot>
             </table>
           </div>
         </div>
