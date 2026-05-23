@@ -17,6 +17,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     const { prepareProformaEmailPayload } = await import("@/lib/proforma-email-helper");
+    const { buildProformaPdfAttachment } = await import("@/lib/email-attachments");
     const d = await prepareProformaEmailPayload(id);
 
     if (!d) {
@@ -24,8 +25,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     const { sendTemplatedEmail, sendAdminNotification } = await import("@/lib/email");
-    await sendTemplatedEmail("PROFORMA_CREATED", d.email, d);
-    await sendAdminNotification("PROFORMA_CREATED_ADMIN", d);
+    const attachment = await buildProformaPdfAttachment(id);
+    const attachmentsJson = attachment
+      ? JSON.stringify([{ filename: attachment.filename, contentType: attachment.contentType, base64: attachment.data.toString("base64") }])
+      : "[]";
+    await sendTemplatedEmail("PROFORMA_CREATED", d.email, { ...d, __attachments: attachmentsJson });
+    await sendAdminNotification("PROFORMA_CREATED_ADMIN", { ...d, __attachments: attachmentsJson });
 
     return NextResponse.json({ ok: true, message: "Notifications dispatched successfully." });
   } catch (err) {

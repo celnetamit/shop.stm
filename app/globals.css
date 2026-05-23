@@ -3685,6 +3685,14 @@ textarea:focus {
 }
 
 @media print {
+  .public-chatbot-root,
+  .chatbot-fab,
+  [aria-label="Open website assistant"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+  }
+
   body, html {
     background: #ffffff !important;
     color: #000000 !important;

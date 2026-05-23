@@ -141,13 +141,19 @@ export async function POST(req: NextRequest) {
 
     try {
       const { sendTemplatedEmail, sendAdminNotification } = await import("@/lib/email");
+      const { buildOrderPdfAttachment } = await import("@/lib/email-attachments");
+      const invoiceAttachment = await buildOrderPdfAttachment(order.id);
+      const attachmentsJson = invoiceAttachment
+        ? JSON.stringify([{ filename: invoiceAttachment.filename, contentType: invoiceAttachment.contentType, base64: invoiceAttachment.data.toString("base64") }])
+        : "[]";
       const d = {
         name: order.customerName,
         email: order.email,
         orderId: order.id,
         currency: order.currency,
         total: order.total.toString(),
-        couponCode: order.couponCode || "None"
+        couponCode: order.couponCode || "None",
+        __attachments: attachmentsJson
       };
       await sendTemplatedEmail("ORDER_CONFIRMED", order.email, d);
       await sendAdminNotification("ORDER_CONFIRMED_ADMIN", d);

@@ -47,7 +47,7 @@ export default async function ProformaPrintPage({ params }: { params: Promise<{ 
       dateValue={new Date(quote.createdAt).toLocaleDateString()}
       statusValue={quote.status}
       companyName="Consortium e-Learning Network"
-      companyLines={["A-118, 1st Floor, Sector-63", "Noida, U.P. 201301, India", "info@stmjournals.com"]}
+      companyLines={["A Division of Consortium e-Learning Network Pvt. Ltd.", "A-118, 1st Floor, Sector-63", "Noida, U.P. 201301, India", "info@stmjournals.com"]}
       billToLines={[
         quote.organization || "N/A",
         `Attn: ${quote.contactName || "N/A"}`,

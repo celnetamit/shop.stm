@@ -6,6 +6,7 @@ import autoTable from "jspdf-autotable";
 import { useRouter } from "next/navigation";
 import { fetchPrefillUser, loadDraft, saveDraft } from "@/lib/client/form-prefill";
 import { formatPiNumber } from "@/lib/pi-number";
+import AuthRequiredOverlay from "@/app/components/auth-required-overlay";
 
 type Journal = {
   serialNo: number;
@@ -81,6 +82,7 @@ function getIssueLabels(totalIssues: number): string[] {
 type Props = {
   journals: Journal[];
   canUsePubSubscription: boolean;
+  isAuthenticated: boolean;
 };
 
 function isBookProduct(journalName: string, subject: string): boolean {
@@ -139,7 +141,7 @@ function monthShort(month: number): string {
   return ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][month - 1] || "";
 }
 
-export default function ProformaQuoteClient({ journals, canUsePubSubscription }: Props) {
+export default function ProformaQuoteClient({ journals, canUsePubSubscription, isAuthenticated }: Props) {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [quoteId, setQuoteId] = useState<string>("");
@@ -167,6 +169,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
   const [subscriberCategory, setSubscriberCategory] = useState<SubscriberCategory>("COLLEGE");
   const [userRole, setUserRole] = useState<UserRole>("USER");
   const [existingPiQuery, setExistingPiQuery] = useState("");
+  const [showPiSuggestions, setShowPiSuggestions] = useState(false);
   const [existingPiResults, setExistingPiResults] = useState<Array<{
     id: string;
     organization: string;
@@ -404,6 +407,34 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
     void searchPi();
     return () => { cancelled = true; };
   }, [existingPiQuery, subscriberCategory]);
+
+  function applyExistingPiUser(pi: {
+    id: string;
+    organization: string;
+    institutionName: string | null;
+    contactName: string;
+    email: string;
+    phone: string;
+    country: string;
+    address: string | null;
+    gstNumber: string | null;
+    subscriberCategory: string | null;
+    designation: string | null;
+  }) {
+    setOrganization(pi.organization || "");
+    setInstitutionName(pi.institutionName || pi.organization || "");
+    setContactName(pi.contactName || "");
+    setEmail(pi.email || "");
+    setPhone(pi.phone || "");
+    setCountry(pi.country || "India");
+    setAddress(pi.address || "");
+    setGstNumber(pi.gstNumber || "");
+    setDesignation(pi.designation || "");
+    setQuoteId(pi.id);
+    setExistingPiQuery(`${pi.contactName} | ${pi.email} | ${pi.institutionName || pi.organization}`);
+    setShowPiSuggestions(false);
+    setStep(2);
+  }
 
   useEffect(() => {
     saveDraft("draft:proforma-form", {
@@ -865,7 +896,11 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
     }
   }
 
+  const requireAuth = !isAuthenticated;
+
   return (
+    <>
+    <div style={{ filter: requireAuth ? "blur(6px)" : "none", pointerEvents: requireAuth ? "none" : "auto", userSelect: requireAuth ? "none" : "auto" }}>
     <main className="proforma-page">
       <h1 className="proforma-title">Institutional Proforma System</h1>
       <p className="proforma-subtitle">Generate GST-compliant institutional quotations.</p>
@@ -1000,39 +1035,55 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
               )}
             </div>
             {subscriberCategory === "EXISTING_PI" ? (
-              <div className="proforma-full">
+              <div className="proforma-full" style={{ position: "relative" }}>
                 <input
                   value={existingPiQuery}
                   onChange={(e) => setExistingPiQuery(e.target.value)}
                   placeholder="Search by email / college / name"
+                  onFocus={() => setShowPiSuggestions(true)}
                 />
-                <select
-                  style={{ marginTop: "8px" }}
-                  defaultValue=""
-                  onChange={(e) => {
-                    const selectedId = e.target.value;
-                    const pi = existingPiResults.find((r) => r.id === selectedId);
-                    if (!pi) return;
-                    setOrganization(pi.organization || "");
-                    setInstitutionName(pi.institutionName || pi.organization || "");
-                    setContactName(pi.contactName || "");
-                    setEmail(pi.email || "");
-                    setPhone(pi.phone || "");
-                    setCountry(pi.country || "India");
-                    setAddress(pi.address || "");
-                    setGstNumber(pi.gstNumber || "");
-                    setDesignation(pi.designation || "");
-                    setQuoteId(pi.id);
-                    setStep(2);
-                  }}
-                >
-                  <option value="">Select existing PI user details</option>
-                  {existingPiResults.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.contactName} | {r.email} | {r.institutionName || r.organization}
-                    </option>
-                  ))}
-                </select>
+                {showPiSuggestions && existingPiQuery.trim().length >= 2 ? (
+                  <div
+                    style={{
+                      marginTop: "8px",
+                      border: "1px solid #dbe3f1",
+                      borderRadius: "10px",
+                      background: "#fff",
+                      maxHeight: "230px",
+                      overflowY: "auto",
+                      boxShadow: "0 8px 18px rgba(15, 23, 42, 0.08)",
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      zIndex: 30
+                    }}
+                  >
+                    {existingPiResults.length === 0 ? (
+                      <div style={{ padding: "10px 12px", fontSize: "13px", color: "#64748b" }}>No matching PI user found.</div>
+                    ) : (
+                      existingPiResults.map((r) => (
+                        <button
+                          key={r.id}
+                          type="button"
+                          onClick={() => applyExistingPiUser(r)}
+                          style={{
+                            width: "100%",
+                            border: "none",
+                            borderBottom: "1px solid #edf2f7",
+                            background: "#fff",
+                            textAlign: "left",
+                            padding: "10px 12px",
+                            cursor: "pointer"
+                          }}
+                        >
+                          <div style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>{r.contactName}</div>
+                          <div style={{ fontSize: "12px", color: "#334155", marginTop: "2px" }}>{r.email}</div>
+                          <div style={{ fontSize: "12px", color: "#64748b", marginTop: "2px" }}>{r.institutionName || r.organization}</div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                ) : null}
               </div>
             ) : null}
 
@@ -1322,7 +1373,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
         const brand = isJournalsPub ? {
           logoText: "JP",
           title: "Journals Pub",
-          subtitle: "Dhruv Infosystems Private Limited,",
+          subtitle: "A Division of Dhruv Infosystems Private Limited",
           address: "A-118, Level 1, Sector 63, Noida - 201301, INDIA.",
           bankName: "HDFC Bank",
           bankAddress: "Sector-62, Noida, U.P., India",
@@ -1343,7 +1394,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
         } : {
           logoText: "STM",
           title: "STM Journals",
-          subtitle: "Consortium e-Learning Network Pvt. Ltd.,",
+          subtitle: "A Division of Consortium e-Learning Network Pvt. Ltd.",
           address: "A-118 1st Floor, Sector 63, Noida, Uttar Pradesh, India - 201301",
           bankName: "HDFC Bank",
           bankAddress: "Sector-62, Noida, U.P., India",
@@ -1654,5 +1705,12 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
         );
       })() : null}
     </main>
+    </div>
+    <AuthRequiredOverlay
+      show={requireAuth}
+      title="Login To Access Proforma"
+      subtitle="Please login to create and manage your Proforma Invoice quote."
+    />
+    </>
   );
 }

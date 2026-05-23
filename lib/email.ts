@@ -1,5 +1,11 @@
-import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
+import { SESClient, SendEmailCommand, SendRawEmailCommand } from "@aws-sdk/client-ses";
 import { prisma } from "./prisma";
+
+type EmailAttachment = {
+  filename: string;
+  contentType: string;
+  data: Buffer;
+};
 
 let _sesClient: SESClient | null = null;
 
@@ -31,7 +37,7 @@ function buildModernEmailTemplate(content: string, title: string, isJournalsPub?
   const brandTitle = isJournalsPub ? "JOURNALS PUB" : "STM JOURNALS";
   const brandSubtitle = isJournalsPub
     ? "A Division of Dhruv Infosystems Private Limited"
-    : "A Division of Consortium eLearning Network Pvt. Ltd.";
+    : "A Division of Consortium e-Learning Network Pvt. Ltd.";
   
   const brandRegardsName = isJournalsPub ? "Journals Pub Support Team" : "STM Support Team";
   const brandRegardsCompany = isJournalsPub ? "Dhruv Infosystems Private Limited" : "Consortium eLearning Network Pvt. Ltd.";
@@ -205,17 +211,57 @@ export async function sendTemplatedEmail(key: string, to: string, data: Record<s
     // 4. Wrap in aesthetic container
     const finalBody = buildModernEmailTemplate(interpolatedBody, finalSubject, isJournalsPub);
 
-    // 5. Construct command
-    const command = new SendEmailCommand({
-      Destination: { ToAddresses: [to] },
-      Message: {
-        Body: { Html: { Charset: "UTF-8", Data: finalBody } },
-        Subject: { Charset: "UTF-8", Data: finalSubject },
-      },
-      Source: getFromEmail(),
-    });
+    const attachments: EmailAttachment[] = (data.__attachments ? JSON.parse(data.__attachments) : [])
+      .map((a: { filename: string; contentType: string; base64: string }) => ({
+        filename: a.filename,
+        contentType: a.contentType,
+        data: Buffer.from(a.base64, "base64")
+      }));
 
-    await getSesClient().send(command);
+    if (attachments.length > 0) {
+      const boundary = `NextPart_${Date.now()}`;
+      const from = getFromEmail();
+
+      let raw = "";
+      raw += `From: ${from}\n`;
+      raw += `To: ${to}\n`;
+      raw += `Subject: ${finalSubject}\n`;
+      raw += "MIME-Version: 1.0\n";
+      raw += `Content-Type: multipart/mixed; boundary=\"${boundary}\"\n\n`;
+
+      raw += `--${boundary}\n`;
+      raw += "Content-Type: text/html; charset=UTF-8\n";
+      raw += "Content-Transfer-Encoding: 7bit\n\n";
+      raw += `${finalBody}\n\n`;
+
+      for (const att of attachments) {
+        raw += `--${boundary}\n`;
+        raw += `Content-Type: ${att.contentType}; name=\"${att.filename}\"\n`;
+        raw += `Content-Disposition: attachment; filename=\"${att.filename}\"\n`;
+        raw += "Content-Transfer-Encoding: base64\n\n";
+
+        const b64 = att.data.toString("base64");
+        raw += b64.replace(/(.{76})/g, "$1\n") + "\n\n";
+      }
+
+      raw += `--${boundary}--`;
+
+      await getSesClient().send(
+        new SendRawEmailCommand({
+          RawMessage: { Data: Buffer.from(raw, "utf8") }
+        })
+      );
+    } else {
+      const command = new SendEmailCommand({
+        Destination: { ToAddresses: [to] },
+        Message: {
+          Body: { Html: { Charset: "UTF-8", Data: finalBody } },
+          Subject: { Charset: "UTF-8", Data: finalSubject },
+        },
+        Source: getFromEmail(),
+      });
+      await getSesClient().send(command);
+    }
     console.log(`✅ SES Sent -> ${key} to ${to}`);
     return true;
   } catch (error) {
