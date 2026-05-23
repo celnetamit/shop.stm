@@ -11,6 +11,8 @@ export default function CartPage() {
   const [msg, setMsg] = useState("");
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [isLoggedOut, setIsLoggedOut] = useState(false);
+  const [isInternationalUser, setIsInternationalUser] = useState(false);
+  const USD_RATE = 83;
 
   useEffect(() => {
     let active = true;
@@ -31,6 +33,28 @@ export default function CartPage() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/geo", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((json: { ok: boolean; isInternational?: boolean }) => {
+        if (!active) return;
+        setIsInternationalUser(!!json.ok && !!json.isInternational);
+      })
+      .catch(() => {
+        if (!active) return;
+        setIsInternationalUser(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  function money(valueInInr: number) {
+    if (isInternationalUser) return `$${(valueInInr / USD_RATE).toFixed(2)}`;
+    return `₹${valueInInr.toLocaleString("en-IN")}`;
+  }
 
   const subtotal = useMemo(() => items.reduce((s, it) => s + it.unitPrice * it.qty, 0), [items]);
   const discount = Math.round((subtotal * discountPercent) / 100);
@@ -86,7 +110,7 @@ export default function CartPage() {
                   <h3>{it.journalName}</h3>
                   <p>{it.plan.replace("_", " + ")} | Year {it.year}{it.issue ? ` | Issue ${it.issue}` : ""}</p>
                   <p style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center", margin: "4px 0 0 0" }}>
-                    <span>₹{it.unitPrice.toLocaleString("en-IN")}</span>
+                    <span>{money(it.unitPrice)}</span>
                     <span style={{ fontSize: "12px", color: "#64748b", background: "#f1f5f9", padding: "2px 6px", borderRadius: "4px", border: "1px solid #cbd5e1" }}>
                       HSN/SAC: {itemHsn}
                     </span>
@@ -97,7 +121,7 @@ export default function CartPage() {
                   <span>{it.qty}</span>
                   <button onClick={() => setQty(it.id, it.qty + 1)}>+</button>
                 </div>
-                <strong>₹{(it.unitPrice * it.qty).toLocaleString("en-IN")}</strong>
+                <strong>{money(it.unitPrice * it.qty)}</strong>
                 <button className="cart-remove" onClick={() => removeItem(it.id)}>x</button>
               </article>
             );
@@ -112,10 +136,11 @@ export default function CartPage() {
 
         <aside className="cart-summary">
           <h2>Cart Totals</h2>
-          <p><span>Subtotal</span><strong>₹{subtotal.toLocaleString("en-IN")}</strong></p>
-          <p><span>Discount {couponCode ? `(${couponCode})` : ""}</span><strong>-₹{discount.toLocaleString("en-IN")}</strong></p>
-          <p><span>GST (18%)</span><strong>₹{gst.toLocaleString("en-IN")}</strong></p>
-          <p className="cart-total"><span>Total</span><strong>₹{total.toLocaleString("en-IN")}</strong></p>
+          {isInternationalUser ? <p style={{ fontSize: "12px", color: "#2563eb", marginTop: 0 }}>USD enforced outside India</p> : null}
+          <p><span>Subtotal</span><strong>{money(subtotal)}</strong></p>
+          <p><span>Discount {couponCode ? `(${couponCode})` : ""}</span><strong>-{money(discount)}</strong></p>
+          <p><span>GST (18%)</span><strong>{money(gst)}</strong></p>
+          <p className="cart-total"><span>Total</span><strong>{money(total)}</strong></p>
           <Link href="/checkout" className="cart-checkout-btn">Proceed to checkout</Link>
         </aside>
       </div>

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useCart } from "@/app/components/cart-store";
 import { useEffect, useState, useRef } from "react";
 import PublicChatbot from "@/app/components/public-chatbot";
+import CookieConsentBanner from "@/app/components/cookie-consent-banner";
 
 type SessionUser = {
   id: string;
@@ -388,6 +389,7 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
       {children}
 
       {!hideChrome ? <PublicChatbot /> : null}
+      {!hideChrome ? <CookieConsentBanner /> : null}
 
       {!hideChrome ? (
         <footer className="site-footer" style={{ background: "#060a11", color: "#8b9ebd", paddingTop: "50px", paddingBottom: "20px", marginTop: "40px", fontFamily: "Arial, sans-serif" }}>

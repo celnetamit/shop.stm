@@ -219,6 +219,7 @@ export default function PublicChatbot() {
 
       {open && (
         <div
+          className="public-chatbot-root"
           style={{
             position: "fixed",
             right: "20px",
@@ -295,7 +296,7 @@ export default function PublicChatbot() {
         onClick={() => setOpen((v) => !v)}
         aria-label="Open website assistant"
         title="Ask STM Assistant"
-        className="chatbot-fab"
+        className="chatbot-fab public-chatbot-root"
         style={{
           position: "fixed",
           right: "20px",

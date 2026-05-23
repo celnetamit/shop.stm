@@ -127,6 +127,15 @@ export default function PrivacyPolicyPage() {
           </p>
         </div>
 
+        <div style={{ border: "1px solid #E2E8F0", borderRadius: "10px", padding: "24px", background: "#FFFFFF" }}>
+          <h2 style={{ fontSize: "20px", color: "#0F172A", marginTop: 0, marginBottom: "12px", fontWeight: "700" }}>12. Compliance Frameworks</h2>
+          <ul style={{ paddingLeft: "20px", margin: 0, display: "flex", flexDirection: "column", gap: "8px" }}>
+            <li><strong>DPDP (India):</strong> We process personal data with lawful purpose, notice, and consent aligned to the Digital Personal Data Protection Act.</li>
+            <li><strong>GDPR (EU/EEA):</strong> We support rights including access, correction, deletion, and data portability subject to legal obligations.</li>
+            <li><strong>SOC 2 Security Principles:</strong> We maintain controls and monitoring practices focused on security, confidentiality, and availability.</li>
+          </ul>
+        </div>
+
         <div style={{ border: "1px solid #E2E8F0", borderRadius: "10px", padding: "24px", background: "#F8FAFC", marginTop: "10px" }}>
           <h2 style={{ fontSize: "20px", color: "#0F172A", marginTop: 0, marginBottom: "16px", fontWeight: "700" }}>Grievance & Contact Officer</h2>
           <p style={{ marginBottom: "16px", marginTop: 0 }}>If you have questions relating to your personal data, please contact our Grievance Officer:</p>

@@ -194,6 +194,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
   const [remarks, setRemarks] = useState("");
 
   const [currency, setCurrency] = useState<"INR" | "USD">("INR");
+  const [isInternationalUser, setIsInternationalUser] = useState(false);
   const [keyword, setKeyword] = useState("");
   const [domain, setDomain] = useState("All Subjects");
   const [coupon, setCoupon] = useState("");
@@ -377,6 +378,25 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
         // silent fallback
       }
     })();
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/geo", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((json: { ok: boolean; isInternational?: boolean }) => {
+        if (!active) return;
+        const outsideIndia = !!json.ok && !!json.isInternational;
+        setIsInternationalUser(outsideIndia);
+        if (outsideIndia) setCurrency("USD");
+      })
+      .catch(() => {
+        if (!active) return;
+        setIsInternationalUser(false);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   const allowedSubscriberCategories = useMemo<SubscriberCategory[]>(() => {
@@ -1109,8 +1129,9 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
 
             <div className="proforma-currency-line proforma-full">
               <span>Currency</span>
-              <button type="button" className={currency === "INR" ? "active" : ""} onClick={() => setCurrency("INR")}>INR</button>
+              <button type="button" className={currency === "INR" ? "active" : ""} onClick={() => setCurrency("INR")} disabled={isInternationalUser} title={isInternationalUser ? "INR is disabled for international users" : "INR"}>INR</button>
               <button type="button" className={currency === "USD" ? "active" : ""} onClick={() => setCurrency("USD")}>USD</button>
+              {isInternationalUser ? <span style={{ marginLeft: "8px", fontSize: "12px", color: "#2563eb", fontWeight: 600 }}>USD enforced outside India</span> : null}
             </div>
 
             <h3 className="proforma-section-title proforma-full">Shipping Details</h3>
