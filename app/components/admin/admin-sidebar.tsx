@@ -10,6 +10,7 @@ const links = [
   { href: "/admin/pi-users", label: "PI Users" },
   { href: "/admin/contact-entries", label: "Contact Entries" },
   { href: "/admin/agency-queries", label: "Agency Queries" },
+  { href: "/admin/chats", label: "Chat Leads" },
   { href: "/admin/users", label: "Users" },
   { href: "/admin/email-templates", label: "Email Templates" },
   { href: "/admin/coupons", label: "Coupons" }

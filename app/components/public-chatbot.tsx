@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type HelpLink = { label: string; href: string };
 type Knowledge = {
@@ -159,6 +159,9 @@ function buildResponse(query: string): Omit<ChatMessage, "id" | "role"> {
 export default function PublicChatbot() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [guestToken, setGuestToken] = useState<string | null>(null);
+  const [isSending, setIsSending] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
@@ -172,16 +175,89 @@ export default function PublicChatbot() {
     []
   );
 
-  function send(input?: string) {
+  useEffect(() => {
+    const existing = localStorage.getItem("stm_chat_guest_token");
+    if (existing) {
+      setGuestToken(existing);
+      return;
+    }
+    const token = `guest-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    localStorage.setItem("stm_chat_guest_token", token);
+    setGuestToken(token);
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/chat/history", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((json: {
+        ok: boolean;
+        conversation: null | {
+          id: string;
+          messages: Array<{ id: string; sender: "USER" | "BOT"; content: string }>;
+        };
+      }) => {
+        if (!json.ok || !json.conversation) return;
+        setConversationId(json.conversation.id);
+        const hydrated: ChatMessage[] = json.conversation.messages.map((m) => {
+          if (m.sender === "USER") {
+            return { id: m.id, role: "user", text: m.content };
+          }
+          try {
+            const parsed = JSON.parse(m.content) as { text?: string; links?: HelpLink[] };
+            return { id: m.id, role: "bot", text: parsed.text || m.content, links: parsed.links || [] };
+          } catch {
+            return { id: m.id, role: "bot", text: m.content };
+          }
+        });
+        if (hydrated.length > 0) setMessages(hydrated);
+      })
+      .catch(() => {});
+  }, []);
+
+  async function send(input?: string) {
     const finalQuery = (input ?? query).trim();
     if (!finalQuery) return;
 
     const userMsg: ChatMessage = { id: `u-${Date.now()}`, role: "user", text: finalQuery };
-    const bot = buildResponse(finalQuery);
-    const botMsg: ChatMessage = { id: `b-${Date.now()}-${Math.random()}`, role: "bot", ...bot };
-
-    setMessages((prev) => [...prev, userMsg, botMsg]);
+    setMessages((prev) => [...prev, userMsg]);
     setQuery("");
+    setIsSending(true);
+
+    try {
+      const res = await fetch("/api/chat/message", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          message: finalQuery,
+          conversationId,
+          guestToken
+        })
+      });
+      const json = (await res.json()) as {
+        ok: boolean;
+        error?: string;
+        conversationId?: string;
+        reply?: { id: string; text: string; links?: HelpLink[] };
+      };
+      if (json.ok && json.reply) {
+        if (json.conversationId) setConversationId(json.conversationId);
+        const botMsg: ChatMessage = {
+          id: json.reply.id,
+          role: "bot",
+          text: json.reply.text,
+          links: json.reply.links || []
+        };
+        setMessages((prev) => [...prev, botMsg]);
+      } else {
+        const fallback = buildResponse(finalQuery);
+        setMessages((prev) => [...prev, { id: `b-fallback-${Date.now()}`, role: "bot", ...fallback }]);
+      }
+    } catch {
+      const fallback = buildResponse(finalQuery);
+      setMessages((prev) => [...prev, { id: `b-fallback-${Date.now()}`, role: "bot", ...fallback }]);
+    } finally {
+      setIsSending(false);
+    }
   }
 
   return (
@@ -286,7 +362,7 @@ export default function PublicChatbot() {
               style={{ flex: 1, border: "1px solid #cdd8ea", borderRadius: "8px", padding: "8px 10px", fontSize: "12px", outline: "none" }}
             />
             <button onClick={() => send()} style={{ border: "none", borderRadius: "8px", background: "#1d4ed8", color: "#fff", padding: "8px 12px", fontSize: "12px", fontWeight: 700, cursor: "pointer" }}>
-              Send
+              {isSending ? "..." : "Send"}
             </button>
           </div>
         </div>
