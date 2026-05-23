@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
     const accessToken = await exchangeGoogleCodeForOrigin(code, appBase);
     const profile = await fetchGoogleProfile(accessToken);
     const normalizedEmail = profile.email.toLowerCase();
-    const role = roleForEmail(normalizedEmail);
+    const emailBasedRole = roleForEmail(normalizedEmail);
 
     let user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     const isNew = !user;
@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
         data: {
           email: normalizedEmail,
           name: profile.name,
-          role,
+          role: emailBasedRole,
           provider: "google",
           providerId: profile.id
         }
@@ -51,20 +51,29 @@ export async function GET(req: NextRequest) {
         console.error("Google Auth Email Fail", e);
       }
     } else {
+      if (!user) {
+        throw new Error("User lookup failed");
+      }
+      const nextRole = emailBasedRole === "ADMIN" ? "ADMIN" : user.role;
       user = await prisma.user.update({
         where: { email: normalizedEmail },
         data: {
           name: profile.name,
-          role,
+          role: nextRole,
           provider: "google",
           providerId: profile.id
         }
       });
     }
 
-    const token = await signSession({ sub: user.id, email: user.email, role });
+    if (!user) {
+      throw new Error("User creation/login failed");
+    }
 
-    const res = NextResponse.redirect(`${appBase}${role === "ADMIN" ? "/admin" : "/"}`);
+    const effectiveRole = user.role;
+    const token = await signSession({ sub: user.id, email: user.email, role: effectiveRole });
+
+    const res = NextResponse.redirect(`${appBase}${effectiveRole === "ADMIN" ? "/admin" : "/"}`);
     res.cookies.set(AUTH_COOKIE_NAME, token, {
       httpOnly: true,
       sameSite: "lax",

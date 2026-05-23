@@ -38,7 +38,13 @@ export async function GET(req: NextRequest) {
           designation: true
         }
       });
-      return NextResponse.json({ ok: true, items });
+      const byEmail = new Map<string, (typeof items)[number]>();
+      for (const it of items) {
+        const key = (it.email || "").trim().toLowerCase();
+        if (!key || byEmail.has(key)) continue;
+        byEmail.set(key, it);
+      }
+      return NextResponse.json({ ok: true, items: Array.from(byEmail.values()) });
     } catch {
       // Fallback for DBs where new PI columns are not yet pushed.
       const basicItems = await prisma.proformaQuote.findMany({
@@ -63,14 +69,23 @@ export async function GET(req: NextRequest) {
         }
       });
 
+      const normalized = basicItems.map((it) => ({
+        ...it,
+        institutionName: it.organization,
+        subscriberCategory: null,
+        designation: null
+      }));
+
+      const byEmail = new Map<string, (typeof normalized)[number]>();
+      for (const it of normalized) {
+        const key = (it.email || "").trim().toLowerCase();
+        if (!key || byEmail.has(key)) continue;
+        byEmail.set(key, it);
+      }
+
       return NextResponse.json({
         ok: true,
-        items: basicItems.map((it) => ({
-          ...it,
-          institutionName: it.organization,
-          subscriberCategory: null,
-          designation: null
-        }))
+        items: Array.from(byEmail.values())
       });
     }
   } catch (error) {

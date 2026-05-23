@@ -170,6 +170,7 @@ export default async function AccountPage() {
           <h2 style={{ fontSize: "20px", fontWeight: "800", color: "#0F172A", margin: "0 0 20px 0" }}>⚡ Account Portfolio & Activity</h2>
           
           <UserActivityTabs 
+            role={session.role}
             proformas={JSON.parse(JSON.stringify(proformas))} 
             contacts={JSON.parse(JSON.stringify(contacts))} 
             agencies={JSON.parse(JSON.stringify(agencies))}

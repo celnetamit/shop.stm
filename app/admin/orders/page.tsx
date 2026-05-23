@@ -43,6 +43,7 @@ export default function AdminOrdersPage() {
   const [rows, setRows] = useState<Order[]>([]);
   const [error, setError] = useState("");
   const [editingRemarks, setEditingRemarks] = useState<Record<string, string>>({});
+  const [selectedOrderForModal, setSelectedOrderForModal] = useState<Order | null>(null);
 
   async function load() {
     const res = await fetch("/api/admin/orders", { cache: "no-store" });
@@ -159,26 +160,188 @@ export default function AdminOrdersPage() {
                     </div>
                   </div>
                 </td>
-                <td style={{padding:"12px", fontSize:"11px", minWidth:"200px"}}>
-                  {r.items.length === 0 ? "—" : r.items.map((it) => {
-                    const hsn = getHsnCode(it.journalName, it.subject || "", it.selectedPlan);
-                    return (
-                      <div key={it.id} style={{color:"#475569", marginBottom:"6px", borderBottom:"1px dashed #f1f5f9", paddingBottom:"4px"}}>
-                        <div style={{fontWeight:"600", color:"#1e293b"}}>{it.journalName}</div>
-                        <div style={{color:"#64748b", fontSize:"10px", marginTop:"2px"}}>
-                          Plan: <span style={{fontWeight:"bold", color:"#0f172a"}}>{it.selectedPlan}</span> | 
-                          HSN/SAC: <span style={{fontWeight:"bold", color:"#2563eb"}}>{hsn}</span> | 
-                          Qty: <span style={{fontWeight:"bold", color:"#0f172a"}}>{it.qty}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
+                <td style={{padding:"12px"}}>
+                  <strong>{r.currency} {r.total.toLocaleString()}</strong>
+                </td>
+                <td style={{padding:"12px", minWidth:"150px"}}>
+                  <div style={{display:"flex", alignItems:"center", gap:"8px"}}>
+                    <span style={{fontSize:"13px", fontWeight:"600", color:"#334155"}}>
+                      {r.items.length} {r.items.length === 1 ? "Item" : "Items"}
+                    </span>
+                    {r.items.length > 0 && (
+                      <button 
+                        onClick={() => setSelectedOrderForModal(r)}
+                        style={{
+                          background: "#f1f5f9",
+                          border: "1px solid #cbd5e1",
+                          width: "30px",
+                          height: "30px",
+                          borderRadius: "6px",
+                          cursor: "pointer",
+                          display: "inline-grid",
+                          placeItems: "center",
+                          alignItems: "center",
+                          fontSize: "12px",
+                          fontWeight: "600",
+                          color: "#0f172a"
+                        }}
+                        aria-label="View selected journals"
+                        title="View selected journals"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                          <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {/* Items Details Modal Popup */}
+      {selectedOrderForModal && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(15, 23, 42, 0.6)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 9999,
+          backdropFilter: "blur(4px)",
+        }}>
+          <div style={{
+            background: "white",
+            padding: "24px",
+            borderRadius: "12px",
+            width: "90%",
+            maxWidth: "650px",
+            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+            border: "1px solid #e2e8f0",
+            maxHeight: "90vh",
+            display: "flex",
+            flexDirection: "column"
+          }}>
+            {/* Modal Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", borderBottom: "1px solid #e2e8f0", paddingBottom: "12px" }}>
+              <h3 style={{ margin: 0, fontSize: "18px", color: "#0f172a", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}>
+                👁️ Order Items Details
+              </h3>
+              <button 
+                onClick={() => setSelectedOrderForModal(null)}
+                style={{
+                  background: "#f1f5f9",
+                  border: "none",
+                  borderRadius: "50%",
+                  width: "28px",
+                  height: "28px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "14px",
+                  color: "#64748b",
+                  fontWeight: "bold",
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Order Customer Summary */}
+            <div style={{ marginBottom: "16px", padding: "12px", background: "#f8fafc", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "13px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                <div><strong>Customer:</strong> {selectedOrderForModal.customerName}</div>
+                <div><strong>Email:</strong> {selectedOrderForModal.email}</div>
+                <div><strong>Order ID:</strong> <span style={{ fontFamily: "monospace" }}>{selectedOrderForModal.id}</span></div>
+                <div><strong>Date:</strong> {new Date(selectedOrderForModal.createdAt).toLocaleString()}</div>
+              </div>
+            </div>
+            
+            {/* Modal Content Scroll Area */}
+            <div style={{ overflowY: "auto", flex: 1, paddingRight: "4px" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                <thead>
+                  <tr style={{ background: "#f8fafc", borderBottom: "2px solid #cbd5e1", textAlign: "left" }}>
+                    <th style={{ padding: "10px 8px" }}>Journal Name</th>
+                    <th style={{ padding: "10px 8px", textAlign: "left" }}>Variant</th>
+                    <th style={{ padding: "10px 8px", textAlign: "center" }}>Plan</th>
+                    <th style={{ padding: "10px 8px", textAlign: "center" }}>HSN/SAC</th>
+                    <th style={{ padding: "10px 8px", textAlign: "center" }}>Qty</th>
+                    <th style={{ padding: "10px 8px", textAlign: "right" }}>Price</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedOrderForModal.items.map((it) => {
+                    const hsn = getHsnCode(it.journalName, it.subject || "", it.selectedPlan);
+                    return (
+                      <tr key={it.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                        <td style={{ padding: "12px 8px" }}>
+                          <div style={{ fontWeight: "600", color: "#1e293b" }}>{it.journalName}</div>
+                          <div style={{ fontSize: "11px", color: "#64748b", marginTop: "2px" }}>{it.subject}</div>
+                        </td>
+                        <td style={{ padding: "12px 8px", color: "#334155", fontSize: "12px" }}>
+                          <div><strong>Year:</strong> {it.year}</div>
+                          <div><strong>Issue:</strong> {it.issue || "All"}</div>
+                        </td>
+                        <td style={{ padding: "12px 8px", textAlign: "center" }}>
+                          <span style={{ 
+                            background: it.selectedPlan === "PRINT_ONLINE" ? "#dbeafe" : it.selectedPlan === "ONLINE" ? "#ecfdf5" : "#fff7ed",
+                            color: it.selectedPlan === "PRINT_ONLINE" ? "#1e40af" : it.selectedPlan === "ONLINE" ? "#065f46" : "#9a3412",
+                            padding: "2px 6px",
+                            borderRadius: "4px",
+                            fontSize: "11px",
+                            fontWeight: "bold"
+                          }}>
+                            {it.selectedPlan}
+                          </span>
+                        </td>
+                        <td style={{ padding: "12px 8px", textAlign: "center", color: "#2563eb", fontWeight: "600" }}>{hsn}</td>
+                        <td style={{ padding: "12px 8px", textAlign: "center", fontWeight: "600" }}>{it.qty}</td>
+                        <td style={{ padding: "12px 8px", textAlign: "right", fontWeight: "600", color: "#0f172a" }}>
+                          {selectedOrderForModal.currency} {it.unitPrice.toLocaleString()}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Modal Footer Summary */}
+            <div style={{ marginTop: "16px", paddingTop: "12px", borderTop: "2px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "15px", fontWeight: "bold" }}>
+              <span style={{ color: "#475569" }}>Total Order Amount:</span>
+              <span style={{ color: "#2563eb", fontSize: "18px" }}>
+                {selectedOrderForModal.currency} {selectedOrderForModal.total.toLocaleString()}
+              </span>
+            </div>
+            
+            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "16px" }}>
+              <button 
+                onClick={() => setSelectedOrderForModal(null)}
+                style={{
+                  background: "#0f172a",
+                  color: "white",
+                  border: "none",
+                  padding: "8px 16px",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontWeight: "bold"
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

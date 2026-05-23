@@ -28,6 +28,8 @@ type Journal = {
 };
 
 type Plan = "PRINT" | "ONLINE" | "PRINT_ONLINE";
+type UserRole = "USER" | "ADMIN" | "LIBRARIAN" | "AGENCY" | "STUDENT" | "SCHOLAR";
+type SubscriberCategory = "COLLEGE" | "AGENCY" | "SCHOLAR" | "EXISTING_PI";
 
 type SubscriptionConfig = {
   id: string;
@@ -162,7 +164,8 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
   const [country, setCountry] = useState("India");
   const [sameAsBilling, setSameAsBilling] = useState(true);
   const [subscriptionType, setSubscriptionType] = useState<"STM" | "PUB">("STM");
-  const [subscriberCategory, setSubscriberCategory] = useState<"COLLEGE" | "AGENCY" | "SCHOLAR" | "EXISTING_PI">("COLLEGE");
+  const [subscriberCategory, setSubscriberCategory] = useState<SubscriberCategory>("COLLEGE");
+  const [userRole, setUserRole] = useState<UserRole>("USER");
   const [existingPiQuery, setExistingPiQuery] = useState("");
   const [existingPiResults, setExistingPiResults] = useState<Array<{
     id: string;
@@ -290,7 +293,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
       country: string;
       sameAsBilling: boolean;
       subscriptionType: "STM" | "PUB";
-      subscriberCategory: "COLLEGE" | "AGENCY" | "SCHOLAR" | "EXISTING_PI";
+      subscriberCategory: SubscriberCategory;
       shippingRecipientName: string;
       shippingAddress: string;
       shippingInstitute: string;
@@ -329,10 +332,63 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
     (async () => {
       const u = await fetchPrefillUser();
       if (!u) return;
+      if (u.role) setUserRole(u.role);
       if (!draft.contactName && u.name) setContactName(u.name);
       if (!draft.email && u.email) setEmail(u.email);
+
+      try {
+        const res = await fetch("/api/proforma/pi-latest", { cache: "no-store" });
+        const json = (await res.json()) as {
+          ok: boolean;
+          profile?: {
+            id: string;
+            organization: string;
+            institutionName: string | null;
+            contactName: string;
+            email: string;
+            phone: string;
+            country: string;
+            address: string | null;
+            gstNumber: string | null;
+            subscriberCategory: string | null;
+            designation: string | null;
+          } | null;
+        };
+
+        if (json.ok && json.profile) {
+          const p = json.profile;
+          setOrganization(p.organization || "");
+          setInstitutionName(p.institutionName || p.organization || "");
+          setContactName(p.contactName || "");
+          setEmail((p.email || "").trim().toLowerCase());
+          setPhone(p.phone || "");
+          setCountry(p.country || "India");
+          setAddress(p.address || "");
+          setGstNumber(p.gstNumber || "");
+          setDesignation(p.designation || "");
+          if (p.subscriberCategory === "COLLEGE" || p.subscriberCategory === "AGENCY" || p.subscriberCategory === "SCHOLAR" || p.subscriberCategory === "EXISTING_PI") {
+            setSubscriberCategory(p.subscriberCategory);
+          }
+        }
+      } catch {
+        // silent fallback
+      }
     })();
   }, []);
+
+  const allowedSubscriberCategories = useMemo<SubscriberCategory[]>(() => {
+    if (userRole === "AGENCY") return ["AGENCY", "EXISTING_PI"];
+    if (userRole === "LIBRARIAN" || userRole === "STUDENT" || userRole === "SCHOLAR" || userRole === "USER") {
+      return ["COLLEGE", "SCHOLAR", "EXISTING_PI"];
+    }
+    return ["COLLEGE", "AGENCY", "SCHOLAR", "EXISTING_PI"];
+  }, [userRole]);
+
+  useEffect(() => {
+    if (!allowedSubscriberCategories.includes(subscriberCategory)) {
+      setSubscriberCategory(allowedSubscriberCategories[0]);
+    }
+  }, [allowedSubscriberCategories, subscriberCategory]);
 
   useEffect(() => {
     let cancelled = false;
@@ -894,46 +950,54 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
 
             <label className="proforma-label">Subscriber Category *</label>
             <div className="proforma-pill-row proforma-full">
-              <label className={`proforma-pill-option ${subscriberCategory === "COLLEGE" ? "active" : ""}`}>
-                <input
-                  type="radio"
-                  name="subscriberCategory"
-                  value="COLLEGE"
-                  checked={subscriberCategory === "COLLEGE"}
-                  onChange={() => setSubscriberCategory("COLLEGE")}
-                />
-                <span>College / University</span>
-              </label>
-              <label className={`proforma-pill-option ${subscriberCategory === "AGENCY" ? "active" : ""}`}>
-                <input
-                  type="radio"
-                  name="subscriberCategory"
-                  value="AGENCY"
-                  checked={subscriberCategory === "AGENCY"}
-                  onChange={() => setSubscriberCategory("AGENCY")}
-                />
-                <span>Subscription Agency</span>
-              </label>
-              <label className={`proforma-pill-option ${subscriberCategory === "SCHOLAR" ? "active" : ""}`}>
-                <input
-                  type="radio"
-                  name="subscriberCategory"
-                  value="SCHOLAR"
-                  checked={subscriberCategory === "SCHOLAR"}
-                  onChange={() => setSubscriberCategory("SCHOLAR")}
-                />
-                <span>Individual Scholar</span>
-              </label>
-              <label className={`proforma-pill-option ${subscriberCategory === "EXISTING_PI" ? "active" : ""}`}>
-                <input
-                  type="radio"
-                  name="subscriberCategory"
-                  value="EXISTING_PI"
-                  checked={subscriberCategory === "EXISTING_PI"}
-                  onChange={() => setSubscriberCategory("EXISTING_PI")}
-                />
-                <span>Existing PI Data</span>
-              </label>
+              {allowedSubscriberCategories.includes("COLLEGE") && (
+                <label className={`proforma-pill-option ${subscriberCategory === "COLLEGE" ? "active" : ""}`}>
+                  <input
+                    type="radio"
+                    name="subscriberCategory"
+                    value="COLLEGE"
+                    checked={subscriberCategory === "COLLEGE"}
+                    onChange={() => setSubscriberCategory("COLLEGE")}
+                  />
+                  <span>College / University</span>
+                </label>
+              )}
+              {allowedSubscriberCategories.includes("AGENCY") && (
+                <label className={`proforma-pill-option ${subscriberCategory === "AGENCY" ? "active" : ""}`}>
+                  <input
+                    type="radio"
+                    name="subscriberCategory"
+                    value="AGENCY"
+                    checked={subscriberCategory === "AGENCY"}
+                    onChange={() => setSubscriberCategory("AGENCY")}
+                  />
+                  <span>Subscription Agency</span>
+                </label>
+              )}
+              {allowedSubscriberCategories.includes("SCHOLAR") && (
+                <label className={`proforma-pill-option ${subscriberCategory === "SCHOLAR" ? "active" : ""}`}>
+                  <input
+                    type="radio"
+                    name="subscriberCategory"
+                    value="SCHOLAR"
+                    checked={subscriberCategory === "SCHOLAR"}
+                    onChange={() => setSubscriberCategory("SCHOLAR")}
+                  />
+                  <span>Individual Scholar</span>
+                </label>
+              )}
+              {allowedSubscriberCategories.includes("EXISTING_PI") && (
+                <label className={`proforma-pill-option ${subscriberCategory === "EXISTING_PI" ? "active" : ""}`}>
+                  <input
+                    type="radio"
+                    name="subscriberCategory"
+                    value="EXISTING_PI"
+                    checked={subscriberCategory === "EXISTING_PI"}
+                    onChange={() => setSubscriberCategory("EXISTING_PI")}
+                  />
+                  <span>Existing PI Data</span>
+                </label>
+              )}
             </div>
             {subscriberCategory === "EXISTING_PI" ? (
               <div className="proforma-full">
@@ -976,7 +1040,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription }:
             <input value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder="Contact Name *" required />
             <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email *" type="email" required />
             <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone *" required />
-            <input value={institutionName} onChange={(e) => setInstitutionName(e.target.value)} placeholder="Institution Name *" required />
+            <input value={institutionName} onChange={(e) => setInstitutionName(e.target.value)} placeholder={subscriberCategory === "AGENCY" ? "Agency Name *" : "Institution Name *"} required />
             <input value={designation} onChange={(e) => setDesignation(e.target.value)} placeholder="Designation" />
             <input value={organization} onChange={(e) => setOrganization(e.target.value)} placeholder="Organization" />
             <textarea value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Billing Address *" required className="proforma-full" />

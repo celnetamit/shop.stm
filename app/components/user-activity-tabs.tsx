@@ -1,10 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 
-export default function UserActivityTabs({ proformas = [], contacts = [], agencies = [], orders = [] }: any) {
-  const [activeTab, setActiveTab] = useState(orders.length > 0 ? "orders" : "proforma");
+type Role = "USER" | "ADMIN" | "LIBRARIAN" | "AGENCY" | "STUDENT" | "SCHOLAR";
+type TabKey = "orders" | "proforma" | "contact" | "agency";
+
+export default function UserActivityTabs({ role = "USER", proformas = [], contacts = [], agencies = [], orders = [] }: any) {
+  const showAgencyTab = role === "AGENCY";
+
+  const availableTabs = useMemo<TabKey[]>(() => {
+    const tabs: TabKey[] = ["orders", "proforma", "contact"];
+    if (showAgencyTab) tabs.push("agency");
+    return tabs;
+  }, [showAgencyTab]);
+
+  const defaultTab: TabKey = orders.length > 0 ? "orders" : "proforma";
+  const [activeTab, setActiveTab] = useState<TabKey>(availableTabs.includes(defaultTab) ? defaultTab : availableTabs[0]);
 
   const tabStyle = (isActive: boolean) => ({
     padding: "14px 28px",
@@ -27,7 +39,7 @@ export default function UserActivityTabs({ proformas = [], contacts = [], agenci
     const clean = (status || "").toUpperCase();
     let bg = "#F1F5F9";
     let color = "#475569";
-    
+
     if (clean.includes("PAID") || clean.includes("SUCCESS") || clean.includes("CONFIRMED")) {
       bg = "#DCFCE7"; color = "#166534";
     } else if (clean.includes("PENDING") || clean.includes("SUBMITTED") || clean.includes("IN REVIEW")) {
@@ -39,12 +51,12 @@ export default function UserActivityTabs({ proformas = [], contacts = [], agenci
     }
 
     return (
-      <span style={{ 
-        background: bg, 
-        color: color, 
-        padding: "4px 10px", 
-        borderRadius: "9999px", 
-        fontSize: "12px", 
+      <span style={{
+        background: bg,
+        color: color,
+        padding: "4px 10px",
+        borderRadius: "9999px",
+        fontSize: "12px",
         fontWeight: "700",
         letterSpacing: "0.02em",
         display: "inline-block"
@@ -54,119 +66,42 @@ export default function UserActivityTabs({ proformas = [], contacts = [], agenci
     );
   }
 
+  function emptyState(colSpan: number, message: string, href: string, cta: string) {
+    return (
+      <tr>
+        <td colSpan={colSpan} style={{ padding: "28px", textAlign: "center", color: "#64748B" }}>
+          <p style={{ margin: "0 0 10px 0" }}>{message}</p>
+          <a href={href} style={{ color: "#2563EB", fontWeight: 700, textDecoration: "none" }}>{cta}</a>
+        </td>
+      </tr>
+    );
+  }
+
   return (
     <div className="user-activity-container" style={{ background: "#ffffff", borderRadius: "16px", border: "1px solid #E2E8F0", overflow: "hidden", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.01)" }}>
-      
-      {/* Animated and styled navigation header */}
       <div className="tabs-header" style={{ display: "flex", borderBottom: "1px solid #E2E8F0", background: "#F8FAFC", overflowX: "auto" }}>
-        <button onClick={() => setActiveTab("orders")} style={tabStyle(activeTab === "orders")}>
-          🛒 Orders & Invoices 
-          <span style={{ background: activeTab === "orders" ? "#DBEAFE" : "#E2E8F0", color: activeTab === "orders" ? "#1E40AF" : "#475569", padding: "2px 8px", borderRadius: "12px", fontSize: "11px", fontWeight: "bold" }}>{orders.length}</span>
-        </button>
-        <button onClick={() => setActiveTab("proforma")} style={tabStyle(activeTab === "proforma")}>
-          📄 Proforma Quotes 
-          <span style={{ background: activeTab === "proforma" ? "#DBEAFE" : "#E2E8F0", color: activeTab === "proforma" ? "#1E40AF" : "#475569", padding: "2px 8px", borderRadius: "12px", fontSize: "11px", fontWeight: "bold" }}>{proformas.length}</span>
-        </button>
-        <button onClick={() => setActiveTab("contact")} style={tabStyle(activeTab === "contact")}>
-          💬 Contact Enquiries 
-          <span style={{ background: activeTab === "contact" ? "#DBEAFE" : "#E2E8F0", color: activeTab === "contact" ? "#1E40AF" : "#475569", padding: "2px 8px", borderRadius: "12px", fontSize: "11px", fontWeight: "bold" }}>{contacts.length}</span>
-        </button>
-        <button onClick={() => setActiveTab("agency")} style={tabStyle(activeTab === "agency")}>
-          🤝 Agency Queries 
-          <span style={{ background: activeTab === "agency" ? "#DBEAFE" : "#E2E8F0", color: activeTab === "agency" ? "#1E40AF" : "#475569", padding: "2px 8px", borderRadius: "12px", fontSize: "11px", fontWeight: "bold" }}>{agencies.length}</span>
-        </button>
+        <button onClick={() => setActiveTab("orders")} style={tabStyle(activeTab === "orders")}>🛒 Orders & Invoices <span style={{ background: activeTab === "orders" ? "#DBEAFE" : "#E2E8F0", color: activeTab === "orders" ? "#1E40AF" : "#475569", padding: "2px 8px", borderRadius: "12px", fontSize: "11px", fontWeight: "bold" }}>{orders.length}</span></button>
+        <button onClick={() => setActiveTab("proforma")} style={tabStyle(activeTab === "proforma")}>📄 Proforma Quotes <span style={{ background: activeTab === "proforma" ? "#DBEAFE" : "#E2E8F0", color: activeTab === "proforma" ? "#1E40AF" : "#475569", padding: "2px 8px", borderRadius: "12px", fontSize: "11px", fontWeight: "bold" }}>{proformas.length}</span></button>
+        <button onClick={() => setActiveTab("contact")} style={tabStyle(activeTab === "contact")}>💬 Contact Enquiries <span style={{ background: activeTab === "contact" ? "#DBEAFE" : "#E2E8F0", color: activeTab === "contact" ? "#1E40AF" : "#475569", padding: "2px 8px", borderRadius: "12px", fontSize: "11px", fontWeight: "bold" }}>{contacts.length}</span></button>
+        {showAgencyTab && (
+          <button onClick={() => setActiveTab("agency")} style={tabStyle(activeTab === "agency")}>🤝 Agency Queries <span style={{ background: activeTab === "agency" ? "#DBEAFE" : "#E2E8F0", color: activeTab === "agency" ? "#1E40AF" : "#475569", padding: "2px 8px", borderRadius: "12px", fontSize: "11px", fontWeight: "bold" }}>{agencies.length}</span></button>
+        )}
       </div>
 
       <div className="tab-content" style={{ padding: "24px" }}>
-        
-        {/* Orders Tab */}
         {activeTab === "orders" && (
           <div className="admin-table-wrap" style={{ border: "1px solid #E2E8F0", borderRadius: "12px", overflow: "hidden" }}>
             <table className="admin-table" style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
-              <thead style={{ background: "#F8FAFC" }}>
-                <tr>
-                  <th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Order Reference</th>
-                  <th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Items Purchased</th>
-                  <th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Total Amount</th>
-                  <th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Status</th>
-                  <th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Date</th>
-                  <th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Action</th>
-                </tr>
-              </thead>
+              <thead style={{ background: "#F8FAFC" }}><tr><th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Order Reference</th><th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Items Purchased</th><th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Total Amount</th><th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Status</th><th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Date</th><th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Action</th></tr></thead>
               <tbody>
-                {orders.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} style={{ padding: "32px", textAlign: "center", color: "#94A3B8" }}>
-                      No order history discovered yet.
-                    </td>
-                  </tr>
-                ) : (
-                  orders.map((o: any, idx: number) => (
-                    <tr key={o.id} style={{ borderTop: "1px solid #E2E8F0", background: idx % 2 === 0 ? "transparent" : "#FCFDFE" }}>
-                      <td style={{ padding: "14px 18px", fontWeight: "700", color: "#1E293B", fontSize: "13px" }}>
-                        #{o.id.substring(0, 8)}...
-                        <div style={{ color: "#64748B", fontSize: "10px", fontWeight: "normal", marginTop: "2px" }}>Ref: {o.id}</div>
-                      </td>
-                      <td style={{ padding: "14px 18px", color: "#475569", fontSize: "13px" }}>
-                        {o.items?.length || 0} journal(s)
-                      </td>
-                      <td style={{ padding: "14px 18px", fontWeight: "800", color: "#0F172A", fontSize: "13px" }}>
-                        {o.currency} {Number(o.total).toLocaleString()}
-                      </td>
-                      <td style={{ padding: "14px 18px" }}>{renderStatusBadge(o.status)}</td>
-                      <td style={{ padding: "14px 18px", color: "#475569", fontSize: "13px" }}>
-                        {new Date(o.createdAt).toLocaleDateString()}
-                      </td>
-                      <td style={{ padding: "14px 18px" }}>
-                        <Link 
-                          href={`/account/orders/${o.id}/invoice`} 
-                          target="_blank"
-                          style={{ 
-                            padding: "8px 14px", 
-                            background: "#10B981", 
-                            color: "white", 
-                            borderRadius: "6px", 
-                            textDecoration: "none", 
-                            fontSize: "13px", 
-                            fontWeight: "600", 
-                            display: "inline-block", 
-                            transition: "background 0.2s" 
-                          }}
-                          onMouseOver={e => e.currentTarget.style.background = "#059669"}
-                          onMouseOut={e => e.currentTarget.style.background = "#10B981"}
-                        >
-                          📄 Download Invoice
-                        </Link>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Proforma Tab */}
-        {activeTab === "proforma" && (
-          <div className="admin-table-wrap" style={{ border: "1px solid #E2E8F0", borderRadius: "12px", overflow: "hidden" }}>
-            <table className="admin-table" style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
-              <thead style={{ background: "#F8FAFC" }}>
-                <tr>
-                  <th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Organization</th>
-                  <th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Status</th>
-                  <th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Items</th>
-                  <th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Created</th>
-                  <th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {proformas.length === 0 ? <tr><td colSpan={5} style={{ padding: "24px", textAlign: "center", color: "#64748B" }}>No proforma quotes created yet.</td></tr> : proformas.map((p: any, idx: number) => (
-                  <tr key={p.id} style={{ borderTop: "1px solid #E2E8F0", background: idx % 2 === 0 ? "transparent" : "#FCFDFE" }}>
-                    <td style={{ padding: "14px 18px", fontWeight: "700", color: "#1E293B" }}>{p.organization}</td>
-                    <td style={{ padding: "14px 18px" }}>{renderStatusBadge(p.status)}</td>
-                    <td style={{ padding: "14px 18px", color: "#475569", fontSize: "13px" }}>{p.items?.length || 0} journals</td>
-                    <td style={{ padding: "14px 18px", color: "#475569", fontSize: "13px" }}>{new Date(p.createdAt).toLocaleDateString()}</td>
-                    <td style={{ padding: "14px 18px" }}><Link href={`/account/proforma/${p.id}`} style={{ padding: "8px 14px", background: "#3B82F6", color: "white", borderRadius: "6px", textDecoration: "none", fontSize: "13px", fontWeight: "600", display: "inline-block", transition: "background 0.2s" }} onMouseOver={e => e.currentTarget.style.background = "#2563EB"} onMouseOut={e => e.currentTarget.style.background = "#3B82F6"}>View & Download</Link></td>
+                {orders.length === 0 ? emptyState(6, "No order history found yet.", "/catalogues-list", "Browse Journals & Place Your First Order") : orders.map((o: any, idx: number) => (
+                  <tr key={o.id} style={{ borderTop: "1px solid #E2E8F0", background: idx % 2 === 0 ? "transparent" : "#FCFDFE" }}>
+                    <td style={{ padding: "14px 18px", fontWeight: "700", color: "#1E293B", fontSize: "13px" }}>#{o.id.substring(0, 8)}...<div style={{ color: "#64748B", fontSize: "10px", fontWeight: "normal", marginTop: "2px" }}>Ref: {o.id}</div></td>
+                    <td style={{ padding: "14px 18px", color: "#475569", fontSize: "13px" }}>{o.items?.length || 0} journal(s)</td>
+                    <td style={{ padding: "14px 18px", fontWeight: "800", color: "#0F172A", fontSize: "13px" }}>{o.currency} {Number(o.total).toLocaleString()}</td>
+                    <td style={{ padding: "14px 18px" }}>{renderStatusBadge(o.status)}</td>
+                    <td style={{ padding: "14px 18px", color: "#475569", fontSize: "13px" }}>{new Date(o.createdAt).toLocaleDateString()}</td>
+                    <td style={{ padding: "14px 18px" }}><Link href={`/account/orders/${o.id}/invoice`} target="_blank" style={{ padding: "8px 14px", background: "#10B981", color: "white", borderRadius: "6px", textDecoration: "none", fontSize: "13px", fontWeight: "600", display: "inline-block", transition: "background 0.2s" }}>📄 Download Invoice</Link></td>
                   </tr>
                 ))}
               </tbody>
@@ -174,20 +109,31 @@ export default function UserActivityTabs({ proformas = [], contacts = [], agenci
           </div>
         )}
 
-        {/* Contact Tab */}
+        {activeTab === "proforma" && (
+          <div className="admin-table-wrap" style={{ border: "1px solid #E2E8F0", borderRadius: "12px", overflow: "hidden" }}>
+            <table className="admin-table" style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+              <thead style={{ background: "#F8FAFC" }}><tr><th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Organization</th><th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Status</th><th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Items</th><th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Created</th><th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Action</th></tr></thead>
+              <tbody>
+                {proformas.length === 0 ? emptyState(5, "No proforma quotes created yet.", "/get-proforma-invoice-quote", "Create Proforma Quote") : proformas.map((p: any, idx: number) => (
+                  <tr key={p.id} style={{ borderTop: "1px solid #E2E8F0", background: idx % 2 === 0 ? "transparent" : "#FCFDFE" }}>
+                    <td style={{ padding: "14px 18px", fontWeight: "700", color: "#1E293B" }}>{p.organization}</td>
+                    <td style={{ padding: "14px 18px" }}>{renderStatusBadge(p.status)}</td>
+                    <td style={{ padding: "14px 18px", color: "#475569", fontSize: "13px" }}>{p.items?.length || 0} journals</td>
+                    <td style={{ padding: "14px 18px", color: "#475569", fontSize: "13px" }}>{new Date(p.createdAt).toLocaleDateString()}</td>
+                    <td style={{ padding: "14px 18px" }}><Link href={`/account/proforma/${p.id}`} style={{ padding: "8px 14px", background: "#3B82F6", color: "white", borderRadius: "6px", textDecoration: "none", fontSize: "13px", fontWeight: "600", display: "inline-block", transition: "background 0.2s" }}>View & Download</Link></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
         {activeTab === "contact" && (
           <div className="admin-table-wrap" style={{ border: "1px solid #E2E8F0", borderRadius: "12px", overflow: "hidden" }}>
             <table className="admin-table" style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
-              <thead style={{ background: "#F8FAFC" }}>
-                <tr>
-                  <th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Subject</th>
-                  <th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Message</th>
-                  <th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Status</th>
-                  <th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Date Submitted</th>
-                </tr>
-              </thead>
+              <thead style={{ background: "#F8FAFC" }}><tr><th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Subject</th><th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Message</th><th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Status</th><th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Date Submitted</th></tr></thead>
               <tbody>
-                {contacts.length === 0 ? <tr><td colSpan={4} style={{ padding: "24px", textAlign: "center", color: "#64748B" }}>No contact queries found.</td></tr> : contacts.map((c: any, idx: number) => (
+                {contacts.length === 0 ? emptyState(4, "No contact enquiries found.", "/contact-us", "Submit Contact Enquiry") : contacts.map((c: any, idx: number) => (
                   <tr key={c.id} style={{ borderTop: "1px solid #E2E8F0", background: idx % 2 === 0 ? "transparent" : "#FCFDFE" }}>
                     <td style={{ padding: "14px 18px", fontWeight: "700", color: "#1E293B" }}>{c.subject}</td>
                     <td style={{ padding: "14px 18px", color: "#475569", maxWidth: "300px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.message}</td>
@@ -200,20 +146,12 @@ export default function UserActivityTabs({ proformas = [], contacts = [], agenci
           </div>
         )}
 
-        {/* Agency Tab */}
-        {activeTab === "agency" && (
+        {showAgencyTab && activeTab === "agency" && (
           <div className="admin-table-wrap" style={{ border: "1px solid #E2E8F0", borderRadius: "12px", overflow: "hidden" }}>
             <table className="admin-table" style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
-              <thead style={{ background: "#F8FAFC" }}>
-                <tr>
-                  <th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Agency Name</th>
-                  <th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Specialization</th>
-                  <th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Message</th>
-                  <th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Date Submitted</th>
-                </tr>
-              </thead>
+              <thead style={{ background: "#F8FAFC" }}><tr><th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Agency Name</th><th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Specialization</th><th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Message</th><th style={{ padding: "14px 18px", color: "#475569", fontSize: "13px", fontWeight: "700" }}>Date Submitted</th></tr></thead>
               <tbody>
-                {agencies.length === 0 ? <tr><td colSpan={4} style={{ padding: "24px", textAlign: "center", color: "#64748B" }}>No agency queries found.</td></tr> : agencies.map((a: any, idx: number) => (
+                {agencies.length === 0 ? emptyState(4, "No agency queries found.", "/for-agencies", "Submit Agency Query") : agencies.map((a: any, idx: number) => (
                   <tr key={a.id} style={{ borderTop: "1px solid #E2E8F0", background: idx % 2 === 0 ? "transparent" : "#FCFDFE" }}>
                     <td style={{ padding: "14px 18px", fontWeight: "700", color: "#1E293B" }}>{a.agencyName}</td>
                     <td style={{ padding: "14px 18px", color: "#475569", fontSize: "13px" }}>{a.specialization}</td>

@@ -23,6 +23,7 @@ export default async function HomePage() {
         gridTemplateColumns: "1fr",
         padding: "80px 20px 0px",
         width: "100%",
+        boxSizing: "border-box",
         boxShadow: "inset 0 -1px 0 rgba(255, 255, 255, 0.08)",
         transition: "background 0.3s"
       }}>

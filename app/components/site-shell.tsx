@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/app/components/cart-store";
 import { useEffect, useState, useRef } from "react";
+import PublicChatbot from "@/app/components/public-chatbot";
 
 type SessionUser = {
   id: string;
@@ -85,9 +86,15 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const accountDropdownRef = useRef<HTMLDivElement>(null);
   const disciplinesDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    setOpenDropdown(null);
+  }, [pathname]);
 
   useEffect(() => {
     if (searchQuery.length < 2) {
@@ -150,7 +157,7 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
               <img src="/stmlogo.png" alt="STM Journals" style={{ height: "65px", width: "auto", objectFit: "contain" }} />
             </Link>
             
-            <div className="site-search" style={{ position: "relative", flex: "1 1 400px", maxWidth: "600px", minWidth: "280px", margin: "0 auto" }}>
+            <div className="site-search" style={{ position: "relative", flex: "1 1 400px", maxWidth: "600px", minWidth: "0", width: "100%", margin: "0 auto" }}>
               <input
                 type="text"
                 placeholder="Search Journal, Book or ISSN..."
@@ -206,7 +213,7 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
               )}
             </div>
 
-            <div className="site-utils" style={{ display: "flex", gap: "20px", alignItems: "center" }}>
+            <div className="site-utils" style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap", justifyContent: "center" }}>
               <button
                 onClick={toggleTheme}
                 className="transition-smooth"
@@ -325,7 +332,19 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
           </div>
           
           <div className="site-header-inner" style={{ borderTop: "1px solid var(--line)", padding: "0" }}>
-            <nav className="site-nav" style={{ maxWidth: "1300px", margin: "0 auto", padding: "0 20px", display: "flex", gap: "32px", justifyContent: "center", alignItems: "center", minHeight: "50px" }}>
+            <div className="mobile-nav-toggle-row" style={{ maxWidth: "1300px", margin: "0 auto", padding: "8px 14px", display: "flex", justifyContent: "flex-end" }}>
+              <button
+                className="mobile-nav-toggle"
+                aria-label="Toggle navigation menu"
+                aria-expanded={mobileMenuOpen}
+                onClick={() => setMobileMenuOpen((v) => !v)}
+                style={{ border: "1px solid var(--line)", background: "var(--surface)", borderRadius: "8px", width: "40px", height: "36px", cursor: "pointer", color: "var(--text)", fontSize: "20px", lineHeight: 1 }}
+              >
+                {mobileMenuOpen ? "×" : "☰"}
+              </button>
+            </div>
+
+            <nav className={`site-nav ${mobileMenuOpen ? "mobile-open" : "mobile-closed"}`} style={{ maxWidth: "1300px", margin: "0 auto", padding: "0 20px", display: "flex", gap: "32px", justifyContent: "center", alignItems: "center", minHeight: "50px" }}>
               <Link href="/" style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text)", textDecoration: "none", fontFamily: "Outfit, sans-serif", transition: "color 0.2s" }} onMouseOver={e => e.currentTarget.style.color = "var(--brand)"} onMouseOut={e => e.currentTarget.style.color = "var(--text)"}>Home</Link>
               <Link href="/about-us" style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text)", textDecoration: "none", fontFamily: "Outfit, sans-serif", transition: "color 0.2s" }} onMouseOver={e => e.currentTarget.style.color = "var(--brand)"} onMouseOut={e => e.currentTarget.style.color = "var(--text)"}>About Us</Link>
               
@@ -367,6 +386,8 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
       ) : null}
 
       {children}
+
+      {!hideChrome ? <PublicChatbot /> : null}
 
       {!hideChrome ? (
         <footer className="site-footer" style={{ background: "#060a11", color: "#8b9ebd", paddingTop: "50px", paddingBottom: "20px", marginTop: "40px", fontFamily: "Arial, sans-serif" }}>
