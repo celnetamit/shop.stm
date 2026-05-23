@@ -18,12 +18,12 @@ type Row = {
   }>;
 };
 
-function parseBot(content: string): { text: string; links: Array<{ label: string; href: string }> } {
+function parseBot(content: string): { text: string; links: Array<{ label: string; href: string }>; steps: string[] } {
   try {
-    const j = JSON.parse(content) as { text?: string; links?: Array<{ label: string; href: string }> };
-    return { text: j.text || content, links: j.links || [] };
+    const j = JSON.parse(content) as { text?: string; links?: Array<{ label: string; href: string }>; steps?: string[] };
+    return { text: j.text || content, links: j.links || [], steps: j.steps || [] };
   } catch {
-    return { text: content, links: [] };
+    return { text: content, links: [], steps: [] };
   }
 }
 
@@ -204,6 +204,13 @@ export default function AdminChatsPage() {
                   <div key={m.id} style={{ marginBottom: "10px", display: "flex", justifyContent: m.sender === "USER" ? "flex-end" : "flex-start" }}>
                     <div style={{ maxWidth: "84%", background: m.sender === "USER" ? "#1d4ed8" : "#fff", color: m.sender === "USER" ? "#fff" : "#1e293b", border: m.sender === "USER" ? "none" : "1px solid #dbe3f1", borderRadius: "10px", padding: "9px 10px", fontSize: "12px" }}>
                       <div>{bot ? bot.text : m.content}</div>
+                      {bot?.steps?.length ? (
+                        <ol style={{ margin: "8px 0 0 16px", padding: 0 }}>
+                          {bot.steps.map((s, idx) => (
+                            <li key={`${m.id}-step-${idx}`} style={{ marginBottom: "4px" }}>{s}</li>
+                          ))}
+                        </ol>
+                      ) : null}
                       {bot?.links?.length ? (
                         <div style={{ marginTop: "6px", display: "flex", gap: "8px", flexWrap: "wrap" }}>
                           {bot.links.map((l) => (

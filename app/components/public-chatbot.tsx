@@ -203,8 +203,8 @@ export default function PublicChatbot() {
             return { id: m.id, role: "user", text: m.content };
           }
           try {
-            const parsed = JSON.parse(m.content) as { text?: string; links?: HelpLink[] };
-            return { id: m.id, role: "bot", text: parsed.text || m.content, links: parsed.links || [] };
+            const parsed = JSON.parse(m.content) as { text?: string; links?: HelpLink[]; steps?: string[] };
+            return { id: m.id, role: "bot", text: parsed.text || m.content, links: parsed.links || [], steps: parsed.steps || [] };
           } catch {
             return { id: m.id, role: "bot", text: m.content };
           }
@@ -237,7 +237,7 @@ export default function PublicChatbot() {
         ok: boolean;
         error?: string;
         conversationId?: string;
-        reply?: { id: string; text: string; links?: HelpLink[] };
+        reply?: { id: string; text: string; links?: HelpLink[]; steps?: string[] };
       };
       if (json.ok && json.reply) {
         if (json.conversationId) setConversationId(json.conversationId);
@@ -245,7 +245,8 @@ export default function PublicChatbot() {
           id: json.reply.id,
           role: "bot",
           text: json.reply.text,
-          links: json.reply.links || []
+          links: json.reply.links || [],
+          steps: json.reply.steps || []
         };
         setMessages((prev) => [...prev, botMsg]);
       } else {

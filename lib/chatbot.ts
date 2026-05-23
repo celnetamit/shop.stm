@@ -79,6 +79,7 @@ export async function generateChatReply(input: {
     return {
       reply: "Assistant is temporarily unavailable. Please contact support at /contact-us.",
       links: [{ label: "Contact Us", href: "/contact-us" }] as ChatLink[],
+      steps: [] as string[],
       intent: null as string | null
     };
   }
@@ -91,8 +92,9 @@ export async function generateChatReply(input: {
       content:
         `You are STM Journals sales + support assistant.\n${WEBSITE_CONTEXT}\n` +
         (dynamicCatalogContext ? `\n${dynamicCatalogContext}\n` : "\n") +
-        "Return STRICT JSON only: {\"reply\":\"...\",\"intent\":\"...\",\"links\":[{\"label\":\"...\",\"href\":\"/...\"}]}.\n" +
+        "Return STRICT JSON only: {\"reply\":\"...\",\"intent\":\"...\",\"links\":[{\"label\":\"...\",\"href\":\"/...\"}],\"steps\":[\"...\"]}.\n" +
         "Intent should be one of: Inquiry, Proforma, Order, Support, Pricing, Journals, Agency, Librarian, Checkout.\n" +
+        "If user asks for process/how-to/steps, return a clear steps array with each step as a separate line item.\n" +
         "Keep reply concise and practical. Provide at most 4 links."
     },
     ...input.history.map((h) => ({ role: h.role, content: h.content })),
@@ -128,6 +130,7 @@ export async function generateChatReply(input: {
     return {
       reply: raw || "Please visit /contact-us and our team will assist you.",
       links: [{ label: "Contact Us", href: "/contact-us" }] as ChatLink[],
+      steps: [] as string[],
       intent: null as string | null
     };
   }
@@ -137,17 +140,21 @@ export async function generateChatReply(input: {
       reply?: string;
       intent?: string;
       links?: ChatLink[];
+      steps?: string[];
     };
     const safeLinks = (parsed.links || []).filter((l) => l?.href?.startsWith("/")).slice(0, 4);
+    const safeSteps = (parsed.steps || []).map((s) => String(s).trim()).filter(Boolean).slice(0, 8);
     return {
       reply: parsed.reply || "Please share more details so I can help.",
       links: safeLinks,
+      steps: safeSteps,
       intent: parsed.intent || null
     };
   } catch {
     return {
       reply: raw || "Please visit /contact-us and our team will assist you.",
       links: [{ label: "Contact Us", href: "/contact-us" }] as ChatLink[],
+      steps: [] as string[],
       intent: null as string | null
     };
   }

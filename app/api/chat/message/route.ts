@@ -79,7 +79,7 @@ export async function POST(req: Request) {
       data: {
         conversationId: conversation.id,
         sender: "BOT",
-        content: JSON.stringify({ text: ai.reply, links: ai.links || [] })
+        content: JSON.stringify({ text: ai.reply, links: ai.links || [], steps: ai.steps || [] })
       }
     });
 
@@ -102,6 +102,7 @@ export async function POST(req: Request) {
         id: botMessage.id,
         text: ai.reply,
         links: ai.links || [],
+        steps: ai.steps || [],
         createdAt: botMessage.createdAt
       }
     });
