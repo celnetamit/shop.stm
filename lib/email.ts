@@ -76,9 +76,9 @@ function buildModernEmailTemplate(content: string, title: string, isJournalsPub?
               <tr>
                 <td align="center">
                   ${isJournalsPub ? `
-                    <img src="${logoUrl}" alt="Journals Pub Logo" width="180" style="margin-bottom: 12px; display:block; margin-left:auto; margin-right:auto; background:#fff; padding:6px; border-radius:6px;">
+                    <img src="${logoUrl}" alt="Journals Pub Logo" width="130" style="margin-bottom: 10px; display:block; margin-left:auto; margin-right:auto; background:#fff; padding:5px; border-radius:6px;">
                   ` : `
-                    <img src="${logoUrl}" alt="STM Logo" width="180" style="background:#ffffff; padding:6px; border-radius:6px; object-fit:contain; max-width:180px; height:auto; margin-bottom: 12px; display:block; margin-left:auto; margin-right:auto;">
+                    <img src="${logoUrl}" alt="STM Logo" width="130" style="background:#ffffff; padding:5px; border-radius:6px; object-fit:contain; max-width:130px; height:auto; margin-bottom: 10px; display:block; margin-left:auto; margin-right:auto;">
                   `}
                 </td>
               </tr>
@@ -87,8 +87,8 @@ function buildModernEmailTemplate(content: string, title: string, isJournalsPub?
             <p style="margin:6px 0 0; color:#bfdbfe; font-size:13px; font-family: Arial, sans-serif;">${brandSubtitle}</p>
             <table role="presentation" align="center" style="margin-top: 14px;">
               <tr>
-                <td style="background-color: #15803d; border-radius: 20px; padding: 6px 15px;">
-                  <span style="color: #ffffff; font-size: 12px; font-weight: bold; white-space: nowrap;">🏆 21 Years of Excellence in Education & Publishing</span>
+                <td style="background-color: #15803d; border-radius: 20px; padding: 6px 14px; white-space: nowrap;">
+                  <span style="color: #ffffff; font-size: 11px; font-weight: 700; white-space: nowrap; display:inline-block; line-height:1.2;">🏆&nbsp;21 Years of Excellence in Education &amp; Publishing</span>
                 </td>
               </tr>
             </table>
