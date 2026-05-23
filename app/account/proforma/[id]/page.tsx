@@ -56,6 +56,15 @@ export default async function ProformaPrintPage({ params }: { params: Promise<{ 
         quote.country || "N/A"
       ]}
       metaPanel={<p style={{ margin: 0, color: "#64748B", fontSize: "13px" }}>Proforma generated for institutional processing.</p>}
+      tableColGroup={
+        <colgroup>
+          <col style={{ width: "8%" }} />
+          <col style={{ width: "52%" }} />
+          <col style={{ width: "14%" }} />
+          <col style={{ width: "12%" }} />
+          <col style={{ width: "14%" }} />
+        </colgroup>
+      }
       tableHeader={
         <tr>
           <th style={{ padding: "12px", textAlign: "left", color: "#334155", fontSize: "14px" }}>S.No</th>

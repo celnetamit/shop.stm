@@ -101,7 +101,7 @@ export default function UserActivityTabs({ role = "USER", proformas = [], contac
                     <td style={{ padding: "14px 18px", fontWeight: "800", color: "#0F172A", fontSize: "13px" }}>{o.currency} {Number(o.total).toLocaleString()}</td>
                     <td style={{ padding: "14px 18px" }}>{renderStatusBadge(o.status)}</td>
                     <td style={{ padding: "14px 18px", color: "#475569", fontSize: "13px" }}>{new Date(o.createdAt).toLocaleDateString()}</td>
-                    <td style={{ padding: "14px 18px" }}><Link href={`/account/orders/${o.id}/invoice`} target="_blank" style={{ padding: "8px 14px", background: "#10B981", color: "white", borderRadius: "6px", textDecoration: "none", fontSize: "13px", fontWeight: "600", display: "inline-block", transition: "background 0.2s" }}>📄 Download Invoice</Link></td>
+                    <td style={{ padding: "14px 18px" }}><Link href={`/account/orders/${o.id}/invoice`} target="_blank" rel="noopener noreferrer" style={{ padding: "8px 14px", background: "#10B981", color: "white", borderRadius: "6px", textDecoration: "none", fontSize: "13px", fontWeight: "600", display: "inline-block", transition: "background 0.2s" }}>📄 Download Invoice</Link></td>
                   </tr>
                 ))}
               </tbody>
@@ -120,7 +120,7 @@ export default function UserActivityTabs({ role = "USER", proformas = [], contac
                     <td style={{ padding: "14px 18px" }}>{renderStatusBadge(p.status)}</td>
                     <td style={{ padding: "14px 18px", color: "#475569", fontSize: "13px" }}>{p.items?.length || 0} journals</td>
                     <td style={{ padding: "14px 18px", color: "#475569", fontSize: "13px" }}>{new Date(p.createdAt).toLocaleDateString()}</td>
-                    <td style={{ padding: "14px 18px" }}><Link href={`/account/proforma/${p.id}`} style={{ padding: "8px 14px", background: "#3B82F6", color: "white", borderRadius: "6px", textDecoration: "none", fontSize: "13px", fontWeight: "600", display: "inline-block", transition: "background 0.2s" }}>View & Download</Link></td>
+                    <td style={{ padding: "14px 18px" }}><Link href={`/account/proforma/${p.id}`} target="_blank" rel="noopener noreferrer" style={{ padding: "8px 14px", background: "#3B82F6", color: "white", borderRadius: "6px", textDecoration: "none", fontSize: "13px", fontWeight: "600", display: "inline-block", transition: "background 0.2s" }}>View & Download</Link></td>
                   </tr>
                 ))}
               </tbody>

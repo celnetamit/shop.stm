@@ -51,6 +51,16 @@ export default async function OrderInvoicePrintPage({ params }: { params: Promis
       companyLines={companyLines}
       billToLines={[order.organization || order.customerName, order.customerName, order.email, order.address, `${order.state}${order.pincode ? ` - ${order.pincode}` : ""}`, `GSTIN: ${order.gstNumber || "N/A"}`]}
       metaPanel={<div style={{ fontSize: "13px", color: "#64748B" }}><p style={{ margin: "0 0 6px 0" }}>Payment ID: {order.razorpayPaymentId || "Manual"}</p><p style={{ margin: "0 0 6px 0" }}>Razorpay Order: {order.razorpayOrderId || "Direct"}</p><p style={{ margin: 0 }}>Last Updated: {new Date(order.updatedAt).toLocaleString("en-IN")}</p></div>}
+      tableColGroup={
+        <colgroup>
+          <col style={{ width: "7%" }} />
+          <col style={{ width: "45%" }} />
+          <col style={{ width: "12%" }} />
+          <col style={{ width: "12%" }} />
+          <col style={{ width: "8%" }} />
+          <col style={{ width: "16%" }} />
+        </colgroup>
+      }
       tableHeader={<tr><th style={{ padding: "12px", textAlign: "left", color: "#334155", fontSize: "13px", fontWeight: "bold" }}>S.No</th><th style={{ padding: "12px", textAlign: "left", color: "#334155", fontSize: "13px", fontWeight: "bold" }}>Particulars</th><th style={{ padding: "12px", textAlign: "center", color: "#334155", fontSize: "13px", fontWeight: "bold" }}>HSN/SAC</th><th style={{ padding: "12px", textAlign: "center", color: "#334155", fontSize: "13px", fontWeight: "bold" }}>Plan</th><th style={{ padding: "12px", textAlign: "center", color: "#334155", fontSize: "13px", fontWeight: "bold" }}>Qty</th><th style={{ padding: "12px", textAlign: "right", color: "#334155", fontSize: "13px", fontWeight: "bold" }}>Amount ({order.currency})</th></tr>}
       tableBody={<>{order.items.map((item, idx) => (<tr key={item.id} style={{ borderBottom: "1px solid #E2E8F0" }}><td style={{ padding: "12px", color: "#475569", fontSize: "14px" }}>{idx + 1}</td><td style={{ padding: "12px", color: "#0F172A", fontSize: "14px", fontWeight: "500" }}>{item.journalName}<div style={{ color: "#64748B", fontSize: "12px", marginTop: "4px" }}>Year: {item.year} | {item.selectedPlan}</div></td><td style={{ padding: "12px", textAlign: "center", color: "#475569", fontSize: "13px" }}>{getHsnCode(item.journalName, item.subject || "", item.selectedPlan)}</td><td style={{ padding: "12px", textAlign: "center", color: "#475569", fontSize: "13px" }}>{item.selectedPlan}</td><td style={{ padding: "12px", textAlign: "center", color: "#475569", fontSize: "14px" }}>{item.qty || 1}</td><td style={{ padding: "12px", textAlign: "right", color: "#0F172A", fontSize: "14px" }}>{(item.unitPrice * (item.qty || 1)).toFixed(2)}</td></tr>))}</>}
       totals={[
