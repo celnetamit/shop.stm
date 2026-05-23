@@ -45,7 +45,28 @@ export default function AuthRequiredOverlay({ show, title = "Login Required", su
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.38)", backdropFilter: "blur(6px)", zIndex: 10000, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
-      <div style={{ width: "100%", maxWidth: "420px", borderRadius: "16px", border: "1px solid #dbe3f1", background: "#fff", boxShadow: "0 24px 40px rgba(2, 12, 27, 0.18)", padding: "22px" }}>
+      <div style={{ width: "100%", maxWidth: "420px", borderRadius: "16px", border: "1px solid #dbe3f1", background: "#fff", boxShadow: "0 24px 40px rgba(2, 12, 27, 0.18)", padding: "22px", position: "relative" }}>
+        <button
+          type="button"
+          onClick={() => router.push("/")}
+          aria-label="Close and go to home"
+          style={{
+            position: "absolute",
+            top: "10px",
+            right: "10px",
+            width: "30px",
+            height: "30px",
+            borderRadius: "999px",
+            border: "1px solid #dbe3f1",
+            background: "#f8fafc",
+            color: "#475569",
+            cursor: "pointer",
+            fontSize: "18px",
+            lineHeight: "1"
+          }}
+        >
+          ×
+        </button>
         <h2 style={{ margin: "0 0 8px 0", fontSize: "22px", color: "#0f172a" }}>{title}</h2>
         <p style={{ margin: "0 0 16px 0", fontSize: "13px", color: "#64748b" }}>{subtitle}</p>
 
@@ -70,6 +91,21 @@ export default function AuthRequiredOverlay({ show, title = "Login Required", su
           />
           <button type="submit" disabled={loading} style={{ border: "none", borderRadius: "10px", background: "#1d4ed8", color: "#fff", padding: "10px 12px", fontWeight: 700, cursor: "pointer" }}>
             {loading ? "Signing in..." : "Login"}
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push("/")}
+            style={{
+              border: "1px solid #cbd5e1",
+              borderRadius: "10px",
+              background: "#fff",
+              color: "#0f172a",
+              padding: "10px 12px",
+              fontWeight: 600,
+              cursor: "pointer"
+            }}
+          >
+            Back to Home
           </button>
         </form>
 
