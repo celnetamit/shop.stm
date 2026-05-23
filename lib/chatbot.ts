@@ -1,11 +1,65 @@
 type ChatLink = { label: string; href: string };
+import { getJournalCatalog } from "@/lib/journal-catalog";
 
 const WEBSITE_CONTEXT = [
   "Primary pages: /, /catalogues-list, /cart, /checkout, /get-proforma-invoice-quote, /account, /for-librarians, /for-agencies, /contact-us, /faq, /policies.",
+  "Website focus: journal subscriptions, proforma invoices, institutional and agency purchase flows.",
   "If user asks process, provide short step-by-step guidance.",
   "If relevant, include internal links from this website only.",
-  "Act as a helpful sales + support assistant for STM Journals."
+  "Act as a helpful sales + support assistant for STM Journals.",
+  "If user asks for journal lists by topic, suggest matching journals and direct them to catalogue pages."
 ].join("\n");
+
+let catalogCache:
+  | Array<{
+      journalName: string;
+      subject: string;
+      slug: string;
+      issn: string | null;
+    }>
+  | null = null;
+
+async function getCatalogLite() {
+  if (catalogCache) return catalogCache;
+  const full = await getJournalCatalog();
+  catalogCache = full.map((j) => ({
+    journalName: j.journalName,
+    subject: j.subject,
+    slug: j.slug,
+    issn: j.issn
+  }));
+  return catalogCache;
+}
+
+async function buildCatalogContext(userMessage: string): Promise<string> {
+  const q = userMessage.toLowerCase().trim();
+  if (!q) return "";
+
+  const words = q.split(/[^a-z0-9]+/).filter((w) => w.length > 2);
+  if (words.length === 0) return "";
+
+  try {
+    const catalog = await getCatalogLite();
+    const scored = catalog
+      .map((j) => {
+        const text = `${j.journalName} ${j.subject} ${j.issn || ""}`.toLowerCase();
+        const score = words.reduce((sum, w) => (text.includes(w) ? sum + 1 : sum), 0);
+        return { j, score };
+      })
+      .filter((x) => x.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8);
+
+    if (scored.length === 0) return "";
+    const lines = scored.map(
+      (x, idx) =>
+        `${idx + 1}. ${x.j.journalName} | Subject: ${x.j.subject} | ISSN: ${x.j.issn || "N/A"} | URL: /product/${x.j.slug}`
+    );
+    return `Relevant journals from website catalog for this query:\n${lines.join("\n")}`;
+  } catch {
+    return "";
+  }
+}
 
 function extractJson(text: string): string | null {
   const start = text.indexOf("{");
@@ -29,12 +83,16 @@ export async function generateChatReply(input: {
     };
   }
 
+  const dynamicCatalogContext = await buildCatalogContext(input.userMessage);
+
   const messages = [
     {
       role: "system",
       content:
         `You are STM Journals sales + support assistant.\n${WEBSITE_CONTEXT}\n` +
+        (dynamicCatalogContext ? `\n${dynamicCatalogContext}\n` : "\n") +
         "Return STRICT JSON only: {\"reply\":\"...\",\"intent\":\"...\",\"links\":[{\"label\":\"...\",\"href\":\"/...\"}]}.\n" +
+        "Intent should be one of: Inquiry, Proforma, Order, Support, Pricing, Journals, Agency, Librarian, Checkout.\n" +
         "Keep reply concise and practical. Provide at most 4 links."
     },
     ...input.history.map((h) => ({ role: h.role, content: h.content })),
