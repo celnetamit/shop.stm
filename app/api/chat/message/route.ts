@@ -11,6 +11,15 @@ type Body = {
   guestToken?: string;
 };
 
+function inferNameFromEmail(email: string | null | undefined): string | null {
+  if (!email) return null;
+  const local = (email.split("@")[0] || "").trim();
+  if (!local) return null;
+  const cleaned = local.replace(/[._-]+/g, " ").trim();
+  if (!cleaned) return null;
+  return cleaned.replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as Body;
@@ -41,12 +50,13 @@ export async function POST(req: Request) {
     }
 
     if (!conversation) {
+      const inferredEmail = session?.email || lead.email || null;
       conversation = await prisma.chatConversation.create({
         data: {
           userId: session?.sub || null,
           guestToken: session ? null : body.guestToken || null,
-          email: session?.email || lead.email || null,
-          name: lead.name || null,
+          email: inferredEmail,
+          name: lead.name || inferNameFromEmail(inferredEmail),
           phone: lead.phone || null,
           organization: lead.organization || null
         }
@@ -83,12 +93,14 @@ export async function POST(req: Request) {
       }
     });
 
+    const resolvedEmail = lead.email || session?.email || conversation.email || null;
+
     await prisma.chatConversation.update({
       where: { id: conversation.id },
       data: {
         userId: session?.sub || conversation.userId || null,
-        email: lead.email || session?.email || conversation.email || null,
-        name: lead.name || conversation.name || null,
+        email: resolvedEmail,
+        name: lead.name || conversation.name || inferNameFromEmail(resolvedEmail),
         phone: lead.phone || conversation.phone || null,
         organization: lead.organization || conversation.organization || null,
         intent: ai.intent || conversation.intent || null

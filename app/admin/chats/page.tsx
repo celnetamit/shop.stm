@@ -18,6 +18,16 @@ type Row = {
   }>;
 };
 
+function deriveDisplayName(row: Pick<Row, "name" | "email">): string {
+  if (row.name?.trim()) return row.name.trim();
+  if (!row.email) return "Unknown User";
+
+  const local = row.email.split("@")[0] || "";
+  const cleaned = local.replace(/[._-]+/g, " ").trim();
+  if (!cleaned) return "Unknown User";
+  return cleaned.replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 function parseBot(content: string): { text: string; links: Array<{ label: string; href: string }>; steps: string[] } {
   try {
     const j = JSON.parse(content) as { text?: string; links?: Array<{ label: string; href: string }>; steps?: string[] };
@@ -120,7 +130,7 @@ export default function AdminChatsPage() {
             <tbody>
               {filtered.map((row, idx) => (
                 <tr key={row.id} style={{ borderTop: "1px solid #e2e8f0", background: idx % 2 === 0 ? "#fff" : "#fcfdff" }}>
-                  <td style={{ padding: "12px", fontWeight: 700, color: "#0f172a" }}>{row.name || "Unknown User"}</td>
+                  <td style={{ padding: "12px", fontWeight: 700, color: "#0f172a" }}>{deriveDisplayName(row)}</td>
                   <td style={{ padding: "12px", color: "#334155" }}>{row.email || "N/A"}</td>
                   <td style={{ padding: "12px", color: "#334155" }}>{row.intent || "Inquiry"}</td>
                   <td style={{ padding: "12px", color: "#334155" }}>{row.phone || "N/A"}</td>
@@ -189,7 +199,7 @@ export default function AdminChatsPage() {
           >
             <div style={{ padding: "12px 16px", borderBottom: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <strong>{active.name || "Unknown User"}</strong>
+                <strong>{deriveDisplayName(active)}</strong>
                 <div style={{ fontSize: "12px", color: "#64748b" }}>
                   {active.email || "N/A"} | {active.phone || "N/A"} | Intent: {active.intent || "Inquiry"}
                 </div>
