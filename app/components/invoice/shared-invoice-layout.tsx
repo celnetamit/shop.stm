@@ -48,6 +48,10 @@ export default function SharedInvoiceLayout(props: Props) {
     footerNote
   } = props;
 
+  const normalizedCompany = companyName.toLowerCase();
+  const isJournalsPubCompany = normalizedCompany.includes("journals pub") || normalizedCompany.includes("journalspub");
+  const logoSrc = isJournalsPubCompany ? "/journalspub-logo.png" : "/stmlogo.png";
+
   return (
     <main style={{ minHeight: "100vh", background: "#F1F5F9", padding: "40px 20px" }}>
       <style dangerouslySetInnerHTML={{ __html: `
@@ -109,7 +113,7 @@ export default function SharedInvoiceLayout(props: Props) {
           <div style={{ display: "flex", alignItems: "center", borderBottom: "1px solid #94A3B8", padding: "14px 16px" }}>
             <div style={{ width: "13%", display: "flex", justifyContent: "center" }}>
               <img
-                src={companyName.toLowerCase().includes("journal") ? "/journalspub-logo.png" : "/stmlogo.png"}
+                src={logoSrc}
                 alt={companyName}
                 style={{ maxHeight: "60px", width: "auto", objectFit: "contain" }}
               />
