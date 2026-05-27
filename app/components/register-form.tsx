@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 type RegisterRole = "LIBRARIAN" | "AGENCY" | "USER" | "STUDENT" | "SCHOLAR";
+const ACADEMIC_ROLES: RegisterRole[] = ["LIBRARIAN", "STUDENT", "SCHOLAR", "USER"];
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -13,6 +14,8 @@ export default function RegisterForm() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<RegisterRole>("LIBRARIAN");
   const [error, setError] = useState("");
+  const [collegeName, setCollegeName] = useState("");
+  const [collegeAddress, setCollegeAddress] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -26,7 +29,7 @@ export default function RegisterForm() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name, email, password, role })
+        body: JSON.stringify({ name, email, password, role, collegeName, collegeAddress })
       });
 
       const json = (await res.json()) as { ok: boolean; error?: string; user?: { role: "USER" | "ADMIN" | "LIBRARIAN" | "AGENCY" | "STUDENT" | "SCHOLAR" } };
@@ -63,13 +66,21 @@ export default function RegisterForm() {
         <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="you@institution.edu" required />
         <label className="register-field-label">Password</label>
         <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Minimum 8 characters" required minLength={8} />
-        <label className="register-field-label">Register As</label>
+        <label className="register-field-label">Designation</label>
         <select value={role} onChange={(e) => setRole(e.target.value as RegisterRole)} required>
           <option value="LIBRARIAN">Librarian</option>
           <option value="AGENCY">Agency</option>
           <option value="USER">College / Institution</option>
           <option value="SCHOLAR">Scholar / Student</option>
         </select>
+        {ACADEMIC_ROLES.includes(role) ? (
+          <>
+            <label className="register-field-label">College Name</label>
+            <input value={collegeName} onChange={(e) => setCollegeName(e.target.value)} type="text" placeholder="College / Institution Name" />
+            <label className="register-field-label">College Address</label>
+            <input value={collegeAddress} onChange={(e) => setCollegeAddress(e.target.value)} type="text" placeholder="College Address" />
+          </>
+        ) : null}
         <button className="auth-btn register-submit-btn" type="submit" disabled={loading}>{loading ? "Creating..." : "Create Account"}</button>
       </form>
       <p className="register-foot">Already have an account? <Link href="/login">Login</Link></p>

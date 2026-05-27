@@ -171,6 +171,10 @@ export default function CheckoutClient() {
       setOrderMessage("⚠️ Please complete all required billing details.");
       return;
     }
+    if (!Number.isFinite(total) || total <= 0) {
+      setOrderMessage("⚠️ Invalid amount. Please reload checkout from cart or PI link.");
+      return;
+    }
     
     setPlacingOrder(true);
 
@@ -230,6 +234,7 @@ export default function CheckoutClient() {
 
   async function finalizeOrderCreation(rzpResponse: any) {
     try {
+      const sourceItems = quoteData ? (quoteData.items || []) : items;
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -240,6 +245,15 @@ export default function CheckoutClient() {
           address: address,
           state: state,
           pincode: pincode,
+          sameAsBilling: quoteData?.sameAsBilling ?? true,
+          receiverName: quoteData?.receiverName || null,
+          receiverInstitute: quoteData?.receiverInstitute || null,
+          receiverAddress: quoteData?.receiverAddress || null,
+          receiverPincode: quoteData?.receiverPincode || null,
+          receiverCity: quoteData?.receiverCity || null,
+          receiverState: quoteData?.receiverState || null,
+          receiverCountry: quoteData?.receiverCountry || null,
+          receiverPhone: quoteData?.receiverPhone || null,
           gstNumber: gst || null,
           quoteId: queryQuoteId || null,
           currency: "INR",
@@ -252,16 +266,16 @@ export default function CheckoutClient() {
           razorpayOrderId: rzpResponse.razorpay_order_id,
           razorpayPaymentId: rzpResponse.razorpay_payment_id,
           razorpaySignature: rzpResponse.razorpay_signature,
-          items: items.map((it) => ({
+          items: sourceItems.map((it: any) => ({
             journalName: it.journalName,
             subject: it.subject,
             issn: it.issn,
             image: it.image,
-            year: it.year,
+            year: String(it.year || new Date().getFullYear()),
             issue: it.issue || null,
-            plan: it.plan,
+            plan: it.plan || it.selectedPlan,
             unitPrice: it.unitPrice,
-            qty: it.qty
+            qty: it.qty || 1
           }))
         })
       });

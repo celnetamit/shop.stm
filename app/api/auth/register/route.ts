@@ -7,7 +7,7 @@ import { roleForEmail } from "@/lib/auth/admin-emails";
 
 export async function POST(req: NextRequest) {
   try {
-    const body = (await req.json()) as { name?: string; email?: string; password?: string; role?: "LIBRARIAN" | "AGENCY" | "USER" | "STUDENT" | "SCHOLAR" };
+    const body = (await req.json()) as { name?: string; email?: string; password?: string; role?: "LIBRARIAN" | "AGENCY" | "USER" | "STUDENT" | "SCHOLAR" | "MANAGER" };
     const name = body.name?.trim() || null;
     const email = body.email?.trim().toLowerCase();
     const password = body.password || "";

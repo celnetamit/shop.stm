@@ -43,7 +43,10 @@ function buildModernEmailTemplate(content: string, title: string, isJournalsPub?
   const brandRegardsCompany = isJournalsPub ? "Dhruv Infosystems Private Limited" : "Consortium eLearning Network Pvt. Ltd.";
 
   const brandCopyright = isJournalsPub ? "Dhruv Infosystems Private Limited" : "Consortium eLearning Network Pvt. Ltd.";
-  const brandEmail = isJournalsPub ? "subscriptions@journalspub.com" : "info@stmjournals.in";
+  const brandEmail = isJournalsPub ? "Info@journalspub.com" : "info@stmjournals.in";
+  const brandAddress = isJournalsPub
+    ? "A-118 Second floor A-block Sector 63- Noida 201301"
+    : "A-118 First floor A-block Sector 63- Noida 201301";
 
   return `
 <!DOCTYPE html>
@@ -88,7 +91,7 @@ function buildModernEmailTemplate(content: string, title: string, isJournalsPub?
             <table role="presentation" align="center" style="margin-top: 14px;">
               <tr>
                 <td style="background-color: #15803d; border-radius: 20px; padding: 6px 14px; white-space: nowrap;">
-                  <span style="color: #ffffff; font-size: 11px; font-weight: 700; white-space: nowrap; display:inline-block; line-height:1.2;">🏆&nbsp;21 Years of Excellence in Education &amp; Publishing</span>
+                  <span style="color: #ffffff; font-size: 11px; font-weight: 700; white-space: nowrap; display:inline-block; line-height:1.2;">&#127942;&nbsp;21 Years of Excellence in Education &amp; Publishing</span>
                 </td>
               </tr>
             </table>
@@ -118,7 +121,7 @@ function buildModernEmailTemplate(content: string, title: string, isJournalsPub?
         <td class="footer" style="background-color: #0f172a; border-radius: 0 0 12px 12px; padding: 20px; text-align:center;">
           <p style="margin:0 0 6px; color:#ffffff; font-weight:600; font-family: Arial, sans-serif; letter-spacing: 0.5px;">Empowering Scientific Innovation</p>
           <p style="margin:0; color:#94a3b8; font-size:11px;">&copy; ${new Date().getFullYear()} ${brandCopyright}</p>
-          <p style="margin:4px 0 0; color:#94a3b8; font-size:11px;">Sector-63, Noida, U.P. | <a href="mailto:${brandEmail}" style="color:#38bdf8; text-decoration:none;">${brandEmail}</a></p>
+          <p style="margin:4px 0 0; color:#94a3b8; font-size:11px;">${brandAddress} | <a href="mailto:${brandEmail}" style="color:#38bdf8; text-decoration:none;">${brandEmail}</a></p>
           <p style="margin:6px 0 0; color:#94a3b8; font-size:11px;">+91-9810078950 (M) | +91-0120-4781200 / 206 (L)</p>
         </td>
       </tr>

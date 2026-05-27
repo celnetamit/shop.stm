@@ -6,7 +6,7 @@ import { getCurrentSession } from "@/lib/auth/session";
 
 export async function GET() {
   const session = await getCurrentSession();
-  if (!session || session.role !== "ADMIN") return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  if (!session || (session.role !== "ADMIN" && session.role !== "MANAGER")) return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
 
   try {
     const users = await prisma.user.findMany({ orderBy: { createdAt: "desc" }, take: 200 });

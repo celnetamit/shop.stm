@@ -25,6 +25,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       address?: string;
       gstNumber?: string;
       currency?: "INR" | "USD";
+      sameAsBilling?: boolean;
+      shippingRecipientName?: string;
+      shippingInstitute?: string;
+      shippingAddress?: string;
+      shippingPincode?: string;
+      shippingCity?: string;
+      shippingState?: string;
+      shippingCountry?: string;
+      shippingPhone?: string;
     };
 
     if (!body.organization || !body.contactName || !body.email || !body.phone || !body.country) {
@@ -58,6 +67,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           designation: body.designation?.trim() || null,
           country: body.country.trim(),
           address: body.address?.trim() || null,
+          sameAsBilling: body.sameAsBilling !== false,
+          receiverName: body.shippingRecipientName?.trim() || null,
+          receiverInstitute: body.shippingInstitute?.trim() || null,
+          receiverAddress: body.shippingAddress?.trim() || null,
+          receiverPincode: body.shippingPincode?.trim() || null,
+          receiverCity: body.shippingCity?.trim() || null,
+          receiverState: body.shippingState?.trim() || null,
+          receiverCountry: body.shippingCountry?.trim() || null,
+          receiverPhone: body.shippingPhone?.trim() || null,
           gstNumber: body.gstNumber?.trim() || null,
           currency: body.currency === "USD" ? "USD" : "INR",
           createdByUserId: session?.sub || undefined

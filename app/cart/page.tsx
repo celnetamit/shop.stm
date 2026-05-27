@@ -3,36 +3,14 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useCart } from "@/app/components/cart-store";
-import AuthRequiredOverlay from "@/app/components/auth-required-overlay";
 
 export default function CartPage() {
   const { items, setQty, removeItem, couponCode, discountPercent, setCoupon } = useCart();
   const [coupon, setCouponInput] = useState(couponCode);
   const [msg, setMsg] = useState("");
-  const [checkingAuth, setCheckingAuth] = useState(true);
-  const [isLoggedOut, setIsLoggedOut] = useState(false);
   const [isInternationalUser, setIsInternationalUser] = useState(false);
   const USD_RATE = 83;
 
-  useEffect(() => {
-    let active = true;
-    fetch("/api/auth/me", { cache: "no-store" })
-      .then((res) => {
-        if (!active) return;
-        setIsLoggedOut(!res.ok);
-      })
-      .catch(() => {
-        if (!active) return;
-        setIsLoggedOut(true);
-      })
-      .finally(() => {
-        if (!active) return;
-        setCheckingAuth(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
 
   useEffect(() => {
     let active = true;
@@ -80,11 +58,9 @@ export default function CartPage() {
     setMsg(`Applied ${json.coupon.code} (${json.coupon.discount}% off)`);
   }
 
-  const requireAuth = !checkingAuth && isLoggedOut;
-
   return (
     <>
-    <div style={{ filter: requireAuth ? "blur(6px)" : "none", pointerEvents: requireAuth ? "none" : "auto", userSelect: requireAuth ? "none" : "auto" }}>
+    <div>
     <main className="cart-page">
       <h1>Your Cart</h1>
       <div className="cart-layout">
@@ -146,11 +122,6 @@ export default function CartPage() {
       </div>
     </main>
     </div>
-    <AuthRequiredOverlay
-      show={requireAuth}
-      title="Login To Access Cart"
-      subtitle="Please login to continue with cart and checkout."
-    />
     </>
   );
 }

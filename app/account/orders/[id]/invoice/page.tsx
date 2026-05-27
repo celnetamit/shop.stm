@@ -42,7 +42,16 @@ export default async function CustomerOrderInvoicePrintPage({ params }: { params
       statusValue={order.status}
       companyName="Consortium e-Learning Network"
       companyLines={["A-118, 1st Floor, Sector-63", "Noida, U.P. 201301, India", "info@stmjournals.com"]}
-      billToLines={[order.organization || order.customerName, order.customerName, order.email, order.address, `${order.state} - ${order.pincode}`]}
+      billToLines={[
+        order.organization || order.customerName,
+        order.customerName,
+        order.email,
+        order.address,
+        `${order.state} - ${order.pincode}`,
+        `Receiver: ${order.sameAsBilling ? order.customerName : (order.receiverName || order.customerName)}`,
+        `Receiver Address: ${order.sameAsBilling ? order.address : (order.receiverAddress || order.address)}`,
+        `Receiver Contact: ${order.sameAsBilling ? "Same as billing" : (order.receiverPhone || "N/A")}`
+      ]}
       metaPanel={<div style={{ fontSize: "13px", color: "#64748B" }}><p style={{ margin: "0 0 6px 0" }}>Payment Gateway: Razorpay India</p><p style={{ margin: "0 0 6px 0" }}>Payment ID: {order.razorpayPaymentId || "Manual Confirmation"}</p><p style={{ margin: 0 }}>Updated: {new Date(order.updatedAt).toLocaleString()}</p></div>}
       tableColGroup={
         <colgroup>

@@ -53,7 +53,10 @@ export default async function ProformaPrintPage({ params }: { params: Promise<{ 
         `Attn: ${quote.contactName || "N/A"}`,
         `${quote.email} | ${quote.phone || "N/A"}`,
         quote.address || "N/A",
-        quote.country || "N/A"
+        quote.country || "N/A",
+        `Receiver: ${quote.sameAsBilling ? quote.contactName : (quote.receiverName || quote.contactName || "N/A")}`,
+        `Receiver Address: ${quote.sameAsBilling ? (quote.address || "N/A") : (quote.receiverAddress || "N/A")}`,
+        `Receiver Contact: ${quote.sameAsBilling ? (quote.phone || "N/A") : (quote.receiverPhone || quote.phone || "N/A")}`
       ]}
       metaPanel={<p style={{ margin: 0, color: "#64748B", fontSize: "13px" }}>Proforma generated for institutional processing.</p>}
       tableColGroup={

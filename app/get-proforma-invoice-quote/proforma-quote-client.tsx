@@ -29,7 +29,7 @@ type Journal = {
 };
 
 type Plan = "PRINT" | "ONLINE" | "PRINT_ONLINE";
-type UserRole = "USER" | "ADMIN" | "LIBRARIAN" | "AGENCY" | "STUDENT" | "SCHOLAR";
+type UserRole = "USER" | "ADMIN" | "MANAGER" | "LIBRARIAN" | "AGENCY" | "STUDENT" | "SCHOLAR";
 type SubscriberCategory = "COLLEGE" | "AGENCY" | "SCHOLAR" | "EXISTING_PI";
 
 type SubscriptionConfig = {
@@ -340,43 +340,6 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
       if (!draft.contactName && u.name) setContactName(u.name);
       if (!draft.email && u.email) setEmail(u.email);
 
-      try {
-        const res = await fetch("/api/proforma/pi-latest", { cache: "no-store" });
-        const json = (await res.json()) as {
-          ok: boolean;
-          profile?: {
-            id: string;
-            organization: string;
-            institutionName: string | null;
-            contactName: string;
-            email: string;
-            phone: string;
-            country: string;
-            address: string | null;
-            gstNumber: string | null;
-            subscriberCategory: string | null;
-            designation: string | null;
-          } | null;
-        };
-
-        if (json.ok && json.profile) {
-          const p = json.profile;
-          setOrganization(p.organization || "");
-          setInstitutionName(p.institutionName || p.organization || "");
-          setContactName(p.contactName || "");
-          setEmail((p.email || "").trim().toLowerCase());
-          setPhone(p.phone || "");
-          setCountry(p.country || "India");
-          setAddress(p.address || "");
-          setGstNumber(p.gstNumber || "");
-          setDesignation(p.designation || "");
-          if (p.subscriberCategory === "COLLEGE" || p.subscriberCategory === "AGENCY" || p.subscriberCategory === "SCHOLAR" || p.subscriberCategory === "EXISTING_PI") {
-            setSubscriberCategory(p.subscriberCategory);
-          }
-        }
-      } catch {
-        // silent fallback
-      }
     })();
   }, []);
 
@@ -716,7 +679,16 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
         institutionName,
         designation,
         currency,
-        remarks
+        remarks,
+        sameAsBilling,
+        shippingRecipientName,
+        shippingInstitute,
+        shippingAddress,
+        shippingPincode,
+        shippingCity,
+        shippingState,
+        shippingCountry,
+        shippingPhone
       })
     });
 
@@ -1504,7 +1476,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
                       <strong style={{ color: "#475569", fontSize: "10px", textTransform: "uppercase" }}>PAN No. :</strong> <span style={{ fontWeight: "700", color: "#0f172a" }}>{brand.pan}</span>
                       <strong style={{ color: "#475569", fontSize: "10px", textTransform: "uppercase" }}>CIN No. :</strong> <span style={{ fontWeight: "700", color: "#0f172a" }}>{brand.cin}</span>
                       <strong style={{ color: "#475569", fontSize: "10px", textTransform: "uppercase" }}>Legal Name :</strong> <span>{brand.legalName}</span>
-                      <strong style={{ color: "#475569", fontSize: "10px", textTransform: "uppercase" }}>IEC No. :</strong> <span style={{ fontWeight: "700", color: "#0f172a" }}>AACCC6494M</span>
+                      <strong style={{ color: "#475569", fontSize: "10px", textTransform: "uppercase" }}>IEC Code :</strong> <span style={{ fontWeight: "700", color: "#0f172a" }}>{isJournalsPub ? "AACCD1689F" : "AACCC6494M"}</span>
                     </div>
                   </div>
                 </div>

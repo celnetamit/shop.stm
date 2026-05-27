@@ -3,7 +3,7 @@
 export type PrefillUser = {
   name: string;
   email: string;
-  role?: "USER" | "ADMIN" | "LIBRARIAN" | "AGENCY" | "STUDENT" | "SCHOLAR";
+  role?: "USER" | "ADMIN" | "MANAGER" | "LIBRARIAN" | "AGENCY" | "STUDENT" | "SCHOLAR";
 };
 
 export async function fetchPrefillUser(): Promise<PrefillUser | null> {
@@ -15,7 +15,7 @@ export async function fetchPrefillUser(): Promise<PrefillUser | null> {
       user?: {
         name?: string | null;
         email?: string | null;
-        role?: "USER" | "ADMIN" | "LIBRARIAN" | "AGENCY" | "STUDENT" | "SCHOLAR";
+        role?: "USER" | "ADMIN" | "MANAGER" | "LIBRARIAN" | "AGENCY" | "STUDENT" | "SCHOLAR";
       };
     };
     if (!json.ok || !json.user) return null;

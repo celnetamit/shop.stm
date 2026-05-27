@@ -26,5 +26,5 @@ export default async function ProformaQuotePage() {
     publisherContactNumber: item.publisherContactNumber
   }));
 
-  return <ProformaQuoteClient journals={journals} canUsePubSubscription={session?.role === "ADMIN"} isAuthenticated={!!session} />;
+  return <ProformaQuoteClient journals={journals} canUsePubSubscription={session?.role === "ADMIN" || session?.role === "MANAGER"} isAuthenticated={!!session} />;
 }

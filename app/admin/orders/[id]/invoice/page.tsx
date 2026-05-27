@@ -49,7 +49,17 @@ export default async function OrderInvoicePrintPage({ params }: { params: Promis
       statusValue={order.status}
       companyName={companyName}
       companyLines={companyLines}
-      billToLines={[order.organization || order.customerName, order.customerName, order.email, order.address, `${order.state}${order.pincode ? ` - ${order.pincode}` : ""}`, `GSTIN: ${order.gstNumber || "N/A"}`]}
+      billToLines={[
+        order.organization || order.customerName,
+        order.customerName,
+        order.email,
+        order.address,
+        `${order.state}${order.pincode ? ` - ${order.pincode}` : ""}`,
+        `GSTIN: ${order.gstNumber || "N/A"}`,
+        `Receiver: ${order.sameAsBilling ? order.customerName : (order.receiverName || order.customerName)}`,
+        `Receiver Address: ${order.sameAsBilling ? order.address : (order.receiverAddress || order.address)}`,
+        `Receiver Contact: ${order.sameAsBilling ? "Same as billing" : (order.receiverPhone || "N/A")}`
+      ]}
       metaPanel={<div style={{ fontSize: "13px", color: "#64748B" }}><p style={{ margin: "0 0 6px 0" }}>Payment ID: {order.razorpayPaymentId || "Manual"}</p><p style={{ margin: "0 0 6px 0" }}>Razorpay Order: {order.razorpayOrderId || "Direct"}</p><p style={{ margin: 0 }}>Last Updated: {new Date(order.updatedAt).toLocaleString("en-IN")}</p></div>}
       tableColGroup={
         <colgroup>

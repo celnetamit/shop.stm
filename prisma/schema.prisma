@@ -10,6 +10,7 @@ datasource db {
 enum UserRole {
   USER
   ADMIN
+  MANAGER
   LIBRARIAN
   AGENCY
   STUDENT
@@ -56,6 +57,7 @@ model User {
   email        String   @unique
   passwordHash String?
   role         UserRole @default(USER)
+  accessPermissions Json?
   provider     String   @default("credentials")
   providerId   String?
   createdAt    DateTime @default(now())
@@ -86,6 +88,15 @@ model ProformaQuote {
   designation   String?
   country       String
   address       String?
+  sameAsBilling Boolean           @default(true)
+  receiverName  String?
+  receiverInstitute String?
+  receiverAddress String?
+  receiverPincode String?
+  receiverCity String?
+  receiverState String?
+  receiverCountry String?
+  receiverPhone String?
   gstNumber     String?
   currency      CurrencyCode       @default(INR)
   status        QuoteStatus        @default(DRAFT)
@@ -145,6 +156,15 @@ model Order {
   email          String
   organization   String?
   address        String
+  sameAsBilling  Boolean      @default(true)
+  receiverName   String?
+  receiverInstitute String?
+  receiverAddress String?
+  receiverPincode String?
+  receiverCity String?
+  receiverState String?
+  receiverCountry String?
+  receiverPhone String?
   state          String
   pincode        String
   gstNumber      String?

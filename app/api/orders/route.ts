@@ -13,6 +13,15 @@ export async function POST(req: NextRequest) {
       address?: string;
       state?: string;
       pincode?: string;
+      sameAsBilling?: boolean;
+      receiverName?: string | null;
+      receiverInstitute?: string | null;
+      receiverAddress?: string | null;
+      receiverPincode?: string | null;
+      receiverCity?: string | null;
+      receiverState?: string | null;
+      receiverCountry?: string | null;
+      receiverPhone?: string | null;
       gstNumber?: string;
       quoteId?: string;
       currency?: "INR" | "USD";
@@ -90,6 +99,8 @@ export async function POST(req: NextRequest) {
 
     const session = await getCurrentSession();
 
+    const quoteForReceiver = body.quoteId ? await prisma.proformaQuote.findUnique({ where: { id: body.quoteId } }).catch(() => null) : null;
+
     const order = await prisma.$transaction(async (tx) => {
       const created = await tx.order.create({
         data: {
@@ -100,6 +111,15 @@ export async function POST(req: NextRequest) {
           address,
           state,
           pincode,
+          sameAsBilling: body.sameAsBilling ?? quoteForReceiver?.sameAsBilling ?? true,
+          receiverName: body.receiverName || quoteForReceiver?.receiverName || null,
+          receiverInstitute: body.receiverInstitute || quoteForReceiver?.receiverInstitute || null,
+          receiverAddress: body.receiverAddress || quoteForReceiver?.receiverAddress || null,
+          receiverPincode: body.receiverPincode || quoteForReceiver?.receiverPincode || null,
+          receiverCity: body.receiverCity || quoteForReceiver?.receiverCity || null,
+          receiverState: body.receiverState || quoteForReceiver?.receiverState || null,
+          receiverCountry: body.receiverCountry || quoteForReceiver?.receiverCountry || null,
+          receiverPhone: body.receiverPhone || quoteForReceiver?.receiverPhone || null,
           gstNumber: body.gstNumber?.trim() || null,
           quoteId: body.quoteId?.trim() || null,
           currency: body.currency === "USD" ? "USD" : "INR",

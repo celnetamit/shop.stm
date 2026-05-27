@@ -6,7 +6,7 @@ export const AUTH_COOKIE_NAME = "auth_token";
 type SessionPayload = {
   sub: string;
   email: string;
-  role: "USER" | "ADMIN" | "LIBRARIAN" | "AGENCY" | "STUDENT" | "SCHOLAR";
+  role: "USER" | "ADMIN" | "MANAGER" | "LIBRARIAN" | "AGENCY" | "STUDENT" | "SCHOLAR";
 };
 
 function getJwtSecret(): Uint8Array {
