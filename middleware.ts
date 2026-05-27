@@ -34,6 +34,11 @@ export async function middleware(req: NextRequest) {
     if (session.role !== "ADMIN" && session.role !== "MANAGER") return NextResponse.redirect(new URL("/account", req.url));
   }
 
+  if (pathname.startsWith("/admin/users")) {
+    if (!session) return NextResponse.redirect(new URL("/login", req.url));
+    if (session.role !== "ADMIN") return NextResponse.redirect(new URL("/admin", req.url));
+  }
+
   if (pathname.startsWith("/checkout") && !session) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
