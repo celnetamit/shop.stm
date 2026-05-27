@@ -3,6 +3,7 @@ import { getCurrentSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { formatPiNumber } from "@/lib/pi-number";
 import SharedInvoiceLayout from "@/app/components/invoice/shared-invoice-layout";
+import { getJournalCatalog } from "@/lib/journal-catalog";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +37,16 @@ export default async function ProformaPrintPage({ params }: { params: Promise<{ 
   const gst = (taxable * gstRate) / 100;
   const total = taxable + gst;
   const piNumber = formatPiNumber({ id: quote.id, createdAt: quote.createdAt });
+  const catalog = await getJournalCatalog();
+  const isJournalsPub = quote.items.some((item) => {
+    const clean = item.journalName.toLowerCase();
+    const match = catalog.find((c) => clean.includes(c.journalName.toLowerCase()) || c.journalName.toLowerCase().includes(clean));
+    return match && (match.publisher || "").toLowerCase().replace(/[^a-z0-9]/g, "") === "journalspub";
+  });
+  const companyName = isJournalsPub ? "Journals Pub" : "STM Journals";
+  const companyLines = isJournalsPub
+    ? ["A Division of Dhruv Infosystems Private Limited", "A-118, 2nd Floor, A-Block, Sector-63, Noida - 201301", "Info@journalspub.com"]
+    : ["A Division of Consortium e-Learning Network Pvt. Ltd.", "A-118, 1st Floor, A-Block, Sector-63, Noida - 201301", "info@stmjournals.in"];
 
   return (
     <SharedInvoiceLayout
@@ -46,8 +57,8 @@ export default async function ProformaPrintPage({ params }: { params: Promise<{ 
       numberValue={piNumber}
       dateValue={new Date(quote.createdAt).toLocaleDateString()}
       statusValue={quote.status}
-      companyName="Consortium e-Learning Network"
-      companyLines={["A Division of Consortium e-Learning Network Pvt. Ltd.", "A-118, 1st Floor, Sector-63", "Noida, U.P. 201301, India", "info@stmjournals.com"]}
+      companyName={companyName}
+      companyLines={companyLines}
       billToLines={[
         quote.organization || "N/A",
         `Attn: ${quote.contactName || "N/A"}`,
