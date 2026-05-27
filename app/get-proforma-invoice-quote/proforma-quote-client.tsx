@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useRouter } from "next/navigation";
-import { fetchPrefillUser, loadDraft, saveDraft } from "@/lib/client/form-prefill";
+import { fetchPrefillUser, saveDraft } from "@/lib/client/form-prefill";
 import { formatPiNumber } from "@/lib/pi-number";
 import AuthRequiredOverlay from "@/app/components/auth-required-overlay";
 
@@ -282,63 +282,16 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
   }, [subscriptionType]);
 
   useEffect(() => {
-    const draft = loadDraft<{
-      organization: string;
-      contactName: string;
-      email: string;
-      phone: string;
-      address: string;
-      gstNumber: string;
-      city: string;
-      stateName: string;
-      pincode: string;
-      designation: string;
-      institutionName: string;
-      country: string;
-      sameAsBilling: boolean;
-      subscriptionType: "STM" | "PUB";
-      subscriberCategory: SubscriberCategory;
-      shippingRecipientName: string;
-      shippingAddress: string;
-      shippingInstitute: string;
-      shippingPincode: string;
-      shippingCity: string;
-      shippingState: string;
-      shippingCountry: string;
-      shippingPhone: string;
-      remarks: string;
-    }>("draft:proforma-form");
-    if (draft.organization) setOrganization(draft.organization);
-    if (draft.contactName) setContactName(draft.contactName);
-    if (draft.email) setEmail(draft.email);
-    if (draft.phone) setPhone(draft.phone);
-    if (draft.address) setAddress(draft.address);
-    if (draft.gstNumber) setGstNumber(draft.gstNumber);
-    if (draft.city) setCity(draft.city);
-    if (draft.stateName) setStateName(draft.stateName);
-    if (draft.pincode) setPincode(draft.pincode);
-    if (draft.designation) setDesignation(draft.designation);
-    if (draft.institutionName) setInstitutionName(draft.institutionName);
-    if (draft.country) setCountry(draft.country);
-    if (typeof draft.sameAsBilling === "boolean") setSameAsBilling(draft.sameAsBilling);
-    if (draft.subscriptionType) setSubscriptionType(draft.subscriptionType);
-    if (draft.subscriberCategory) setSubscriberCategory(draft.subscriberCategory);
-    if (draft.shippingRecipientName) setShippingRecipientName(draft.shippingRecipientName);
-    if (draft.shippingAddress) setShippingAddress(draft.shippingAddress);
-    if (draft.shippingInstitute) setShippingInstitute(draft.shippingInstitute);
-    if (draft.shippingPincode) setShippingPincode(draft.shippingPincode);
-    if (draft.shippingCity) setShippingCity(draft.shippingCity);
-    if (draft.shippingState) setShippingState(draft.shippingState);
-    if (draft.shippingCountry) setShippingCountry(draft.shippingCountry);
-    if (draft.shippingPhone) setShippingPhone(draft.shippingPhone);
-    if (draft.remarks) setRemarks(draft.remarks);
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem("draft:proforma-form");
+    }
 
     (async () => {
       const u = await fetchPrefillUser();
       if (!u) return;
       if (u.role) setUserRole(u.role);
-      if (!draft.contactName && u.name) setContactName(u.name);
-      if (!draft.email && u.email) setEmail(u.email);
+      if (u.name) setContactName(u.name);
+      if (u.email) setEmail(u.email);
 
     })();
   }, []);
@@ -867,6 +820,33 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
     }
   }
 
+  async function buildCurrentPreviewPdfBase64(): Promise<string | null> {
+    const input = document.getElementById("invoice-capture-area");
+    if (!input) return null;
+    const html2canvas = (await import("html2canvas")).default;
+    const canvas = await html2canvas(input, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: "#ffffff"
+    });
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    const scale = Math.min(pdfWidth / canvas.width, pdfHeight / canvas.height) * 0.95;
+    const finalWidth = canvas.width * scale;
+    const finalHeight = canvas.height * scale;
+    const marginX = (pdfWidth - finalWidth) / 2;
+    const marginY = (pdfHeight - finalHeight) / 2;
+    pdf.addImage(imgData, "PNG", marginX, marginY, finalWidth, finalHeight);
+    const bytes = pdf.output("arraybuffer");
+    const arr = new Uint8Array(bytes);
+    let binary = "";
+    arr.forEach((b) => { binary += String.fromCharCode(b); });
+    return btoa(binary);
+  }
+
   async function onSendEmailNotification() {
     if (!quoteId || quoteId.startsWith("draft-")) return;
     setSendingEmail(true);
@@ -874,7 +854,12 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
     setError("");
 
     try {
-      const response = await fetch(`/api/proforma/${quoteId}/notify`, { method: "POST" });
+      const pdfBase64 = await buildCurrentPreviewPdfBase64();
+      const response = await fetch(`/api/proforma/${quoteId}/notify`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ attachmentBase64: pdfBase64 })
+      });
       const result = await response.json();
       if (result.ok) {
         setEmailSuccessMsg("Successfully dispatched emails to users and admins.");

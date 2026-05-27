@@ -91,7 +91,10 @@ function buildModernEmailTemplate(content: string, title: string, isJournalsPub?
             <table role="presentation" align="center" style="margin-top: 14px;">
               <tr>
                 <td style="background-color: #15803d; border-radius: 20px; padding: 6px 14px; white-space: nowrap;">
-                  <span style="color: #ffffff; font-size: 11px; font-weight: 700; white-space: nowrap; display:inline-block; line-height:1.2;">&#127942;&nbsp;21 Years of Excellence in Education &amp; Publishing</span>
+                  <span style="color: #ffffff; font-size: 11px; font-weight: 700; white-space: nowrap; display:inline-flex; align-items:center; gap:6px; line-height:1.2;">
+                    <span style="display:inline-block; line-height:1;">&#127942;</span>
+                    <span style="display:inline-block;">21 Years of Excellence in Education &amp; Publishing</span>
+                  </span>
                 </td>
               </tr>
             </table>

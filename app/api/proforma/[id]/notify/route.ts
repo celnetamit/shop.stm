@@ -11,13 +11,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   try {
+    const payload = (await req.json().catch(() => ({}))) as { attachmentBase64?: string };
     const { id } = await params;
     if (!id || id.startsWith("draft-")) {
       return NextResponse.json({ ok: false, error: "Cannot notify on a draft quote." }, { status: 400 });
     }
 
     const { prepareProformaEmailPayload } = await import("@/lib/proforma-email-helper");
-    const { buildProformaPdfAttachment } = await import("@/lib/email-attachments");
     const d = await prepareProformaEmailPayload(id);
 
     if (!d) {
@@ -25,9 +25,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     const { sendTemplatedEmail, sendAdminNotification } = await import("@/lib/email");
-    const attachment = await buildProformaPdfAttachment(id);
-    const attachmentsJson = attachment
-      ? JSON.stringify([{ filename: attachment.filename, contentType: attachment.contentType, base64: attachment.data.toString("base64") }])
+    const attachmentsJson = payload.attachmentBase64
+      ? JSON.stringify([{ filename: `proforma-${d.quoteId}.pdf`, contentType: "application/pdf", base64: payload.attachmentBase64 }])
       : "[]";
     await sendTemplatedEmail("PROFORMA_CREATED", d.email, { ...d, __attachments: attachmentsJson });
     await sendAdminNotification("PROFORMA_CREATED_ADMIN", { ...d, __attachments: attachmentsJson });
