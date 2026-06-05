@@ -291,6 +291,48 @@ export async function sendAdminNotification(key: string, data: Record<string, st
   }
 }
 
+export async function sendEmailVerificationOtp(to: string, otp: string) {
+  try {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
+      throw new Error(`Invalid email address: ${to}`);
+    }
+
+    if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+      throw new Error("AWS credentials are required for sending emails");
+    }
+
+    const subject = "Verify your STM Journals email";
+    const body = buildModernEmailTemplate(
+      `
+        <h2 style="margin:0 0 10px; color:#0f172a;">Confirm your email address</h2>
+        <p style="margin:0 0 18px; color:#475569;">Use this one-time password to continue creating your STM Journals account.</p>
+        <div style="text-align:center; margin:24px 0;">
+          <span style="display:inline-block; letter-spacing:8px; font-size:32px; font-weight:800; color:#0f2a57; background:#eef6ff; border:1px solid #dbe8ff; border-radius:12px; padding:14px 18px;">${escapeHtml(otp)}</span>
+        </div>
+        <p style="margin:0; color:#64748b; font-size:13px;">This OTP expires in 10 minutes. If you did not request it, you can ignore this email.</p>
+      `,
+      subject
+    );
+
+    await getSesClient().send(
+      new SendEmailCommand({
+        Destination: { ToAddresses: [to] },
+        Message: {
+          Body: { Html: { Charset: "UTF-8", Data: body } },
+          Subject: { Charset: "UTF-8", Data: subject },
+        },
+        Source: getFromEmail(),
+      })
+    );
+
+    console.log(`✅ SES Sent -> EMAIL_VERIFICATION_OTP to ${to}`);
+    return true;
+  } catch (error) {
+    console.error("❌ SES OTP Failed ->", error);
+    return false;
+  }
+}
+
 export async function seedDefaultTemplates() {
   const defaults = [
     {

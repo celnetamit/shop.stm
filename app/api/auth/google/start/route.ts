@@ -3,9 +3,16 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getGoogleAuthUrl } from "@/lib/auth/google";
 
+function resolveGoogleAppBase(req: NextRequest) {
+  const requestOrigin = new URL(req.url).origin;
+  const requestHost = new URL(requestOrigin).hostname;
+  const isLocalDevOrigin = process.env.NODE_ENV !== "production" && (requestHost === "127.0.0.1" || requestHost === "localhost");
+  return (isLocalDevOrigin ? requestOrigin : process.env.NEXT_PUBLIC_APP_URL || requestOrigin).replace(/\/$/, "");
+}
+
 export async function GET(req: NextRequest) {
   try {
-    const origin = (process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin).replace(/\/$/, "");
+    const origin = resolveGoogleAppBase(req);
     const state = crypto.randomUUID();
     const url = getGoogleAuthUrl(state, origin);
     const existing = req.cookies.get("google_oauth_state")?.value || "";

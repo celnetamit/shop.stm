@@ -439,12 +439,21 @@ a {
   gap: 10px;
 }
 
-.auth-form input {
+.auth-form input,
+.auth-form select {
   border: 1px solid #c8d4e8;
   border-radius: 10px;
   padding: 11px 12px;
   font-size: 14px;
   background: #f8fbff;
+  min-width: 0;
+}
+
+.auth-form input:disabled,
+.auth-form select:disabled {
+  color: #8290a6;
+  background: #f1f5f9;
+  cursor: not-allowed;
 }
 
 .auth-btn, .auth-google {
@@ -471,6 +480,13 @@ a {
   color: #1d2128;
   text-decoration: none;
   margin-top: 8px;
+  gap: 10px;
+}
+
+.google-logo {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
 }
 
 .register-card {
@@ -505,6 +521,37 @@ a {
   margin-top: 2px;
 }
 
+.register-email-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 112px;
+  gap: 10px;
+}
+
+.register-otp-btn {
+  border: 1px solid #bed0ea;
+  border-radius: 10px;
+  background: #eff6ff;
+  color: #163f86;
+  cursor: pointer;
+  font-weight: 800;
+  min-height: 42px;
+  padding: 0 12px;
+}
+
+.register-otp-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.register-otp-panel {
+  display: grid;
+  gap: 8px;
+  border: 1px solid #dce7f6;
+  border-radius: 12px;
+  background: #f8fbff;
+  padding: 12px;
+}
+
 .register-submit-btn {
   margin-top: 14px;
   min-height: 46px;
@@ -519,6 +566,16 @@ a {
 
 .register-foot a {
   font-weight: 700;
+}
+
+.auth-success {
+  color: #166534;
+  background: #ecfdf3;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  font-size: 14px;
+  margin: 10px 0;
+  padding: 10px 12px;
 }
 
 .login-footer {
@@ -541,6 +598,16 @@ a {
   font-size: 13px;
   color: #5d6b80;
   margin: 10px 0;
+}
+
+@media (max-width: 520px) {
+  .register-email-row {
+    grid-template-columns: 1fr;
+  }
+
+  .register-otp-btn {
+    width: 100%;
+  }
 }
 
 .catalogues-v2 {

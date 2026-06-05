@@ -6,9 +6,16 @@ import { prisma } from "@/lib/prisma";
 import { AUTH_COOKIE_NAME, signSession } from "@/lib/auth/session";
 import { roleForEmail } from "@/lib/auth/admin-emails";
 
+function resolveGoogleAppBase(req: NextRequest) {
+  const requestOrigin = new URL(req.url).origin;
+  const requestHost = new URL(requestOrigin).hostname;
+  const isLocalDevOrigin = process.env.NODE_ENV !== "production" && (requestHost === "127.0.0.1" || requestHost === "localhost");
+  return (isLocalDevOrigin ? requestOrigin : process.env.NEXT_PUBLIC_APP_URL || requestOrigin).replace(/\/$/, "");
+}
+
 export async function GET(req: NextRequest) {
   try {
-    const appBase = (process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin).replace(/\/$/, "");
+    const appBase = resolveGoogleAppBase(req);
     const url = new URL(req.url);
     const code = url.searchParams.get("code");
     const state = url.searchParams.get("state");
@@ -34,6 +41,8 @@ export async function GET(req: NextRequest) {
       user = await prisma.user.create({
         data: {
           email: normalizedEmail,
+          emailVerified: true,
+          emailVerifiedAt: new Date(),
           name: profile.name,
           role: emailBasedRole,
           provider: "google",
@@ -61,7 +70,9 @@ export async function GET(req: NextRequest) {
           name: profile.name,
           role: nextRole,
           provider: "google",
-          providerId: profile.id
+          providerId: profile.id,
+          emailVerified: true,
+          emailVerifiedAt: user.emailVerifiedAt || new Date()
         }
       });
     }
@@ -89,8 +100,9 @@ export async function GET(req: NextRequest) {
       maxAge: 0
     });
     return res;
-  } catch {
-    const appBase = (process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin).replace(/\/$/, "");
+  } catch (error) {
+    console.error("Google callback failed", error);
+    const appBase = resolveGoogleAppBase(req);
     return NextResponse.redirect(`${appBase}/login?error=google_auth`);
   }
 }

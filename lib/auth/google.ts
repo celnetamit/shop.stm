@@ -66,7 +66,11 @@ export async function exchangeGoogleCodeForOrigin(code: string, origin: string):
   }
 
   if (validatedOrigin !== allowedOrigin) {
-    throw new Error("Origin mismatch");
+    const host = new URL(validatedOrigin).hostname;
+    const isLocalDevOrigin = process.env.NODE_ENV !== "production" && (host === "127.0.0.1" || host === "localhost");
+    if (!isLocalDevOrigin) {
+      throw new Error("Origin mismatch");
+    }
   }
 
   const body = new URLSearchParams({

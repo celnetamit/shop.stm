@@ -21,11 +21,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, error: "Email is already registered." }, { status: 409 });
     }
 
+    const verification = await prisma.emailVerification.findUnique({ where: { email } });
+    if (!verification?.verifiedAt) {
+      return NextResponse.json({ ok: false, error: "Please verify your email with OTP before creating an account." }, { status: 403 });
+    }
+
     const passwordHash = await hashPassword(password);
     const requestedRole = body.role;
     const role = roleForEmail(email) === "ADMIN" ? "ADMIN" : (requestedRole || "USER");
     const user = await prisma.user.create({
-      data: { name, email, passwordHash, provider: "credentials", role }
+      data: { name, email, emailVerified: true, emailVerifiedAt: verification.verifiedAt, passwordHash, provider: "credentials", role }
     });
 
     // Dispatch emails silently, catching any error so as not to break overall HTTP stream
