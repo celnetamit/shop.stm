@@ -10,7 +10,20 @@ export async function GET() {
   if (!session || session.role !== "ADMIN") return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
 
   try {
-    const users = await prisma.user.findMany({ orderBy: { createdAt: "desc" }, take: 200 });
+    const users = await prisma.user.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 200,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        emailVerified: true,
+        emailVerifiedAt: true,
+        createdAt: true,
+        accessPermissions: true
+      }
+    });
     return NextResponse.json({ ok: true, users });
   } catch (error) {
     return NextResponse.json({ ok: false, error: error instanceof Error ? error.message : "Failed" }, { status: 500 });
@@ -57,7 +70,7 @@ export async function POST(req: Request) {
 
     try {
       const { sendTemplatedEmail, sendAdminNotification } = await import("@/lib/email");
-      const data = { name: name || "User", email };
+      const data = { name: name || "User", email, role };
       await sendTemplatedEmail("USER_WELCOME", email, data);
       await sendAdminNotification("USER_WELCOME_ADMIN", data);
     } catch (e) {

@@ -136,7 +136,7 @@ export default function AdminEmailTemplates() {
                   style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "14px" }} 
                   placeholder="Insert dynamic subject here..."
                 />
-                <div style={{ fontSize: "11px", color: "#64748B", marginTop: "4px" }}>Pro-tip: Embed dynamic strings like <code>{"{{name}}"}</code> or <code>{"{{orderId}}"}</code>.</div>
+                <div style={{ fontSize: "11px", color: "#64748B", marginTop: "4px" }}>Pro-tip: Embed dynamic strings like <code>{"{{name}}"}</code>, <code>{"{{role}}"}</code>, or <code>{"{{orderId}}"}</code>.</div>
               </div>
 
               <div style={{ marginBottom: "24px" }}>

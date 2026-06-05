@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
       // Trigger transactional email workflows only for first-time Google registrations
       try {
         const { sendTemplatedEmail, sendAdminNotification } = await import("@/lib/email");
-        const data = { name: profile.name || "User", email: normalizedEmail };
+        const data = { name: profile.name || "User", email: normalizedEmail, role: user.role };
         await sendTemplatedEmail("USER_WELCOME", normalizedEmail, data);
         await sendAdminNotification("USER_WELCOME_ADMIN", data);
       } catch (e) {

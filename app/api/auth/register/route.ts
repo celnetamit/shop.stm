@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     // Dispatch emails silently, catching any error so as not to break overall HTTP stream
     try {
       const { sendTemplatedEmail, sendAdminNotification } = await import("@/lib/email");
-      const data = { name: name || "User", email };
+      const data = { name: name || "User", email, role };
       await sendTemplatedEmail("USER_WELCOME", email, data);
       await sendAdminNotification("USER_WELCOME_ADMIN", data);
     } catch (e) {

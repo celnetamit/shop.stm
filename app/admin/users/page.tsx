@@ -10,6 +10,8 @@ type User = {
   name: string | null;
   email: string;
   role: UserRole;
+  emailVerified: boolean;
+  emailVerifiedAt: string | null;
   createdAt: string;
   accessPermissions?: AccessPermissions | null;
 };
@@ -39,6 +41,7 @@ export default function AdminUsersPage() {
   const [adding, setAdding] = useState(false);
 
   const totalAdmins = useMemo(() => rows.filter((r) => r.role === "ADMIN").length, [rows]);
+  const totalVerified = useMemo(() => rows.filter((r) => r.emailVerified).length, [rows]);
 
   async function load() {
     setError("");
@@ -109,6 +112,7 @@ export default function AdminUsersPage() {
           <div style={{ display: "flex", gap: "10px" }}>
             <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "8px 12px", fontSize: "13px" }}>Total Users: <strong>{rows.length}</strong></div>
             <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "8px 12px", fontSize: "13px" }}>Admins: <strong>{totalAdmins}</strong></div>
+            <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "8px 12px", fontSize: "13px" }}>Verified: <strong>{totalVerified}</strong></div>
           </div>
         </div>
 
@@ -137,7 +141,7 @@ export default function AdminUsersPage() {
         <section style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "14px", overflow: "hidden" }}>
           {rows.map((r) => (
             <div key={r.id} style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1.3fr 0.9fr 1fr 1fr auto", gap: "10px", alignItems: "center" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1.3fr 0.9fr 0.8fr 1fr 1fr auto", gap: "10px", alignItems: "center" }}>
                 <div>
                   <div style={{ fontWeight: 700, color: "#0f172a" }}>{r.name || "Unnamed User"}</div>
                   <div style={{ fontSize: "13px", color: "#64748b" }}>{r.email}</div>
@@ -156,6 +160,13 @@ export default function AdminUsersPage() {
                   <option value="STUDENT">STUDENT</option>
                   <option value="SCHOLAR">SCHOLAR</option>
                 </select>
+
+                <div
+                  title={r.emailVerifiedAt ? `Verified on ${new Date(r.emailVerifiedAt).toLocaleString()}` : "Email not verified yet"}
+                  style={r.emailVerified ? verifiedBadge : unverifiedBadge}
+                >
+                  {r.emailVerified ? "Verified" : "Unverified"}
+                </div>
 
                 <input
                   type="password"
@@ -246,4 +257,26 @@ const secondaryBtn: CSSProperties = {
   fontSize: "13px",
   fontWeight: 600,
   cursor: "pointer"
+};
+
+const verifiedBadge: CSSProperties = {
+  border: "1px solid #bbf7d0",
+  background: "#ecfdf3",
+  color: "#166534",
+  borderRadius: "999px",
+  padding: "8px 10px",
+  fontSize: "12px",
+  fontWeight: 800,
+  textAlign: "center"
+};
+
+const unverifiedBadge: CSSProperties = {
+  border: "1px solid #fed7aa",
+  background: "#fff7ed",
+  color: "#9a3412",
+  borderRadius: "999px",
+  padding: "8px 10px",
+  fontSize: "12px",
+  fontWeight: 800,
+  textAlign: "center"
 };

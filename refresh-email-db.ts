@@ -11,6 +11,7 @@ const defaults = [
         </div>
         
         <p style="color:#475569; line-height:1.6;">We're thrilled to have you join the <strong>STM Journals</strong> — your gateway to thousands of peer-reviewed journals, conference proceedings, and research materials.</p>
+        <p style="color:#475569; line-height:1.6;"><strong>Account Role:</strong> {{role}}</p>
         
         <table role="presentation" style="width:100%; margin:24px 0; table-layout:fixed;" cellpadding="0" cellspacing="8" width="100%">
           <tr>
@@ -115,7 +116,7 @@ const defaults = [
     {
       key: "USER_WELCOME_ADMIN",
       subject: "New User Alert: {{name}} has registered",
-      body: `<h3>User Registration</h3><p>A new user has joined the platform.</p><ul><li>Name: {{name}}</li><li>Email: {{email}}</li></ul>`,
+      body: `<h3>User Registration</h3><p>A new user has joined the platform.</p><ul><li>Name: {{name}}</li><li>Email: {{email}}</li><li>Role: {{role}}</li></ul>`,
       description: "Notification alert dispatched to administrators upon new accounts."
     },
     {
