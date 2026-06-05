@@ -39,9 +39,6 @@ function buildModernEmailTemplate(content: string, title: string, isJournalsPub?
     ? "A Division of Dhruv Infosystems Private Limited"
     : "A Division of Consortium e-Learning Network Pvt. Ltd.";
   
-  const brandRegardsName = isJournalsPub ? "Journals Pub Support Team" : "STM Support Team";
-  const brandRegardsCompany = isJournalsPub ? "Dhruv Infosystems Private Limited" : "Consortium eLearning Network Pvt. Ltd.";
-
   const brandCopyright = isJournalsPub ? "Dhruv Infosystems Private Limited" : "Consortium eLearning Network Pvt. Ltd.";
   const brandEmail = isJournalsPub ? "Info@journalspub.com" : "info@stmjournals.in";
   const brandAddress = isJournalsPub
@@ -113,8 +110,18 @@ function buildModernEmailTemplate(content: string, title: string, isJournalsPub?
             <tr>
               <td style="color: #64748b; font-size: 14px; line-height: 1.5;">
                 <strong>Warm regards,</strong><br/>
-                ${brandRegardsName}<br/>
-                ${brandRegardsCompany}
+                <strong style="color:#0f172a;">Manish Shah</strong><br/>
+                Manager<br/>
+                Marketing &amp; Sales Department<br/>
+                Consortium e-Learning Network Pvt. Ltd.<br/><br/>
+                Tel: <a href="tel:01204781206" style="color:#2563eb; text-decoration:none;">0120-4781206</a>
+                &nbsp; Mob: <a href="tel:+919810078958" style="color:#2563eb; text-decoration:none;">+91-9810078958</a><br/>
+                Add: A-118 1st floor Sector 63 Noida U.P. India<br/>
+                Website: <a href="https://journals.stmjournals.com/" style="color:#2563eb; text-decoration:none;">https://journals.stmjournals.com/</a><br/>
+                Email:
+                <a href="mailto:manish@celnet.in" style="color:#2563eb; text-decoration:none;">manish@celnet.in</a>
+                |
+                <a href="mailto:info@stmjournals.com" style="color:#2563eb; text-decoration:none;">info@stmjournals.com</a>
               </td>
             </tr>
           </table>
