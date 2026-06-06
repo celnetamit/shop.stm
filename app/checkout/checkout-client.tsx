@@ -124,7 +124,8 @@ export default function CheckoutClient() {
       const isDigital = rawPlan === "ONLINE" || rawPlan === "PRINT_ONLINE";
       // Direct checkout natively triggers Razorpay (INR)
       const isINR = quoteData ? (quoteData.currency === "INR") : true;
-      const itemGstRate = (isINR && isDigital) ? 18 : 0;
+      const isGstExemptSubscriber = quoteData?.subscriberCategory === "COLLEGE" || quoteData?.subscriberCategory === "EXISTING_PI";
+      const itemGstRate = (isINR && isDigital && !isGstExemptSubscriber) ? 18 : 0;
 
       const itemGst = itemTaxable * (itemGstRate / 100);
       const itemCgst = itemGst / 2;

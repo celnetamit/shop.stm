@@ -104,6 +104,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         email: quote.email,
         address: quote.address || "",
         country: quote.country,
+        subscriberCategory: quote.subscriberCategory || "COLLEGE",
         gstNumber: quote.gstNumber || "",
         sameAsBilling: quote.sameAsBilling,
         receiverName: quote.receiverName || "",
@@ -129,6 +130,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         cgst,
         sgst,
         total,
+        couponPercent: quote.couponPercent || 0,
         currency: quote.currency
       }
     });
