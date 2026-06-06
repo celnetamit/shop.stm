@@ -63,7 +63,7 @@ export default function CheckoutClient() {
     
     async function fetchQuote() {
       try {
-        const res = await fetch(`/api/proforma/${queryQuoteId}`);
+        const res = await fetch(`/api/proforma/${encodeURIComponent(queryQuoteId)}`);
         const json = await res.json();
         if (json.ok && json.quote) {
           setQuoteData(json.quote);

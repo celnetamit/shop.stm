@@ -142,7 +142,7 @@ const defaults = [
         <div style="background-color: #eff6ff; padding: 20px; border-radius: 8px; text-align: center; border: 1px dashed #bfdbfe;">
           <h3 style="margin: 0 0 10px; color: #1e3a8a; font-size: 16px;">🔒 Secure Online Activation</h3>
           <p style="margin: 0 0 15px; font-size: 14px; color: #1e40af;">You may activate your subscription instantly by completing the verified digital payout.</p>
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://shop.stmjournals.in'}/checkout?quoteId={{quoteId}}" style="display:inline-block; background-color:#2563eb; color:white; padding:14px 28px; text-decoration:none; border-radius:6px; font-weight:bold; font-size:16px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);">⚡ Complete Payment Now →</a>
+          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://shop.stmjournals.in'}/checkout?quoteId={{quoteDbId}}&piNumber={{quoteId}}" style="display:inline-block; background-color:#2563eb; color:white; padding:14px 28px; text-decoration:none; border-radius:6px; font-weight:bold; font-size:16px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);">⚡ Complete Payment Now →</a>
         </div>
         
         <p style="font-size: 12px; color: #64748b; text-align: center; margin-top: 20px;">Valid for 30 days from generation.</p>

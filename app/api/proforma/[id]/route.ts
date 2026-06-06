@@ -3,6 +3,30 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentSession } from "@/lib/auth/session";
+import { formatPiNumber } from "@/lib/pi-number";
+
+async function findProformaQuote(idOrPiNumber: string) {
+  const direct = await prisma.proformaQuote.findUnique({
+    where: { id: idOrPiNumber },
+    include: { items: true }
+  });
+  if (direct) return direct;
+
+  if (!idOrPiNumber.includes("/")) return null;
+
+  const candidates = await prisma.proformaQuote.findMany({
+    select: { id: true, createdAt: true },
+    orderBy: { createdAt: "desc" },
+    take: 1000
+  });
+  const match = candidates.find((q) => formatPiNumber({ id: q.id, createdAt: q.createdAt }) === idOrPiNumber);
+  if (!match) return null;
+
+  return prisma.proformaQuote.findUnique({
+    where: { id: match.id },
+    include: { items: true }
+  });
+}
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -16,10 +40,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.json({ ok: false, error: "Authentication required." }, { status: 401 });
     }
 
-    const quote = await prisma.proformaQuote.findUnique({
-      where: { id },
-      include: { items: true }
-    });
+    const quote = await findProformaQuote(id);
 
     if (!quote) {
       return NextResponse.json({ ok: false, error: "Requested document missing." }, { status: 404 });
@@ -191,18 +212,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         })
       ]);
       
-      // Post-Transaction Async Email Notification
-      try {
-        const { prepareProformaEmailPayload } = await import("@/lib/proforma-email-helper");
-        const d = await prepareProformaEmailPayload(id);
-        if (d) {
-          const { sendTemplatedEmail, sendAdminNotification } = await import("@/lib/email");
-          await sendTemplatedEmail("PROFORMA_CREATED", d.email, { ...d, __attachments: "[]" });
-          await sendAdminNotification("PROFORMA_CREATED_ADMIN", { ...d, __attachments: "[]" });
-        }
-      } catch (emailErr) {
-        console.error("⚠️ Proforma email triggers failed", emailErr);
-      }
     } catch (dbError) {
       if (!isMissingTableError(dbError)) throw dbError;
       return NextResponse.json({ ok: true, warning: "Draft mode: DB table missing" });

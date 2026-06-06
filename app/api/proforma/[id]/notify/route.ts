@@ -21,6 +21,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ ok: false, error: "Cannot notify on a draft quote." }, { status: 400 });
     }
 
+    const quote = await prisma.proformaQuote.findUnique({ where: { id }, select: { createdByUserId: true } });
+    if (!quote) {
+      return NextResponse.json({ ok: false, error: "Quote failed refinement." }, { status: 404 });
+    }
+    if (session.role !== "ADMIN" && quote.createdByUserId !== session.sub) {
+      return NextResponse.json({ ok: false, error: "Unauthorized: you do not own this quote." }, { status: 403 });
+    }
+
     const { prepareProformaEmailPayload } = await import("@/lib/proforma-email-helper");
     const d = await prepareProformaEmailPayload(id);
 

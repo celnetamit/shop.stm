@@ -153,6 +153,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [sendEmailAfterPreview, setSendEmailAfterPreview] = useState(false);
   const [emailSuccessMsg, setEmailSuccessMsg] = useState("");
   const [error, setError] = useState("");
 
@@ -738,6 +739,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
     }
 
     setStep(3);
+    setSendEmailAfterPreview(true);
   }
 
   async function onApplyCoupon() {
@@ -856,6 +858,17 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
       setSendingEmail(false);
     }
   }
+
+  useEffect(() => {
+    if (!sendEmailAfterPreview || step !== 3 || sendingEmail) return;
+
+    const timer = window.setTimeout(() => {
+      setSendEmailAfterPreview(false);
+      void onSendEmailNotification();
+    }, 350);
+
+    return () => window.clearTimeout(timer);
+  }, [sendEmailAfterPreview, step, sendingEmail]);
 
   const requireAuth = !isAuthenticated;
 
