@@ -4,6 +4,10 @@ import { getCurrentSession } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 
+function proformaPdfFilename(piNumber: string) {
+  return `proforma-${piNumber.replace(/[^\w.-]+/g, "_")}.pdf`;
+}
+
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getCurrentSession();
   if (!session || session.role !== "ADMIN") {
@@ -24,10 +28,20 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ ok: false, error: "Quote failed refinement." }, { status: 404 });
     }
 
+    if (!payload.attachmentBase64) {
+      return NextResponse.json({ ok: false, error: "Generated proforma PDF attachment is required." }, { status: 400 });
+    }
+
+    const pdfBuffer = Buffer.from(payload.attachmentBase64, "base64");
+    if (!pdfBuffer.length || pdfBuffer.subarray(0, 4).toString("utf8") !== "%PDF") {
+      return NextResponse.json({ ok: false, error: "Invalid generated proforma PDF attachment." }, { status: 400 });
+    }
+
+    const attachmentsJson = JSON.stringify([
+      { filename: proformaPdfFilename(d.quoteId), contentType: "application/pdf", base64: payload.attachmentBase64 }
+    ]);
+
     const { sendTemplatedEmail, sendAdminNotification } = await import("@/lib/email");
-    const attachmentsJson = payload.attachmentBase64
-      ? JSON.stringify([{ filename: `proforma-${d.quoteId}.pdf`, contentType: "application/pdf", base64: payload.attachmentBase64 }])
-      : "[]";
     await sendTemplatedEmail("PROFORMA_CREATED", d.email, { ...d, __attachments: attachmentsJson });
     await sendAdminNotification("PROFORMA_CREATED_ADMIN", { ...d, __attachments: attachmentsJson });
 

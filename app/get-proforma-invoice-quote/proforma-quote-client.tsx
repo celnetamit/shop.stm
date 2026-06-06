@@ -100,6 +100,10 @@ function isBookProduct(journalName: string, subject: string): boolean {
   );
 }
 
+function proformaPdfFilename(piNumber: string) {
+  return `proforma-${piNumber.replace(/[^\w.-]+/g, "_")}.pdf`;
+}
+
 function getIssueCountFromFrequency(frequency: string | null): number {
   if (!frequency) return 2;
   const cleaned = frequency.trim().toLowerCase();
@@ -609,6 +613,43 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
     return currency === "INR" ? `₹${fixed}` : `$${fixed}`;
   }
 
+  async function buildGeneratedInvoicePdf() {
+    const input = document.getElementById("invoice-capture-area");
+    if (!input) return null;
+
+    const html2canvas = (await import("html2canvas")).default;
+    const canvas = await html2canvas(input, {
+      scale: 1.5,
+      useCORS: true,
+      logging: false,
+      backgroundColor: "#ffffff"
+    });
+
+    const imgData = canvas.toDataURL("image/jpeg", 0.82);
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = canvas.width;
+    const imgHeight = canvas.height;
+    const scale = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight) * 0.95;
+    const finalWidth = imgWidth * scale;
+    const finalHeight = imgHeight * scale;
+    const marginX = (pdfWidth - finalWidth) / 2;
+    const marginY = (pdfHeight - finalHeight) / 2;
+
+    pdf.addImage(imgData, "JPEG", marginX, marginY, finalWidth, finalHeight);
+    return pdf;
+  }
+
+  function arrayBufferToBase64(buffer: ArrayBuffer) {
+    const bytes = new Uint8Array(buffer);
+    let binary = "";
+    bytes.forEach((b) => {
+      binary += String.fromCharCode(b);
+    });
+    return btoa(binary);
+  }
+
   async function onSaveStepOne(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -773,78 +814,15 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
   }
 
   async function onDownloadInvoicePdf() {
-    const input = document.getElementById("invoice-capture-area");
-    if (!input) return;
-    
     try {
-      const html2canvas = (await import("html2canvas")).default;
-      
-      // Hide interactive action buttons if they are inside capturing tree,
-      // though our DOM targeting is scoped to just the article.
-      const canvas = await html2canvas(input, {
-        scale: 2, // Retain absolute high-fidelity text/graphics
-        useCORS: true, // Load external logos from URL without taint issues
-        logging: false,
-        backgroundColor: "#ffffff"
-      });
-      
-      const imgData = canvas.toDataURL("image/png");
-      
-      // Establish Portrait A4 configuration (210mm x 297mm)
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      
-      // Canvas absolute dimensions
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      
-      // Compute exact fit-to-page ratios
-      const ratio = Math.min(pdfWidth / (imgWidth / 3.7795275590551), pdfHeight / (imgHeight / 3.7795275590551)); // 3.779 is standard pixel-to-mm ratio
-      
-      // Scale the image dimensions with margins
-      const scale = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight) * 0.95; // Reduce slightly for margins
-      const finalWidth = imgWidth * scale;
-      const finalHeight = imgHeight * scale;
-      
-      // Center both horizontally and vertically on page
-      const marginX = (pdfWidth - finalWidth) / 2;
-      const marginY = (pdfHeight - finalHeight) / 2;
-      
-      pdf.addImage(imgData, "PNG", marginX, marginY, finalWidth, finalHeight);
-      pdf.save(`proforma-${quoteId || "draft"}.pdf`);
+      const pdf = await buildGeneratedInvoicePdf();
+      if (!pdf) return;
+      const piNumber = formatPiNumber({ id: quoteId || "draft", createdAt: quoteCreatedAt || new Date().toISOString() });
+      pdf.save(proformaPdfFilename(piNumber || "draft"));
     } catch (err) {
       console.error("Encountered html2canvas conversion error", err);
-      // Resilience fallback to classic browser print flow
       window.print();
     }
-  }
-
-  async function buildCurrentPreviewPdfBase64(): Promise<string | null> {
-    const input = document.getElementById("invoice-capture-area");
-    if (!input) return null;
-    const html2canvas = (await import("html2canvas")).default;
-    const canvas = await html2canvas(input, {
-      scale: 2,
-      useCORS: true,
-      logging: false,
-      backgroundColor: "#ffffff"
-    });
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF("p", "mm", "a4");
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-    const scale = Math.min(pdfWidth / canvas.width, pdfHeight / canvas.height) * 0.95;
-    const finalWidth = canvas.width * scale;
-    const finalHeight = canvas.height * scale;
-    const marginX = (pdfWidth - finalWidth) / 2;
-    const marginY = (pdfHeight - finalHeight) / 2;
-    pdf.addImage(imgData, "PNG", marginX, marginY, finalWidth, finalHeight);
-    const bytes = pdf.output("arraybuffer");
-    const arr = new Uint8Array(bytes);
-    let binary = "";
-    arr.forEach((b) => { binary += String.fromCharCode(b); });
-    return btoa(binary);
   }
 
   async function onSendEmailNotification() {
@@ -854,11 +832,17 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
     setError("");
 
     try {
-      const pdfBase64 = await buildCurrentPreviewPdfBase64();
+      const pdf = await buildGeneratedInvoicePdf();
+      if (!pdf) {
+        setError("Could not generate proforma PDF for email.");
+        return;
+      }
+
+      const attachmentBase64 = arrayBufferToBase64(pdf.output("arraybuffer"));
       const response = await fetch(`/api/proforma/${quoteId}/notify`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ attachmentBase64: pdfBase64 })
+        body: JSON.stringify({ attachmentBase64 })
       });
       const result = await response.json();
       if (result.ok) {

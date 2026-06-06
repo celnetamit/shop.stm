@@ -194,16 +194,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       // Post-Transaction Async Email Notification
       try {
         const { prepareProformaEmailPayload } = await import("@/lib/proforma-email-helper");
-        const { buildProformaPdfAttachment } = await import("@/lib/email-attachments");
         const d = await prepareProformaEmailPayload(id);
         if (d) {
-          const attachment = await buildProformaPdfAttachment(id);
-          const attachmentsJson = attachment
-            ? JSON.stringify([{ filename: attachment.filename, contentType: attachment.contentType, base64: attachment.data.toString("base64") }])
-            : "[]";
           const { sendTemplatedEmail, sendAdminNotification } = await import("@/lib/email");
-          await sendTemplatedEmail("PROFORMA_CREATED", d.email, { ...d, __attachments: attachmentsJson });
-          await sendAdminNotification("PROFORMA_CREATED_ADMIN", { ...d, __attachments: attachmentsJson });
+          await sendTemplatedEmail("PROFORMA_CREATED", d.email, { ...d, __attachments: "[]" });
+          await sendAdminNotification("PROFORMA_CREATED_ADMIN", { ...d, __attachments: "[]" });
         }
       } catch (emailErr) {
         console.error("⚠️ Proforma email triggers failed", emailErr);
