@@ -1,5 +1,41 @@
+# dependencies
 node_modules
+/.pnp
+.pnp.js
+
+# next.js / build output
 .next
+.next_broken_*
+/out
+/build
+*.tsbuildinfo
+next-env.d.ts
+
+# env files (never commit real secrets)
 .env
-.DS_Store
+.env*.local
+
+# database
 prisma/dev.db
+
+# logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# os / editor
+.DS_Store
+.idea
+.vscode
+
+# test coverage
+/coverage
+
+# local scratch / debug artifacts
+scratch_*
+
+# generated/test output artifacts (kept locally, not tracked)
+PI-test.pdf
+PI-test-view.png
+Proforma_PRO-*.pdf
