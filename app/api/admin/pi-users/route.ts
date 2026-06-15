@@ -2,11 +2,11 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentSession } from "@/lib/auth/session";
+import { requireAdmin } from "@/lib/auth/guards";
 
 export async function GET() {
-  const session = await getCurrentSession();
-  if (!session || session.role !== "ADMIN") return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  const session = await requireAdmin();
+  if (!session) return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
 
   const proformas = await prisma.proformaQuote.findMany({
     include: { items: true },
@@ -34,6 +34,7 @@ export async function GET() {
     }
     row.entries.push({
       id: q.id,
+      piNumber: q.piNumber,
       createdAt: q.createdAt,
       status: q.status,
       subscriberCategory: q.subscriberCategory,

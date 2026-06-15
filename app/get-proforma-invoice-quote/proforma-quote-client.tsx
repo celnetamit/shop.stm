@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useRouter } from "next/navigation";
 import { fetchPrefillUser, saveDraft } from "@/lib/client/form-prefill";
-import { formatPiNumber } from "@/lib/pi-number";
+import { resolvePiNumber } from "@/lib/pi-number";
+import { gstRateFor } from "@/lib/pricing";
 import AuthRequiredOverlay from "@/app/components/auth-required-overlay";
 
 type Journal = {
@@ -150,6 +151,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [quoteId, setQuoteId] = useState<string>("");
   const [quoteCreatedAt, setQuoteCreatedAt] = useState<string>("");
+  const [storedPiNumber, setStoredPiNumber] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
@@ -177,6 +179,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
   const [showPiSuggestions, setShowPiSuggestions] = useState(false);
   const [existingPiResults, setExistingPiResults] = useState<Array<{
     id: string;
+    piNumber?: string | null;
     organization: string;
     institutionName: string | null;
     contactName: string;
@@ -209,6 +212,9 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
   const [selected, setSelected] = useState<Record<number, boolean>>({});
   const [subscriptionConfigs, setSubscriptionConfigs] = useState<Record<number, SubscriptionConfig[]>>({});
 
+  // Subscription years derive from the current year (not hardcoded).
+  const currentYear = new Date().getFullYear();
+
   const getConfigsForJournal = (serialNo: number, frequency: string | null): SubscriptionConfig[] => {
     const totalIssues = getIssueCountFromFrequency(frequency);
     if (!subscriptionConfigs[serialNo] || subscriptionConfigs[serialNo].length === 0) {
@@ -216,7 +222,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
         {
           id: `initial-${serialNo}`,
           type: "ANNUAL",
-          year: 2025,
+          year: currentYear,
           plan: "PRINT",
           selectedIssues: Array.from({ length: totalIssues }, (_, i) => i + 1)
         }
@@ -229,13 +235,13 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
     const totalIssues = getIssueCountFromFrequency(frequency);
     const current = getConfigsForJournal(serialNo, frequency);
     
-    const lastYear = current.length > 0 ? Math.max(...current.map(c => c.year)) : 2025;
+    const lastYear = current.length > 0 ? Math.max(...current.map(c => c.year)) : currentYear;
     const nextYear = lastYear + 1;
 
     const newConfig: SubscriptionConfig = {
       id: `${serialNo}-${Date.now()}-${Math.random()}`,
       type: "ANNUAL",
-      year: nextYear <= 2027 ? nextYear : 2025,
+      year: nextYear <= currentYear + 2 ? nextYear : currentYear,
       plan: "PRINT",
       selectedIssues: Array.from({ length: totalIssues }, (_, i) => i + 1)
     };
@@ -351,6 +357,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
 
   function applyExistingPiUser(pi: {
     id: string;
+    piNumber?: string | null;
     organization: string;
     institutionName: string | null;
     contactName: string;
@@ -372,6 +379,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
     setGstNumber(pi.gstNumber || "");
     setDesignation(pi.designation || "");
     setQuoteId(pi.id);
+    setStoredPiNumber(pi.piNumber || "");
     setExistingPiQuery(`${pi.contactName} | ${pi.email} | ${pi.institutionName || pi.organization}`);
     setShowPiSuggestions(false);
     setStep(2);
@@ -508,6 +516,8 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
       periodEnd: number;
     }> = [];
 
+    const isQuoteGstExempt = subscriberCategory === "COLLEGE" || subscriberCategory === "EXISTING_PI";
+
     selectedRows.forEach((row) => {
       const totalIssues = getIssueCountFromFrequency(row.frequency);
       const configs = getConfigsForJournal(row.serialNo, row.frequency);
@@ -520,8 +530,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
 
         const itemDiscount = (unitPrice * appliedDiscountPercent) / 100;
         const itemTaxable = unitPrice - itemDiscount;
-        const isDigital = plan === "ONLINE" || plan === "PRINT_ONLINE";
-        const gstRate = currency === "INR" && isDigital && subscriberCategory !== "COLLEGE" && subscriberCategory !== "EXISTING_PI" ? 18 : 0;
+        const gstRate = gstRateFor(plan, currency === "INR", isQuoteGstExempt);
         const itemGst = itemTaxable * (gstRate / 100);
         const netAmount = itemTaxable + itemGst;
         let periodStart = c.year * 12;
@@ -687,7 +696,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
       })
     });
 
-    const json = (await res.json()) as { ok: boolean; error?: string; quoteId?: string; quoteCreatedAt?: string };
+    const json = (await res.json()) as { ok: boolean; error?: string; quoteId?: string; quoteCreatedAt?: string; piNumber?: string | null };
     setSaving(false);
 
     if (!json.ok || !json.quoteId) {
@@ -697,6 +706,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
 
     setQuoteId(json.quoteId);
     if (json.quoteCreatedAt) setQuoteCreatedAt(json.quoteCreatedAt);
+    if (json.piNumber) setStoredPiNumber(json.piNumber);
     setStep(2);
   }
 
@@ -739,6 +749,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
     }
 
     setStep(3);
+    emailDispatchedRef.current = false; // arm a fresh dispatch for this submission
     setSendEmailAfterPreview(true);
   }
 
@@ -819,7 +830,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
     try {
       const pdf = await buildGeneratedInvoicePdf();
       if (!pdf) return;
-      const piNumber = formatPiNumber({ id: quoteId || "draft", createdAt: quoteCreatedAt || new Date().toISOString() });
+      const piNumber = resolvePiNumber({ id: quoteId || "draft", createdAt: quoteCreatedAt || new Date().toISOString(), piNumber: storedPiNumber });
       pdf.save(proformaPdfFilename(piNumber || "draft"));
     } catch (err) {
       console.error("Encountered html2canvas conversion error", err);
@@ -859,16 +870,21 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
     }
   }
 
+  // One-shot latch so the auto-email fires exactly once per submission, even if this
+  // effect re-runs (Strict Mode double-invoke, dependency churn). Reset in onSubmit.
+  const emailDispatchedRef = useRef(false);
   useEffect(() => {
-    if (!sendEmailAfterPreview || step !== 3 || sendingEmail) return;
+    if (!sendEmailAfterPreview || step !== 3) return;
 
     const timer = window.setTimeout(() => {
+      if (emailDispatchedRef.current) return;
+      emailDispatchedRef.current = true;
       setSendEmailAfterPreview(false);
       void onSendEmailNotification();
     }, 350);
 
     return () => window.clearTimeout(timer);
-  }, [sendEmailAfterPreview, step, sendingEmail]);
+  }, [sendEmailAfterPreview, step]);
 
   const requireAuth = !isAuthenticated;
 
@@ -1235,10 +1251,9 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
                                   value={config.year} 
                                   onChange={(e) => updateConfigForJournal(j.serialNo, config.id, { year: parseInt(e.target.value, 10) }, j.frequency)}
                                 >
-                                  <option value="2024">2024</option>
-                                  <option value="2025">2025</option>
-                                  <option value="2026">2026</option>
-                                  <option value="2027">2027</option>
+                                  {[currentYear, currentYear + 1, currentYear + 2].map((y) => (
+                                    <option key={y} value={y}>{y}</option>
+                                  ))}
                                 </select>
                                 
                                 <select 
@@ -1338,7 +1353,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
         const activeCgst = gst / 2;
         const activeSgst = gst / 2;
         const invoiceBaseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://shop.stmjournals.in";
-        const piNumber = formatPiNumber({ id: quoteId || "draft", createdAt: quoteCreatedAt || new Date().toISOString() });
+        const piNumber = resolvePiNumber({ id: quoteId || "draft", createdAt: quoteCreatedAt || new Date().toISOString(), piNumber: storedPiNumber });
         const invoiceUrl = `${invoiceBaseUrl}/invoice.aspx?I=${piNumber || "PRO-2026"}`;
 
         const isJournalsPub = selectedRows.length > 0
@@ -1506,7 +1521,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
                     </div>
 
                     <div style={{ borderTop: "1px dashed #cbd5e1", marginTop: "12px", paddingTop: "8px", fontSize: "11.5px" }}>
-                      <span style={{ fontSize: "9px", fontWeight: "700", color: "#2563eb", textTransform: "uppercase" }}>ODER PLACEED BY:</span>
+                      <span style={{ fontSize: "9px", fontWeight: "700", color: "#2563eb", textTransform: "uppercase" }}>ORDER PLACED BY:</span>
                       <div style={{ marginTop: "4px" }}><strong style={{ color: "#64748b" }}>Contact Person :</strong> <span style={{ fontWeight: "700", color: "#0f172a" }}>{contactName || "N/A"}</span></div>
                       <div><strong style={{ color: "#64748b" }}>Institution Name :</strong> <span style={{ fontWeight: "750", color: "#0f172a", textTransform: "uppercase" }}>{sameAsBilling ? (institutionName || organization || contactName) : (shippingInstitute || institutionName || organization || contactName)}</span></div>
                     </div>

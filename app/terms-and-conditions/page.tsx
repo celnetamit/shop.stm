@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Terms & Conditions | STM Journals",
@@ -85,7 +86,7 @@ export default function TermsPage() {
         <div style={{ border: "1px solid #E2E8F0", borderRadius: "10px", padding: "24px", background: "#FFFFFF" }}>
           <h2 style={{ fontSize: "20px", color: "#0F172A", marginTop: 0, marginBottom: "12px", fontWeight: "700" }}>7. Shipping and Delivery</h2>
           <p style={{ margin: 0 }}>
-            We aim to process and ship orders promptly. Delivery times may vary based on location and other factors. For detailed information, please refer to our <a href="/shipping-delivery-policy" style={{ color: "#2563EB", textDecoration: "none", fontWeight: "600" }}>Shipping & Delivery Policy</a>.
+            We aim to process and ship orders promptly. Delivery times may vary based on location and other factors. For detailed information, please refer to our <Link href="/shipping-delivery-policy" style={{ color: "#2563EB", textDecoration: "none", fontWeight: "600" }}>Shipping &amp; Delivery Policy</Link>.
           </p>
         </div>
 

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getDomainCountsFromCsv, getJournalCatalog } from "@/lib/journal-catalog";
 import HomeSections from "@/app/components/home-sections";
 import ScrollReveal from "@/app/components/scroll-reveal";
@@ -83,8 +84,8 @@ export default async function HomePage() {
             Access 274+ peer-reviewed journals. Stay ahead with the latest developments in Science, Technology, and Medicine. Request fast institutional proforma support in one modern workflow.
           </p>
           <div className="home-v3-hero-actions" style={{ justifyContent: "center", gap: "16px" }}>
-            <a href="/catalogues-list" className="btn-shimmer" style={{ background: "#F59E0B", color: "#0F172A", borderColor: "#F59E0B", padding: "12px 28px", fontSize: "14.5px", display: "inline-flex", alignItems: "center", gap: "6px" }}>Explore Catalogues</a>
-            <a href="/get-proforma-invoice-quote" className="btn-glow-outline" style={{ color: "#ffffff", padding: "12px 28px", fontSize: "14.5px" }}>Request Proforma Quote</a>
+            <Link href="/catalogues-list" className="btn-shimmer" style={{ background: "#F59E0B", color: "#0F172A", borderColor: "#F59E0B", padding: "12px 28px", fontSize: "14.5px", display: "inline-flex", alignItems: "center", gap: "6px" }}>Explore Catalogues</Link>
+            <Link href="/get-proforma-invoice-quote" className="btn-glow-outline" style={{ color: "#ffffff", padding: "12px 28px", fontSize: "14.5px" }}>Request Proforma Quote</Link>
           </div>
         </div>
 
@@ -206,7 +207,7 @@ export default async function HomePage() {
                 </div>
                 <h3 style={{ margin: "0 0 8px 0", fontSize: "15px", fontWeight: "800", letterSpacing: "0.05em", color: "var(--text)", textTransform: "uppercase", fontFamily: "Outfit, sans-serif" }}>Trustworthy</h3>
                 <p style={{ margin: "0", fontSize: "13px", color: "var(--muted)", lineHeight: "1.5", maxWidth: "220px", fontFamily: "Outfit, sans-serif" }}>
-                  Commitment of Quality Books with Accurate Content from India's Best Educators
+                  Commitment of Quality Books with Accurate Content from India&apos;s Best Educators
                 </p>
               </div>
 

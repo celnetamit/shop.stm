@@ -91,7 +91,7 @@ export default async function CustomerOrderInvoicePrintPage({ params }: { params
   return (
     <main style={{ minHeight: "100vh", background: "#f1f5f9", padding: "30px 16px", fontFamily: "Inter, Arial, sans-serif" }}>
       <div className="no-print" style={{ maxWidth: "900px", margin: "0 auto 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <a href="/account" style={{ color: "#3b82f6", textDecoration: "none", fontWeight: 700 }}>← Back to Dashboard</a>
+        <Link href="/account" style={{ color: "#3b82f6", textDecoration: "none", fontWeight: 700 }}>← Back to Dashboard</Link>
         <PrintButton />
       </div>
 

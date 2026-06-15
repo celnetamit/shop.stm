@@ -1,7 +1,6 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { headers } from "next/headers";
 import { AUTH_COOKIE_NAME } from "@/lib/auth/session";
 
 function clearAuthCookie(res: NextResponse) {
@@ -21,15 +20,11 @@ export async function POST() {
 }
 
 export async function GET(request: Request) {
-  const hdrs = await headers();
-  const forwardedProto = hdrs.get("x-forwarded-proto");
-  const forwardedHost = hdrs.get("x-forwarded-host");
-  const host = hdrs.get("host");
-  const fallbackUrl = new URL(request.url);
-
-  const proto = forwardedProto || fallbackUrl.protocol.replace(":", "");
-  const resolvedHost = forwardedHost || host || fallbackUrl.host;
-  const url = new URL(`${proto}://${resolvedHost}/login`);
+  // Build the redirect target only from a server-trusted base URL (or the request's
+  // own origin) — never from attacker-controllable X-Forwarded-* / Host headers,
+  // which would allow an open-redirect logout-phishing link.
+  const base = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
+  const url = new URL("/login", base);
   const res = NextResponse.redirect(url);
   clearAuthCookie(res);
   return res;

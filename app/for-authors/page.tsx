@@ -21,7 +21,7 @@ export default function ForAuthorsPage() {
       <article style={{ marginTop: "30px" }}>
         <h2 style={{ fontSize: "24px", color: "#0F172A" }}>1. Submission Guidelines</h2>
         <p style={{ lineHeight: 1.7, color: "#475569" }}>
-          Ensure your paper fits within the target journal's scope. Manuscripts should be written in clear, concise English. You can use our standard templates available upon request.
+          Ensure your paper fits within the target journal&apos;s scope. Manuscripts should be written in clear, concise English. You can use our standard templates available upon request.
         </p>
       </article>
 

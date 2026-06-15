@@ -155,6 +155,12 @@ function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+// Strip CR/LF (and stray quotes) so attacker-controlled values can never inject
+// additional MIME/email headers when assembling a raw message.
+function sanitizeHeaderValue(s: string): string {
+  return String(s ?? "").replace(/[\r\n]+/g, " ").trim();
+}
+
 // Helper to replace templates variables like {{name}} with values in object
 function replaceTemplate(str: string, data: Record<string, string>) {
   let output = str;
@@ -181,9 +187,9 @@ export async function sendTemplatedEmail(key: string, to: string, data: Record<s
     // 1. Find explicit template from DB
     let template = await prisma.emailTemplate.findUnique({ where: { key } });
     
-    // 2. If doesn't exist, init default templates and retry
+    // 2. If doesn't exist, seed defaults (create-only so we never clobber admin edits) and retry
     if (!template) {
-      await seedDefaultTemplates();
+      await seedDefaultTemplates({ createOnly: true });
       template = await prisma.emailTemplate.findUnique({ where: { key } });
     }
     if (!template) throw new Error(`Template missing: ${key}`);
@@ -249,11 +255,13 @@ export async function sendTemplatedEmail(key: string, to: string, data: Record<s
     if (attachments.length > 0) {
       const boundary = `NextPart_${Date.now()}`;
       const from = getFromEmail();
+      const safeTo = sanitizeHeaderValue(to);
+      const safeSubject = sanitizeHeaderValue(finalSubject);
 
       let raw = "";
       raw += `From: ${from}\n`;
-      raw += `To: ${to}\n`;
-      raw += `Subject: ${finalSubject}\n`;
+      raw += `To: ${safeTo}\n`;
+      raw += `Subject: ${safeSubject}\n`;
       raw += "MIME-Version: 1.0\n";
       raw += `Content-Type: multipart/mixed; boundary=\"${boundary}\"\n\n`;
 
@@ -263,9 +271,12 @@ export async function sendTemplatedEmail(key: string, to: string, data: Record<s
       raw += `${finalBody}\n\n`;
 
       for (const att of attachments) {
+        // Sanitize header params: drop CR/LF and double-quotes that would break out of the header.
+        const safeName = sanitizeHeaderValue(att.filename).replace(/"/g, "");
+        const safeContentType = sanitizeHeaderValue(att.contentType).replace(/"/g, "");
         raw += `--${boundary}\n`;
-        raw += `Content-Type: ${att.contentType}; name=\"${att.filename}\"\n`;
-        raw += `Content-Disposition: attachment; filename=\"${att.filename}\"\n`;
+        raw += `Content-Type: ${safeContentType}; name=\"${safeName}\"\n`;
+        raw += `Content-Disposition: attachment; filename=\"${safeName}\"\n`;
         raw += "Content-Transfer-Encoding: base64\n\n";
 
         const b64 = att.data.toString("base64");
@@ -303,9 +314,9 @@ export async function sendAdminNotification(key: string, data: Record<string, st
   try {
     const admins = await prisma.user.findMany({ where: { role: "ADMIN" }, select: { email: true } });
     if (admins.length === 0) return;
-    
-    // To protect concurrency quotas, send to each admin
-    await Promise.all(
+
+    // allSettled so one admin's failed send never aborts the rest.
+    await Promise.allSettled(
       admins.map(adm => sendTemplatedEmail(key, adm.email, data))
     );
   } catch (e) {
@@ -355,7 +366,7 @@ export async function sendEmailVerificationOtp(to: string, otp: string) {
   }
 }
 
-export async function seedDefaultTemplates() {
+export async function seedDefaultTemplates(opts: { createOnly?: boolean } = {}) {
   const defaults = [
     {
       key: "USER_WELCOME",
@@ -513,11 +524,15 @@ export async function seedDefaultTemplates() {
   for (const item of defaults) {
     await prisma.emailTemplate.upsert({
       where: { key: item.key },
-      update: {
-        subject: item.subject,
-        body: item.body,
-        description: item.description
-      },
+      // createOnly: leave existing (possibly admin-edited) rows untouched.
+      // Default (admin "sync" route): overwrite with the hardcoded source.
+      update: opts.createOnly
+        ? {}
+        : {
+            subject: item.subject,
+            body: item.body,
+            description: item.description
+          },
       create: item
     });
   }

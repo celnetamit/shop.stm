@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
-import { formatPiNumber } from "@/lib/pi-number";
+import { resolvePiNumber } from "@/lib/pi-number";
 import SharedInvoiceLayout from "@/app/components/invoice/shared-invoice-layout";
 import { getJournalCatalog } from "@/lib/journal-catalog";
 
@@ -36,7 +36,7 @@ export default async function ProformaPrintPage({ params }: { params: Promise<{ 
   const taxable = subtotal - discountAmount;
   const gst = (taxable * gstRate) / 100;
   const total = taxable + gst;
-  const piNumber = formatPiNumber({ id: quote.id, createdAt: quote.createdAt });
+  const piNumber = resolvePiNumber(quote);
   const catalog = await getJournalCatalog();
   const isJournalsPub = quote.items.some((item) => {
     const clean = item.journalName.toLowerCase();

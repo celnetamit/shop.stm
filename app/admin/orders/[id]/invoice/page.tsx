@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { getCurrentSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { getJournalCatalog } from "@/lib/journal-catalog";
@@ -85,7 +86,7 @@ export default async function OrderInvoicePrintPage({ params }: { params: Promis
   return (
     <main style={{ minHeight: "100vh", background: "#f1f5f9", padding: "30px 16px", fontFamily: "Inter, Arial, sans-serif" }}>
       <div className="no-print" style={{ maxWidth: "900px", margin: "0 auto 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <a href="/admin/orders" style={{ color: "#3b82f6", textDecoration: "none", fontWeight: 700 }}>← Back to Orders</a>
+        <Link href="/admin/orders" style={{ color: "#3b82f6", textDecoration: "none", fontWeight: 700 }}>← Back to Orders</Link>
         <PrintButton />
       </div>
 

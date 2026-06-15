@@ -101,16 +101,26 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
       setSearchResults([]);
       return;
     }
+    const controller = new AbortController();
     const timer = setTimeout(() => {
       setIsSearching(true);
-      fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`)
+      fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`, { signal: controller.signal })
         .then(res => res.json())
         .then(data => {
           setSearchResults(data.results || []);
           setIsSearching(false);
+        })
+        .catch((err) => {
+          // Ignore aborts (a newer query superseded this one); surface others gracefully.
+          if (err?.name === "AbortError") return;
+          setSearchResults([]);
+          setIsSearching(false);
         });
     }, 300);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [searchQuery]);
 
   // Close dropdowns ONLY if clicking COMPLETELY outside of either relative container
@@ -265,6 +275,8 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
                       <p style={{ margin: 0, color: "var(--muted)", fontSize: "12px", borderBottom: "1px solid var(--line)", paddingBottom: "8px" }}>Signed in as<br/><strong style={{ color: "var(--text)", fontSize: "13px" }}>{user.email}</strong></p>
                       <Link href="/account" onClick={() => setOpenDropdown(null)} style={{ color: "var(--brand)", textDecoration: "none", fontSize: "13px", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}><span>📊</span> Dashboard</Link>
                       {user.role === "ADMIN" && <Link href="/admin" onClick={() => setOpenDropdown(null)} style={{ color: "var(--accent)", textDecoration: "none", fontSize: "13px", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}><span>⚙️</span> Admin Panel</Link>}
+                      {/* Logout is a server route (clears the cookie) — a full navigation is intended. */}
+                      {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
                       <a href="/api/auth/logout" style={{ color: "#EF4444", textDecoration: "none", fontSize: "13px", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px", marginTop: "4px", borderTop: "1px solid var(--line)", paddingTop: "10px" }}><span>🚪</span> Logout</a>
                     </div>
                   )}

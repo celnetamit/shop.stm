@@ -12,12 +12,13 @@ export async function POST(req: NextRequest) {
     }
 
     const body = (await req.json()) as { path?: string; forceRefresh?: boolean };
-    const path = body.path || "/";
+    const path = typeof body.path === "string" ? body.path : "/";
     const page = await getClonedPath(path, !!body.forceRefresh);
     return NextResponse.json({ ok: true, path: page.path, updatedAt: page.updatedAt });
   } catch (error) {
+    console.error("Sync failed:", error);
     return NextResponse.json(
-      { ok: false, error: error instanceof Error ? error.message : "Unknown error" },
+      { ok: false, error: "Failed to sync the requested page." },
       { status: 500 }
     );
   }

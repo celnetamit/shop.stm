@@ -251,7 +251,7 @@ export default function BooksClient({ initialBooks, categories }: Props) {
           <div style={{ textAlign: "center", padding: "80px 20px", background: "#ffffff", borderRadius: "16px", boxShadow: "0 4px 6px rgba(0,0,0,0.02)" }}>
             <div style={{ fontSize: "48px", marginBottom: "16px" }}>📚</div>
             <h3 style={{ fontSize: "20px", color: "#1e293b", marginBottom: "8px" }}>No books found</h3>
-            <p style={{ color: "#64748b", maxWidth: "400px", margin: "0 auto 24px" }}>We couldn't find any books matching your criteria. Try clearing your search query or choosing a different category.</p>
+            <p style={{ color: "#64748b", maxWidth: "400px", margin: "0 auto 24px" }}>We couldn&apos;t find any books matching your criteria. Try clearing your search query or choosing a different category.</p>
             <button 
               onClick={() => { setQuery(""); setSelectedCategory(null); }}
               style={{ background: "#0f172a", color: "#fff", border: "none", padding: "12px 24px", borderRadius: "8px", cursor: "pointer", fontWeight: "600" }}

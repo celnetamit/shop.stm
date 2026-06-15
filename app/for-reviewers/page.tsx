@@ -21,7 +21,7 @@ export default function ForReviewersPage() {
       <article style={{ marginTop: "30px" }}>
         <h2 style={{ fontSize: "24px", color: "#0F172A" }}>Peer Review Standards</h2>
         <p style={{ lineHeight: 1.7, color: "#475569" }}>
-          We request all reviewers adhere to ethical standards by avoiding conflicts of interest, maintaining absolute confidentiality regarding the content, and providing objective, constructive feedback aimed at assisting the author's improvement.
+          We request all reviewers adhere to ethical standards by avoiding conflicts of interest, maintaining absolute confidentiality regarding the content, and providing objective, constructive feedback aimed at assisting the author&apos;s improvement.
         </p>
       </article>
 

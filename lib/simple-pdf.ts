@@ -1,5 +1,13 @@
 function pdfEscape(text: string): string {
-  return text.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+  return String(text ?? "")
+    // Drop control chars (incl. CR/LF) that would corrupt the content stream.
+    .replace(/[\x00-\x1f\x7f]/g, " ")
+    // Helvetica is Latin-1 only; replace anything outside it so non-Latin text
+    // renders as a placeholder instead of garbled/broken bytes.
+    .replace(/[^\x20-\xff]/g, "?")
+    .replace(/\\/g, "\\\\")
+    .replace(/\(/g, "\\(")
+    .replace(/\)/g, "\\)");
 }
 
 export function createSimplePdf(title: string, lines: string[]): Buffer {

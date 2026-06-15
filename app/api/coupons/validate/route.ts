@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { errorResponse } from "@/lib/api-error";
 
 function missingCouponTable(error: unknown): boolean {
   if (!(error instanceof Error)) return false;
@@ -64,6 +65,6 @@ export async function GET(req: NextRequest) {
     if (missingCouponTable(error)) {
       return NextResponse.json({ ok: false, error: "Coupon table missing" }, { status: 500 });
     }
-    return NextResponse.json({ ok: false, error: error instanceof Error ? error.message : "Failed" }, { status: 500 });
+    return errorResponse("coupons.validate.GET", error, "Failed to validate coupon.");
   }
 }

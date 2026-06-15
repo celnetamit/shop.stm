@@ -1,12 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { createSimplePdf } from "@/lib/simple-pdf";
-import { formatPiNumber } from "@/lib/pi-number";
+import { resolvePiNumber } from "@/lib/pi-number";
 
 export async function buildProformaPdfAttachment(quoteId: string) {
   const quote = await prisma.proformaQuote.findUnique({ where: { id: quoteId }, include: { items: true } });
   if (!quote) return null;
 
-  const piNo = formatPiNumber({ id: quote.id, createdAt: quote.createdAt });
+  const piNo = resolvePiNumber(quote);
   const subtotal = quote.items.reduce((s, i) => s + Number(i.unitPrice || 0), 0);
   const discount = Math.round((subtotal * (quote.couponPercent || 0)) / 100);
   const taxable = subtotal - discount;

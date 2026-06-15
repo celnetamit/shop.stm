@@ -30,6 +30,13 @@ const CartCtx = createContext<CartState | null>(null);
 
 const KEY = "stm_cart_v1";
 
+// A cart line is uniquely identified by (id, plan, year) — the same journal can
+// appear as separate lines for different plans/years. Use this composite key for
+// add/remove/setQty so operations target exactly one line (and for stable React keys).
+export function lineKey(item: Pick<CartItem, "id" | "plan" | "year">): string {
+  return `${item.id}::${item.plan}::${item.year}`;
+}
+
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [couponCode, setCouponCode] = useState("");
@@ -66,15 +73,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       discountPercent,
       addItem: (item) => {
         setItems((prev) => {
-          const existing = prev.find((x) => x.id === item.id && x.plan === item.plan && x.year === item.year);
+          const key = lineKey(item);
+          const existing = prev.find((x) => lineKey(x) === key);
           if (existing) {
-            return prev.map((x) => (x === existing ? { ...x, qty: x.qty + 1 } : x));
+            return prev.map((x) => (lineKey(x) === key ? { ...x, qty: x.qty + 1 } : x));
           }
           return [...prev, { ...item, qty: 1 }];
         });
       },
-      removeItem: (id) => setItems((prev) => prev.filter((x) => x.id !== id)),
-      setQty: (id, qty) => setItems((prev) => prev.map((x) => (x.id === id ? { ...x, qty: Math.max(1, qty) } : x))),
+      // `key` is a composite line key from lineKey(). For backwards-compatibility,
+      // a bare id still matches lines whose id equals it.
+      removeItem: (key) => setItems((prev) => prev.filter((x) => lineKey(x) !== key && x.id !== key)),
+      setQty: (key, qty) =>
+        setItems((prev) => prev.map((x) => (lineKey(x) === key || x.id === key ? { ...x, qty: Math.max(1, qty) } : x))),
       clear: () => {
         setItems([]);
         setCouponCode("");

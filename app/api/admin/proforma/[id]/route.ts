@@ -2,11 +2,11 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentSession } from "@/lib/auth/session";
+import { requireAdmin } from "@/lib/auth/guards";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await getCurrentSession();
-  if (!session || session.role !== "ADMIN") {
+  const session = await requireAdmin();
+  if (!session) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 

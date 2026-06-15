@@ -2,8 +2,11 @@ import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { extractLeadData, generateChatReply } from "@/lib/chatbot";
+import { rateLimit, clientIpFrom } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
+
+const MAX_MESSAGE_LENGTH = 2000;
 
 type Body = {
   message?: string;
@@ -22,8 +25,18 @@ function inferNameFromEmail(email: string | null | undefined): string | null {
 
 export async function POST(req: Request) {
   try {
+    // Throttle the unauthenticated, paid-LLM-backed endpoint: 20 messages / minute per IP.
+    const ip = clientIpFrom(req);
+    const limit = rateLimit(`chat:${ip}`, 20, 60 * 1000);
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { ok: false, error: "You're sending messages too quickly. Please slow down." },
+        { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } }
+      );
+    }
+
     const body = (await req.json()) as Body;
-    const text = (body.message || "").trim();
+    const text = (body.message || "").trim().slice(0, MAX_MESSAGE_LENGTH);
     if (!text) {
       return NextResponse.json({ ok: false, error: "Message is required." }, { status: 400 });
     }
@@ -119,8 +132,9 @@ export async function POST(req: Request) {
       }
     });
   } catch (error) {
+    console.error("Chat failed:", error);
     return NextResponse.json(
-      { ok: false, error: error instanceof Error ? error.message : "Chat failed." },
+      { ok: false, error: "Chat is temporarily unavailable. Please try again." },
       { status: 500 }
     );
   }

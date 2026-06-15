@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Shipping & Delivery Policy | STM Journals",
@@ -81,7 +82,7 @@ export default function ShippingPolicyPage() {
         <div style={{ border: "1px solid #E2E8F0", borderRadius: "10px", padding: "24px", background: "#FFFFFF" }}>
           <h2 style={{ fontSize: "20px", color: "#0F172A", marginTop: 0, marginBottom: "12px", fontWeight: "700" }}>Order Tracking 🔐</h2>
           <p style={{ margin: 0 }}>
-            Once your order has been dispatched, you will receive a shipping confirmation email containing tracking details, where available. Please allow 24–48 hours for tracking updates to appear on the carrier's website after the dispatch notification.
+            Once your order has been dispatched, you will receive a shipping confirmation email containing tracking details, where available. Please allow 24–48 hours for tracking updates to appear on the carrier&apos;s website after the dispatch notification.
           </p>
         </div>
 
@@ -90,7 +91,7 @@ export default function ShippingPolicyPage() {
           <p style={{ marginBottom: "12px" }}>If your order has not arrived within the estimated delivery timeline:</p>
           <ol style={{ paddingLeft: "20px", margin: 0, display: "flex", flexDirection: "column", gap: "6px", marginBottom: "12px" }}>
             <li>Check the real-time tracking link shared in your confirmation email.</li>
-            <li>Contact our dedicated support team via our <a href="/contact-us" style={{ color: "#2563EB", textDecoration: "none", fontWeight: "600" }}>Contact Page</a> or email us directly.</li>
+            <li>Contact our dedicated support team via our <Link href="/contact-us" style={{ color: "#2563EB", textDecoration: "none", fontWeight: "600" }}>Contact Page</Link> or email us directly.</li>
           </ol>
           <p style={{ margin: 0 }}>
             We will assist you immediately in locating or re-shipping your order in accordance with our replacement terms.
@@ -124,7 +125,7 @@ export default function ShippingPolicyPage() {
           <div style={{ display: "grid", gap: "12px" }}>
             <p style={{ margin: 0 }}><strong>📧 Email:</strong> <a href="mailto:subscriptions@stmjournals.com" style={{ color: "#2563EB", textDecoration: "none" }}>subscriptions@stmjournals.com</a></p>
             <p style={{ margin: 0 }}><strong>📞 Phone:</strong> +91 98100 78958</p>
-            <p style={{ margin: 0 }}><strong>🌐 Web:</strong> <a href="/contact-us" style={{ color: "#2563EB", textDecoration: "none" }}>STM Contact Portal</a></p>
+            <p style={{ margin: 0 }}><strong>🌐 Web:</strong> <Link href="/contact-us" style={{ color: "#2563EB", textDecoration: "none" }}>STM Contact Portal</Link></p>
           </div>
         </div>
       </section>

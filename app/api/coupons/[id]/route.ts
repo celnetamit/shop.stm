@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentSession } from "@/lib/auth/session";
+import { errorResponse } from "@/lib/api-error";
 
 function isAuthorized(role: string | undefined) {
   return role === "ADMIN";
@@ -38,7 +39,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     return NextResponse.json({ ok: true, coupon, usages });
   } catch (error) {
-    return NextResponse.json({ ok: false, error: error instanceof Error ? error.message : "Failed" }, { status: 500 });
+    return errorResponse("coupons.[id].GET", error, "Failed to load coupon.");
   }
 }
 
@@ -50,17 +51,52 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   try {
     const { id } = await params;
-    const body = (await req.json()) as { code?: string; discount?: number; isActive?: boolean };
-    const data: { code?: string; discount?: number; isActive?: boolean } = {};
+    const body = (await req.json()) as {
+      code?: string;
+      type?: "PERCENTAGE" | "FIXED";
+      value?: number;
+      discount?: number;
+      maxUses?: number | string | null;
+      minOrderAmount?: number;
+      validFrom?: string | null;
+      validUntil?: string | null;
+      isActive?: boolean;
+    };
+
+    // N3: admins can now edit type/value/limits/validity, not just code/discount/isActive.
+    const data: Record<string, unknown> = {};
 
     if (typeof body.code === "string") data.code = body.code.trim().toUpperCase();
-    if (typeof body.discount === "number") data.discount = body.discount;
+    if (body.type === "PERCENTAGE" || body.type === "FIXED") data.type = body.type;
+
+    if (body.value !== undefined) {
+      const value = Number(body.value);
+      if (!Number.isFinite(value) || value <= 0) {
+        return NextResponse.json({ ok: false, error: "Discount value must be greater than 0." }, { status: 400 });
+      }
+      const effectiveType = (data.type as string | undefined) ?? body.type;
+      if (effectiveType === "PERCENTAGE" && value > 100) {
+        return NextResponse.json({ ok: false, error: "Percentage cannot exceed 100%." }, { status: 400 });
+      }
+      data.value = value;
+      // Keep the legacy integer `discount` in sync for PERCENTAGE coupons.
+      if (effectiveType !== "FIXED") data.discount = Math.round(value);
+    }
+    if (typeof body.discount === "number") data.discount = Math.max(0, Math.round(body.discount));
+
+    if (body.maxUses !== undefined) {
+      const raw = body.maxUses;
+      data.maxUses = raw === null || raw === "" ? null : Math.max(1, Math.round(Number(raw)));
+    }
+    if (body.minOrderAmount !== undefined) data.minOrderAmount = Math.max(0, Number(body.minOrderAmount) || 0);
+    if (body.validFrom !== undefined) data.validFrom = body.validFrom ? new Date(body.validFrom) : null;
+    if (body.validUntil !== undefined) data.validUntil = body.validUntil ? new Date(body.validUntil) : null;
     if (typeof body.isActive === "boolean") data.isActive = body.isActive;
 
     const updated = await prisma.coupon.update({ where: { id }, data });
     return NextResponse.json({ ok: true, coupon: updated });
   } catch (error) {
-    return NextResponse.json({ ok: false, error: error instanceof Error ? error.message : "Failed" }, { status: 500 });
+    return errorResponse("coupons.[id].PATCH", error, "Failed to update coupon.");
   }
 }
 
@@ -75,6 +111,6 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     await prisma.coupon.delete({ where: { id } });
     return NextResponse.json({ ok: true });
   } catch (error) {
-    return NextResponse.json({ ok: false, error: error instanceof Error ? error.message : "Failed" }, { status: 500 });
+    return errorResponse("coupons.[id].DELETE", error, "Failed to delete coupon.");
   }
 }

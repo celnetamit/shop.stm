@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 
 export const AUTH_COOKIE_NAME = "auth_token";
 
-type SessionPayload = {
+export type SessionPayload = {
   sub: string;
   email: string;
   role: "USER" | "ADMIN" | "MANAGER" | "LIBRARIAN" | "AGENCY" | "STUDENT" | "SCHOLAR";

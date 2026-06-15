@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { seedDefaultTemplates } from "@/lib/email";
-import { getCurrentSession } from "@/lib/auth/session";
+import { requireAdmin } from "@/lib/auth/guards";
 
 export const dynamic = "force-dynamic";
 
 export async function POST() {
-  const session = await getCurrentSession();
-  if (!session || session.role !== "ADMIN") {
+  const session = await requireAdmin();
+  if (!session) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 

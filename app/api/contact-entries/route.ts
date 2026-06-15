@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { errorResponse } from "@/lib/api-error";
 
 export async function POST(req: NextRequest) {
   try {
@@ -43,9 +44,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true, entry });
   } catch (error) {
-    return NextResponse.json(
-      { ok: false, error: error instanceof Error ? error.message : "Failed to save contact entry" },
-      { status: 500 }
-    );
+    return errorResponse("contact-entries.POST", error, "Failed to save your message.");
   }
 }

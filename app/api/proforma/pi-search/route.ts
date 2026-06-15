@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentSession } from "@/lib/auth/session";
+import { errorResponse } from "@/lib/api-error";
 
 export async function GET(req: NextRequest) {
   try {
@@ -12,20 +13,34 @@ export async function GET(req: NextRequest) {
     const q = (req.nextUrl.searchParams.get("q") || "").trim();
     if (q.length < 2) return NextResponse.json({ ok: true, items: [] });
 
+    // SECURITY: non-admins may only find PIs they own (created, or issued to their
+    // email). This keeps the "find your existing PI" renewal flow working while
+    // preventing harvesting of other institutions' contact/GST/address PII.
+    // Admins retain a global lookup.
+    const ownershipFilter =
+      session.role === "ADMIN"
+        ? undefined
+        : { OR: [{ createdByUserId: session.sub }, { email: session.email }] };
+
+    const matchFilter = {
+      OR: [
+        { email: { contains: q, mode: "insensitive" as const } },
+        { organization: { contains: q, mode: "insensitive" as const } },
+        { contactName: { contains: q, mode: "insensitive" as const } },
+        { institutionName: { contains: q, mode: "insensitive" as const } }
+      ]
+    };
+
+    const where = ownershipFilter ? { AND: [matchFilter, ownershipFilter] } : matchFilter;
+
     try {
       const items = await prisma.proformaQuote.findMany({
-        where: {
-          OR: [
-            { email: { contains: q, mode: "insensitive" } },
-            { organization: { contains: q, mode: "insensitive" } },
-            { contactName: { contains: q, mode: "insensitive" } },
-            { institutionName: { contains: q, mode: "insensitive" } }
-          ]
-        },
+        where,
         orderBy: { updatedAt: "desc" },
         take: 20,
         select: {
           id: true,
+          piNumber: true,
           organization: true,
           institutionName: true,
           contactName: true,
@@ -47,14 +62,16 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ ok: true, items: Array.from(byEmail.values()) });
     } catch {
       // Fallback for DBs where new PI columns are not yet pushed.
+      const basicMatch = {
+        OR: [
+          { email: { contains: q, mode: "insensitive" as const } },
+          { organization: { contains: q, mode: "insensitive" as const } },
+          { contactName: { contains: q, mode: "insensitive" as const } }
+        ]
+      };
+      const basicWhere = ownershipFilter ? { AND: [basicMatch, ownershipFilter] } : basicMatch;
       const basicItems = await prisma.proformaQuote.findMany({
-        where: {
-          OR: [
-            { email: { contains: q, mode: "insensitive" } },
-            { organization: { contains: q, mode: "insensitive" } },
-            { contactName: { contains: q, mode: "insensitive" } }
-          ]
-        },
+        where: basicWhere,
         orderBy: { updatedAt: "desc" },
         take: 20,
         select: {
@@ -89,6 +106,6 @@ export async function GET(req: NextRequest) {
       });
     }
   } catch (error) {
-    return NextResponse.json({ ok: false, error: error instanceof Error ? error.message : "Search failed" }, { status: 500 });
+    return errorResponse("proforma.pi-search.GET", error, "Search failed.");
   }
 }

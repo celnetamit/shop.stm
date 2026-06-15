@@ -51,7 +51,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     try {
       const existingQuote = await prisma.proformaQuote.findUnique({ where: { id } });
-      if (existingQuote && existingQuote.createdByUserId && existingQuote.createdByUserId !== session.sub) {
+      if (!existingQuote) {
+        return NextResponse.json({ ok: false, error: "Requested document missing." }, { status: 404 });
+      }
+      // Allow the owner, an admin, or first-time claim of an as-yet-unowned quote.
+      if (existingQuote.createdByUserId && existingQuote.createdByUserId !== session.sub && session.role !== "ADMIN") {
         return NextResponse.json({ ok: false, error: "Unauthorized: you do not own this quote." }, { status: 403 });
       }
 
@@ -81,14 +85,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           createdByUserId: session?.sub || undefined
         }
       });
-      return NextResponse.json({ ok: true, quoteId: quote.id, quoteCreatedAt: quote.createdAt });
+      return NextResponse.json({ ok: true, quoteId: quote.id, quoteCreatedAt: quote.createdAt, piNumber: quote.piNumber });
     } catch (dbError) {
       if (!isMissingTableError(dbError)) throw dbError;
       return NextResponse.json({ ok: true, quoteId: id, warning: "Draft mode: DB table missing" });
     }
   } catch (error) {
+    console.error("Failed to update quote details:", error);
     return NextResponse.json(
-      { ok: false, error: error instanceof Error ? error.message : "Failed to update quote details" },
+      { ok: false, error: "Failed to update quote details. Please try again." },
       { status: 500 }
     );
   }

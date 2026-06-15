@@ -134,27 +134,30 @@ export default function ProductDetailClient({ journal, domains, description, abo
               )}
 
               <div className="product-v2-price-grid">
-                <div 
+                <div
                   className={plan === "PRINT" ? "active" : ""}
                   onClick={() => setPlan("PRINT")}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setPlan("PRINT"); } }}
                   role="button"
                   tabIndex={0}
                 >
                   <span>Print</span>
                   <strong>₹{journal.printInr.toLocaleString("en-IN")}</strong>
                 </div>
-                <div 
+                <div
                   className={plan === "ONLINE" ? "active" : ""}
                   onClick={() => setPlan("ONLINE")}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setPlan("ONLINE"); } }}
                   role="button"
                   tabIndex={0}
                 >
                   <span>Online</span>
                   <strong>₹{journal.onlineInr.toLocaleString("en-IN")}</strong>
                 </div>
-                <div 
+                <div
                   className={plan === "PRINT_ONLINE" ? "active" : ""}
                   onClick={() => setPlan("PRINT_ONLINE")}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setPlan("PRINT_ONLINE"); } }}
                   role="button"
                   tabIndex={0}
                 >

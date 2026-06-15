@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/auth/password";
 import { signSession, AUTH_COOKIE_NAME } from "@/lib/auth/session";
 import { roleForEmail } from "@/lib/auth/admin-emails";
+import { rateLimit, clientIpFrom } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,6 +15,16 @@ export async function POST(req: NextRequest) {
 
     if (!email || !password) {
       return NextResponse.json({ ok: false, error: "Email and password are required." }, { status: 400 });
+    }
+
+    // Throttle online password brute-force: max 10 attempts / 5 min per IP+email.
+    const ip = clientIpFrom(req);
+    const limit = rateLimit(`login:${ip}:${email}`, 10, 5 * 60 * 1000);
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { ok: false, error: "Too many login attempts. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } }
+      );
     }
 
     const user = await prisma.user.findUnique({ where: { email } });
@@ -43,6 +54,7 @@ export async function POST(req: NextRequest) {
     });
     return res;
   } catch (error) {
-    return NextResponse.json({ ok: false, error: error instanceof Error ? error.message : "Login failed" }, { status: 500 });
+    console.error("Login failed:", error);
+    return NextResponse.json({ ok: false, error: "Login failed. Please try again." }, { status: 500 });
   }
 }

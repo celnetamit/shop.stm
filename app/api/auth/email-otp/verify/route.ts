@@ -8,11 +8,24 @@ function normalizeEmail(value?: string) {
   return value?.trim().toLowerCase() || "";
 }
 
+function otpSecret() {
+  const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || process.env.JWT_SECRET;
+  if (!secret) throw new Error("No server secret configured for OTP hashing");
+  return secret;
+}
+
 function hashOtp(email: string, otp: string) {
   return crypto
     .createHash("sha256")
-    .update(`${email}:${otp}:${process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "stm-otp-secret"}`)
+    .update(`${email}:${otp}:${otpSecret()}`)
     .digest("hex");
+}
+
+function timingSafeEqualHex(a: string, b: string): boolean {
+  const bufA = Buffer.from(a, "hex");
+  const bufB = Buffer.from(b, "hex");
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
 }
 
 export async function POST(req: NextRequest) {
@@ -43,7 +56,7 @@ export async function POST(req: NextRequest) {
     }
 
     const otpHash = hashOtp(email, otp);
-    if (otpHash !== verification.otpHash) {
+    if (!timingSafeEqualHex(otpHash, verification.otpHash)) {
       await prisma.emailVerification.update({
         where: { email },
         data: { attempts: { increment: 1 } }
@@ -61,6 +74,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true, verified: true });
   } catch (error) {
-    return NextResponse.json({ ok: false, error: error instanceof Error ? error.message : "Failed to verify OTP" }, { status: 500 });
+    console.error("Failed to verify OTP:", error);
+    return NextResponse.json({ ok: false, error: "Failed to verify OTP. Please try again." }, { status: 500 });
   }
 }

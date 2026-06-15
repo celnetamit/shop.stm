@@ -1,5 +1,18 @@
 import { prisma } from "@/lib/prisma";
-import { formatPiNumber } from "@/lib/pi-number";
+import { resolvePiNumber } from "@/lib/pi-number";
+import { quoteTotals } from "@/lib/pricing";
+
+// Escape user-controlled values before interpolating into email HTML. journalName,
+// selectedPlan, couponCode etc. originate from request bodies and must never be
+// injected raw (lib/email.ts deliberately skips escaping for *Html data keys).
+function esc(value: unknown): string {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+}
 
 export async function prepareProformaEmailPayload(quoteId: string) {
   const quote = await prisma.proformaQuote.findUnique({
@@ -17,43 +30,11 @@ export async function prepareProformaEmailPayload(quoteId: string) {
     return item?.publisher?.toLowerCase() === "journalspub";
   });
 
-  const appliedDiscountPercent = quote.couponPercent || 0;
   const currency = quote.currency || "INR";
   const symbol = currency === "INR" ? "₹" : "$";
 
-  let calcSubtotal = 0;
-  let calcDiscountAmt = 0;
-  let calcTaxable = 0;
-  let calcCgst = 0;
-  let calcSgst = 0;
-
-  quote.items.forEach((it) => {
-    const unitPrice = it.unitPrice;
-    const itemDiscount = (unitPrice * appliedDiscountPercent) / 100;
-    const itemTaxable = unitPrice - itemDiscount;
-
-    const isDigital = it.selectedPlan === "ONLINE" || it.selectedPlan === "PRINT_ONLINE";
-    const isINR = currency === "INR";
-    const isGstExemptSubscriber = quote.subscriberCategory === "COLLEGE" || quote.subscriberCategory === "EXISTING_PI";
-    const itemGstRate = isINR && isDigital && !isGstExemptSubscriber ? 18 : 0;
-
-    const itemGst = itemTaxable * (itemGstRate / 100);
-    const itemCgst = itemGst / 2;
-    const itemSgst = itemGst / 2;
-
-    calcSubtotal += unitPrice;
-    calcDiscountAmt += itemDiscount;
-    calcTaxable += itemTaxable;
-    calcCgst += itemCgst;
-    calcSgst += itemSgst;
-  });
-
-  const subtotal = Math.round(calcSubtotal * 100) / 100;
-  const discount = Math.round(calcDiscountAmt * 100) / 100;
-  const taxable = Math.round(calcTaxable * 100) / 100;
-  const cgst = Math.round(calcCgst * 100) / 100;
-  const sgst = Math.round(calcSgst * 100) / 100;
-  const grandTotal = Math.round((taxable + cgst + sgst) * 100) / 100;
+  // Single source of truth for the money math (see lib/pricing.ts).
+  const { subtotal, discount, cgst, sgst, total: grandTotal } = quoteTotals(quote);
 
   // 1. Generate Visual HTML Breakdown Table
   let itemsHtml = `
@@ -78,10 +59,10 @@ export async function prepareProformaEmailPayload(quoteId: string) {
     itemsHtml += `
       <tr style="border-bottom: 1px solid #f1f5f9;">
         <td style="padding:10px; color:#64748b;">${idx + 1}</td>
-        <td style="padding:10px; font-weight:bold; color:#334155;">${it.journalName}</td>
-        <td style="padding:10px; color:#64748b;">${hsn}</td>
-        <td style="padding:10px;"><span style="background-color:#e0f2fe; color:#0369a1; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:600;">${it.selectedPlan}</span></td>
-        <td style="padding:10px; text-align:right; font-weight:bold; color:#0f172a;">${symbol}${Number(it.unitPrice).toFixed(2)}</td>
+        <td style="padding:10px; font-weight:bold; color:#334155;">${esc(it.journalName)}</td>
+        <td style="padding:10px; color:#64748b;">${esc(hsn)}</td>
+        <td style="padding:10px;"><span style="background-color:#e0f2fe; color:#0369a1; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:600;">${esc(it.selectedPlan)}</span></td>
+        <td style="padding:10px; text-align:right; font-weight:bold; color:#0f172a;">${symbol}${(Number(it.unitPrice) || 0).toFixed(2)}</td>
       </tr>
     `;
   });
@@ -100,7 +81,7 @@ export async function prepareProformaEmailPayload(quoteId: string) {
   if (discount > 0) {
     financialsHtml += `
       <tr>
-        <td style="text-align:right; color:#64748b;">Discount (${quote.couponCode || 'Coupon'}):</td>
+        <td style="text-align:right; color:#64748b;">Discount (${esc(quote.couponCode || 'Coupon')}):</td>
         <td style="text-align:right; color:#ef4444; font-weight:600;">-${symbol}${Number(discount).toFixed(2)}</td>
       </tr>
     `;
@@ -128,7 +109,7 @@ export async function prepareProformaEmailPayload(quoteId: string) {
   `;
 
   return {
-    quoteId: formatPiNumber({ id: quote.id, createdAt: quote.createdAt }),
+    quoteId: resolvePiNumber(quote),
     quoteDbId: quote.id,
     organization: quote.organization,
     contactName: quote.contactName,

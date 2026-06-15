@@ -94,12 +94,13 @@ export default function LoginForm() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
             </svg>
           </div>
-          <input 
-            value={email} 
-            onChange={(e) => setEmail(e.target.value)} 
-            type="email" 
-            placeholder="Email address" 
-            required 
+          <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            type="email"
+            placeholder="Email address"
+            aria-label="Email address"
+            required
             style={{
               width: "100%",
               padding: "14px 16px 14px 48px",
@@ -130,12 +131,13 @@ export default function LoginForm() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
           </div>
-          <input 
-            value={password} 
-            onChange={(e) => setPassword(e.target.value)} 
-            type="password" 
-            placeholder="Password" 
-            required 
+          <input
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            type="password"
+            placeholder="Password"
+            aria-label="Password"
+            required
             style={{
               width: "100%",
               padding: "14px 16px 14px 48px",
@@ -193,7 +195,9 @@ export default function LoginForm() {
         <div style={{ flex: 1, height: "1px", background: "#E2E8F0" }}></div>
       </div>
 
-      <a 
+      {/* OAuth start is a server route, not a page — a full navigation is intended. */}
+      {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+      <a
         href="/api/auth/google/start"
         style={{
           display: "flex",
@@ -224,7 +228,7 @@ export default function LoginForm() {
       </a>
 
       <p style={{ margin: 0, textAlign: "center", color: "#64748B", fontSize: "14px" }}>
-        Don't have an account? <Link href="/register" style={{ color: "#2563EB", fontWeight: "600", textDecoration: "none" }}>Sign up</Link>
+        Don&apos;t have an account? <Link href="/register" style={{ color: "#2563EB", fontWeight: "600", textDecoration: "none" }}>Sign up</Link>
       </p>
     </div>
   );

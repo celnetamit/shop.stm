@@ -1,7 +1,8 @@
 {
   "root": true,
-  "parser": "@typescript-eslint/parser",
-  "plugins": ["@typescript-eslint"],
-  "ignorePatterns": [".next/**", "node_modules/**"],
-  "rules": {}
+  "extends": ["next/core-web-vitals", "next/typescript"],
+  "ignorePatterns": [".next/**", ".next_broken_*/**", "node_modules/**"],
+  "rules": {
+    "@typescript-eslint/no-explicit-any": "warn"
+  }
 }

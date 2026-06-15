@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p 3000",
     "lint": "eslint app lib --ext .ts,.tsx",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:push": "prisma db push",
@@ -18,10 +20,11 @@
     "bcryptjs": "^3.0.3",
     "cheerio": "^1.1.0",
     "html2canvas": "^1.4.1",
+    "isomorphic-dompurify": "^2.36.0",
     "jose": "^6.2.3",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.7",
-    "next": "^15.3.2",
+    "next": "^15.5.19",
     "pg": "^8.13.1",
     "razorpay": "^2.9.6",
     "react": "^19.1.0",
@@ -32,8 +35,12 @@
     "@types/react": "^19.1.4",
     "@types/react-dom": "^19.1.5",
     "eslint": "^8.57.1",
-    "eslint-config-next": "^15.5.15",
+    "eslint-config-next": "^15.5.19",
     "prisma": "^6.8.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^4.1.9"
+  },
+  "overrides": {
+    "postcss": "^8.5.15"
   }
 }

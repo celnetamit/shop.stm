@@ -1,0 +1,48 @@
+version: 2
+
+# Keeps dependencies current so security patches (e.g. the Next.js middleware-bypass
+# advisories addressed in H8) land automatically instead of drifting. GitHub's
+# Dependabot *security* alerts/updates are enabled separately in repo Settings >
+# Code security; this file drives scheduled *version* updates.
+
+updates:
+  # Application dependencies (npm)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+    # Batch low-risk minor/patch bumps into one PR to cut noise; majors stay as
+    # individual PRs so breaking changes get reviewed on their own (mirrors the
+    # "stay within the major" upgrade policy used for the Next.js 15.x patch).
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      # Major upgrades are intentionally handled manually (with a build/test pass),
+      # not auto-proposed, to avoid breaking-change surprises.
+      - dependency-name: "next"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+
+  # Keep the GitHub Actions used in CI patched too
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    labels:
+      - "dependencies"
+      - "github-actions"

@@ -3,6 +3,8 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentSession } from "@/lib/auth/session";
+import { errorResponse } from "@/lib/api-error";
+import { assignPiNumber } from "@/lib/pi-allocator";
 
 function isMissingTableError(error: unknown): boolean {
   if (!(error instanceof Error)) return false;
@@ -66,16 +68,15 @@ export async function POST(req: NextRequest) {
           createdByUserId: session?.sub || null
         }
       });
-      return NextResponse.json({ ok: true, quoteId: quote.id, quoteCreatedAt: quote.createdAt });
+      // N1: allocate a stable, unique PI number (best-effort; falls back to derived format).
+      const piNumber = await assignPiNumber(quote.id, quote.createdAt);
+      return NextResponse.json({ ok: true, quoteId: quote.id, quoteCreatedAt: quote.createdAt, piNumber });
     } catch (dbError) {
       if (!isMissingTableError(dbError)) throw dbError;
       // Graceful fallback for environments where migrations are not applied yet.
       return NextResponse.json({ ok: true, quoteId: `draft-${Date.now()}`, warning: "DB table missing" });
     }
   } catch (error) {
-    return NextResponse.json(
-      { ok: false, error: error instanceof Error ? error.message : "Failed to create quote" },
-      { status: 500 }
-    );
+    return errorResponse("proforma.POST", error, "Failed to create quote.");
   }
 }

@@ -2,12 +2,12 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentSession } from "@/lib/auth/session";
+import { requireAdmin } from "@/lib/auth/guards";
 import { hashPassword } from "@/lib/auth/password";
 
 export async function GET() {
-  const session = await getCurrentSession();
-  if (!session || session.role !== "ADMIN") return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  const session = await requireAdmin();
+  if (!session) return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
 
   try {
     const users = await prisma.user.findMany({
@@ -31,8 +31,8 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const session = await getCurrentSession();
-  if (!session || session.role !== "ADMIN") return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  const session = await requireAdmin();
+  if (!session) return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
 
   try {
     const body = (await req.json()) as {

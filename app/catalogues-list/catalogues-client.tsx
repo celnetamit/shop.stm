@@ -165,7 +165,7 @@ export default function CataloguesClient({ journals, initialCurrency = "INR" }: 
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8.5);
       doc.setTextColor(71, 85, 105);
-      let rowY = y + 5;
+      const rowY = y + 5;
       doc.text("Account Name: Consortium eLearning Network Pvt. Ltd.", 14, rowY);
       doc.text("Account Number: 03942000001153", 14, rowY + 4);
       doc.text("Bank Name: HDFC Bank", 14, rowY + 8);

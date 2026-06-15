@@ -57,7 +57,17 @@ export const viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Apply the saved theme before first paint to avoid a light->dark flash (FOUC).
+            Mirrors the "stm-theme" key used by the theme toggle in site-shell. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{if(localStorage.getItem('stm-theme')==='dark'){document.documentElement.classList.add('dark');}}catch(e){}})();"
+          }}
+        />
+      </head>
       <body>
         <SeoJsonLd />
         <CartProvider>

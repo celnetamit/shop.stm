@@ -94,6 +94,7 @@ model ClonedPage {
 
 model ProformaQuote {
   id            String             @id @default(cuid())
+  piNumber      String?            @unique // N1: stable, unique, indexed PI number (null for legacy rows -> falls back to derived format)
   organization  String
   contactName   String
   email         String
@@ -193,7 +194,7 @@ model Order {
   couponCode     String?
   status         OrderStatus @default(PENDING)
   items          OrderItem[]
-  razorpayOrderId String?
+  razorpayOrderId String?    @unique // N2: DB-level idempotency — one order per Razorpay order id
   razorpayPaymentId String?
   razorpaySignature String?
   adminRemarks   String?           @db.Text

@@ -17,28 +17,37 @@ export default function AdminDashboard() {
   const [code, setCode] = useState("");
   const [discount, setDiscount] = useState(10);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
   async function load() {
-    const res = await fetch("/api/admin/dashboard", { cache: "no-store" });
-    const json = (await res.json()) as {
-      ok: boolean;
-      error?: string;
-      orders?: Order[];
-      proformas?: Proforma[];
-      contactEntries?: ContactEntry[];
-      users?: User[];
-      coupons?: Coupon[];
-    };
-    if (!json.ok) {
-      setError(json.error || "Failed to load dashboard");
-      return;
-    }
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/admin/dashboard", { cache: "no-store" });
+      const json = (await res.json()) as {
+        ok: boolean;
+        error?: string;
+        orders?: Order[];
+        proformas?: Proforma[];
+        contactEntries?: ContactEntry[];
+        users?: User[];
+        coupons?: Coupon[];
+      };
+      if (!json.ok) {
+        setError(json.error || "Failed to load dashboard");
+        return;
+      }
 
-    setOrders(json.orders || []);
-    setProformas(json.proformas || []);
-    setContactEntries(json.contactEntries || []);
-    setUsers(json.users || []);
-    setCoupons(json.coupons || []);
+      setOrders(json.orders || []);
+      setProformas(json.proformas || []);
+      setContactEntries(json.contactEntries || []);
+      setUsers(json.users || []);
+      setCoupons(json.coupons || []);
+    } catch {
+      setError("Could not load the dashboard. Please check your connection and try again.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -117,6 +126,7 @@ export default function AdminDashboard() {
     <section className="admin-dashboard">
       <h2>Admin Management</h2>
       {error ? <p className="auth-error">{error}</p> : null}
+      {loading ? <p style={{ color: "#64748b", fontSize: "14px" }}>Loading dashboard…</p> : null}
 
       <div className="admin-block">
         <h3>Orders</h3>

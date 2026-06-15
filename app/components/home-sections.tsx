@@ -211,14 +211,14 @@ export default function HomeSections({ domains, journals }: { domains: DomainLin
         }}>
           <p style={{ fontFamily: "Outfit, sans-serif", fontSize: "13.5px", color: "var(--muted)", margin: 0 }}>
             Looking for other academic fields?{" "}
-            <a 
-              href="/catalogues-list" 
+            <Link
+              href="/catalogues-list"
               style={{ color: "var(--brand)", fontWeight: "700", textDecoration: "none" }}
               onMouseEnter={(e) => e.currentTarget.style.textDecoration = "underline"}
               onMouseLeave={(e) => e.currentTarget.style.textDecoration = "none"}
             >
               Explore all {domains.length} research disciplines &rarr;
-            </a>
+            </Link>
           </p>
         </div>
       </div>

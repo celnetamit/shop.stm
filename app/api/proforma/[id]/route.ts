@@ -3,7 +3,8 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentSession } from "@/lib/auth/session";
-import { formatPiNumber } from "@/lib/pi-number";
+import { formatPiNumber, resolvePiNumber } from "@/lib/pi-number";
+import { quoteTotals } from "@/lib/pricing";
 
 async function findProformaQuote(idOrPiNumber: string) {
   const direct = await prisma.proformaQuote.findUnique({
@@ -12,6 +13,18 @@ async function findProformaQuote(idOrPiNumber: string) {
   });
   if (direct) return direct;
 
+  // N1: direct indexed lookup by stored PI number (new format, e.g. PRO-2026-5001).
+  try {
+    const byPi = await prisma.proformaQuote.findUnique({
+      where: { piNumber: idOrPiNumber },
+      include: { items: true }
+    });
+    if (byPi) return byPi;
+  } catch {
+    // piNumber column not present yet (pre-migration) — fall through to legacy lookup.
+  }
+
+  // Legacy derived PI numbers contain "/". Bounded scan kept for backward compatibility.
   if (!idOrPiNumber.includes("/")) return null;
 
   const candidates = await prisma.proformaQuote.findMany({
@@ -60,45 +73,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       console.error("Failed to track checkout visit", e);
     }
 
-    const appliedDiscountPercent = quote.couponPercent || 0;
-    let calcSubtotal = 0;
-    let calcDiscountAmt = 0;
-    let calcTaxable = 0;
-    let calcCgst = 0;
-    let calcSgst = 0;
-
-    quote.items.forEach((it) => {
-      const unitPrice = it.unitPrice;
-      const itemDiscount = (unitPrice * appliedDiscountPercent) / 100;
-      const itemTaxable = unitPrice - itemDiscount;
-
-      const isDigital = it.selectedPlan === "ONLINE" || it.selectedPlan === "PRINT_ONLINE";
-      const isINR = quote.currency === "INR";
-      const isGstExemptSubscriber = quote.subscriberCategory === "COLLEGE" || quote.subscriberCategory === "EXISTING_PI";
-      const itemGstRate = isINR && isDigital && !isGstExemptSubscriber ? 18 : 0;
-
-      const itemGst = itemTaxable * (itemGstRate / 100);
-      const itemCgst = itemGst / 2;
-      const itemSgst = itemGst / 2;
-
-      calcSubtotal += unitPrice;
-      calcDiscountAmt += itemDiscount;
-      calcTaxable += itemTaxable;
-      calcCgst += itemCgst;
-      calcSgst += itemSgst;
-    });
-
-    const subtotal = Math.round(calcSubtotal * 100) / 100;
-    const discountAmt = Math.round(calcDiscountAmt * 100) / 100;
-    const taxable = Math.round(calcTaxable * 100) / 100;
-    const cgst = Math.round(calcCgst * 100) / 100;
-    const sgst = Math.round(calcSgst * 100) / 100;
-    const total = Math.round((taxable + cgst + sgst) * 100) / 100;
+    // Single source of truth for the money math (see lib/pricing.ts).
+    const { subtotal, discount: discountAmt, cgst, sgst, total } = quoteTotals(quote);
 
     return NextResponse.json({
       ok: true,
       quote: {
         id: quote.id,
+        piNumber: resolvePiNumber(quote),
         organization: quote.organization,
         contactName: quote.contactName,
         email: quote.email,
@@ -183,7 +165,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
 
     const existingQuote = await prisma.proformaQuote.findUnique({ where: { id } });
-    if (existingQuote && existingQuote.createdByUserId && existingQuote.createdByUserId !== session.sub) {
+    if (!existingQuote) {
+      return NextResponse.json({ ok: false, error: "Requested document missing." }, { status: 404 });
+    }
+    if (existingQuote.createdByUserId && existingQuote.createdByUserId !== session.sub && session.role !== "ADMIN") {
       return NextResponse.json({ ok: false, error: "Unauthorized: you do not own this quote." }, { status: 403 });
     }
 
@@ -221,8 +206,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     return NextResponse.json({ ok: true });
   } catch (error) {
+    console.error("Failed to submit quote:", error);
     return NextResponse.json(
-      { ok: false, error: error instanceof Error ? error.message : "Failed to submit quote" },
+      { ok: false, error: "Failed to submit quote. Please try again." },
       { status: 500 }
     );
   }

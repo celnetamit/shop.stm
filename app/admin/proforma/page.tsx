@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { jsPDF } from "jspdf";
-import { formatPiNumber } from "@/lib/pi-number";
+import { resolvePiNumber } from "@/lib/pi-number";
 
 type ProformaItem = { id: string; journalName: string; subject?: string; selectedPlan: "PRINT" | "ONLINE" | "PRINT_ONLINE"; unitPrice: number };
 type Proforma = {
@@ -101,7 +101,7 @@ function getFinancialRows(pi: Proforma) {
 }
 
 function AdminPiPdfTemplate({ pi }: { pi: Proforma }) {
-  const piNumber = formatPiNumber({ id: pi.id, createdAt: pi.createdAt });
+  const piNumber = resolvePiNumber(pi);
   const validDate = new Date(pi.createdAt);
   validDate.setDate(validDate.getDate() + 30);
   const formatDate = (d: Date) => `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
@@ -300,7 +300,7 @@ export default function AdminProformaPage() {
         const marginX = (pdfWidth - finalWidth) / 2;
         const marginY = (pdfHeight - finalHeight) / 2;
         pdf.addImage(imgData, "JPEG", marginX, marginY, finalWidth, finalHeight);
-        const piNumber = formatPiNumber({ id: pi.id, createdAt: pi.createdAt });
+        const piNumber = resolvePiNumber(pi);
         pdf.save(proformaPdfFilename(piNumber));
       } catch (err) {
         console.error("Failed to generate admin proforma PDF", err);
@@ -433,7 +433,7 @@ export default function AdminProformaPage() {
               <strong>Coupon:</strong><span>{activePi.couponCode ? `${activePi.couponCode} (${activePi.couponPercent || 0}%)` : "Not Used"}</span>
               <strong>PI Created:</strong><span>{new Date(activePi.createdAt).toLocaleString()}</span>
               <strong>Last Updated:</strong><span>{activePi.updatedAt ? new Date(activePi.updatedAt).toLocaleString() : "-"}</span>
-              <strong>PI Number:</strong><span>{formatPiNumber({ id: activePi.id, createdAt: activePi.createdAt })}</span>
+              <strong>PI Number:</strong><span>{resolvePiNumber(activePi)}</span>
             </div>
 
             <div style={{ marginTop: "16px" }}>

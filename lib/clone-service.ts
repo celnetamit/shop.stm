@@ -1,15 +1,60 @@
 import * as cheerio from "cheerio";
+import DOMPurify from "isomorphic-dompurify";
 import { prisma } from "@/lib/prisma";
 
 const SOURCE_SITE_URL = (process.env.SOURCE_SITE_URL || "https://shop.stmjournals.com").replace(/\/$/, "");
 
+// Robust allow-list sanitization of the mirrored third-party HTML. The cheerio pass
+// above handles transformation (link rewriting, header removal, image absolutization);
+// this pass is the security boundary that neutralizes scripts, event handlers and
+// dangerous URL schemes that a hand-rolled denylist can miss (CSS/SVG/MathML vectors,
+// entity-encoded `javascript:`, `data:`/`vbscript:` URLs, `<base>` hijacking, etc.).
+// Presentation is preserved: <style>/<link rel=stylesheet>/inline styles/images survive.
+function sanitizeClonedHtml(html: string): string {
+  try {
+    return DOMPurify.sanitize(html, {
+      WHOLE_DOCUMENT: true,
+      USE_PROFILES: { html: true },
+      // Keep document-level presentation tags DOMPurify would otherwise drop.
+      ADD_TAGS: ["style", "link", "meta"],
+      ADD_ATTR: ["target", "srcset", "sizes", "loading", "media", "rel", "type", "charset", "content", "name", "property"],
+      FORBID_TAGS: ["script", "base", "iframe", "object", "embed", "form", "noscript"],
+      FORBID_ATTR: ["formaction", "ping"],
+      ALLOW_DATA_ATTR: true
+    });
+  } catch (error) {
+    // Never let a sanitizer failure crash the page — fall back to the cheerio-stripped
+    // HTML (scripts/handlers already removed) rather than serving raw or nothing.
+    console.error("DOMPurify sanitize failed; serving cheerio-stripped HTML instead", error);
+    return html;
+  }
+}
+
 function normalizePath(path: string): string {
-  const cleaned = path.startsWith("/") ? path : `/${path}`;
+  // SSRF guard: reject anything that could redirect the fetch off the source origin
+  // (protocol-relative //evil.com, traversal, credentials, backslashes, schemes, CR/LF).
+  const raw = String(path || "/");
+  if (
+    /[\\\r\n\t]/.test(raw) ||
+    raw.includes("..") ||
+    raw.includes("@") ||
+    /^[a-z][a-z0-9+.-]*:/i.test(raw.trim()) || // absolute scheme like http:, javascript:
+    raw.replace(/^\/+/, "").startsWith("/") // protocol-relative // after leading slashes
+  ) {
+    return "/";
+  }
+  const cleaned = raw.startsWith("/") ? raw : `/${raw}`;
   return cleaned.replace(/\/+$/, "") || "/";
 }
 
 function toAbsoluteUrl(path: string): string {
   if (path === "/") return SOURCE_SITE_URL;
+  // Resolve against the source base and assert the origin never changed.
+  const base = new URL(SOURCE_SITE_URL);
+  const resolved = new URL(path, base);
+  if (resolved.origin !== base.origin) {
+    return SOURCE_SITE_URL;
+  }
   return `${SOURCE_SITE_URL}${path}`;
 }
 
@@ -59,11 +104,10 @@ function rewriteHtml(html: string): string {
   });
 
   $("a, link").each((_, el) => {
-    const attr = el.tagName === "a" ? "href" : "href";
-    const val = $(el).attr(attr);
+    const val = $(el).attr("href");
     if (!val) return;
     if (val.startsWith(SOURCE_SITE_URL)) {
-      $(el).attr(attr, val.replace(SOURCE_SITE_URL, ""));
+      $(el).attr("href", val.replace(SOURCE_SITE_URL, ""));
     }
   });
 
@@ -98,7 +142,8 @@ function rewriteHtml(html: string): string {
     });
   });
 
-  return $.html();
+  // Final security pass: allow-list sanitize the transformed markup.
+  return sanitizeClonedHtml($.html());
 }
 
 function looksLikeSelfMirroredHtml(html: string): boolean {
@@ -134,6 +179,39 @@ function isDbUnavailable(error: unknown): boolean {
   );
 }
 
+// Read a response body as text but abort if it exceeds `maxBytes`, so a malicious or
+// runaway upstream cannot exhaust server memory. Handles chunked responses (no
+// reliable Content-Length) by streaming.
+async function readBodyCapped(response: Response, maxBytes: number): Promise<string> {
+  const reader = response.body?.getReader();
+  if (!reader) return response.text();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (value) {
+      total += value.byteLength;
+      if (total > maxBytes) {
+        await reader.cancel();
+        throw new Error("Source response exceeded the maximum allowed size.");
+      }
+      chunks.push(value);
+    }
+  }
+  return new TextDecoder("utf-8").decode(concatUint8(chunks, total));
+}
+
+function concatUint8(chunks: Uint8Array[], total: number): Uint8Array {
+  const out = new Uint8Array(total);
+  let offset = 0;
+  for (const c of chunks) {
+    out.set(c, offset);
+    offset += c.byteLength;
+  }
+  return out;
+}
+
 export async function fetchAndCachePath(pathInput: string) {
   const path = normalizePath(pathInput);
   const sourceUrl = toAbsoluteUrl(path);
@@ -159,7 +237,18 @@ export async function fetchAndCachePath(pathInput: string) {
     throw new Error(`Failed to fetch ${sourceUrl}: ${response.status}`);
   }
 
-  const html = await response.text();
+  // SSRF defense-in-depth: redirects are followed, but if they leave the trusted
+  // source origin (e.g. a compromised source 302-ing to an internal/metadata host)
+  // we refuse to read the body.
+  try {
+    if (response.url && new URL(response.url).origin !== new URL(SOURCE_SITE_URL).origin) {
+      throw new Error("Cross-origin redirect blocked.");
+    }
+  } catch {
+    throw new Error("Source response failed origin validation.");
+  }
+
+  const html = await readBodyCapped(response, 8 * 1024 * 1024); // cap at 8 MB to bound memory
   if (looksLikeSelfMirroredHtml(html)) {
     throw new Error(
       `Source URL appears to be pointing to this same deployed app (${sourceUrl}). Check SOURCE_SITE_URL.`

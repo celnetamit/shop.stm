@@ -34,3 +34,13 @@ export function formatPiNumber({ id, createdAt }: PiSource): string {
 
   return `${head}/${dd}-${mm}-${yy}/${tail}`;
 }
+
+/**
+ * Canonical PI number for a quote. Prefers the stored, unique `piNumber` (N1);
+ * falls back to the legacy derived format for rows created before the column
+ * existed, so existing quotes/PDFs/emails keep their numbers. Client-safe (pure).
+ */
+export function resolvePiNumber(quote: { id: string; createdAt?: string | Date | null; piNumber?: string | null }): string {
+  if (quote.piNumber) return quote.piNumber;
+  return formatPiNumber({ id: quote.id, createdAt: quote.createdAt });
+}

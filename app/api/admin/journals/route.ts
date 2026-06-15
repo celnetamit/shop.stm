@@ -2,12 +2,14 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { getCurrentSession } from "@/lib/auth/session";
+import { requireAdmin } from "@/lib/auth/guards";
 import { loadJournals, saveJournal, type JournalRow } from "@/lib/journal-data";
+import { invalidateCatalogCache } from "@/lib/journal-catalog";
+import { invalidateChatbotCatalogCache } from "@/lib/chatbot";
 
 export async function GET() {
-  const session = await getCurrentSession();
-  if (!session || session.role !== "ADMIN") {
+  const session = await requireAdmin();
+  if (!session) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
@@ -21,8 +23,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const session = await getCurrentSession();
-  if (!session || session.role !== "ADMIN") {
+  const session = await requireAdmin();
+  if (!session) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
@@ -34,9 +36,11 @@ export async function POST(request: Request) {
     }
 
     const updated = await saveJournal(body as Partial<JournalRow> & { "Journal Name": string });
-    
-    // Purge the Next.js Data Cache and Router Cache to reflect changes immediately
+
+    // Purge the Next.js Data/Router cache AND the in-memory module caches.
     revalidatePath("/", "layout");
+    invalidateCatalogCache();
+    invalidateChatbotCatalogCache();
 
     return NextResponse.json({ ok: true, journal: updated });
   } catch (error) {

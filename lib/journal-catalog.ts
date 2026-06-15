@@ -311,3 +311,64 @@ export async function getJournalBySlug(slug: string): Promise<JournalCatalogItem
   const all = await getJournalCatalog();
   return all.find((j) => j.slug === slug) || null;
 }
+
+// --- Server-side authoritative cart pricing (Phase 3b) ---------------------------------
+
+type CatalogPlan = "PRINT" | "ONLINE" | "PRINT_ONLINE";
+type CatalogPriceRow = { issn?: string | null; journalName?: string | null; printInr: unknown; onlineInr: unknown; combinedInr: unknown };
+
+/** Coerce a catalog price (which may be a number OR a string like "1,500") to a number. */
+function toPriceNumber(v: unknown): number {
+  if (typeof v === "number") return Number.isFinite(v) ? v : 0;
+  const n = Number(String(v ?? "").replace(/[^0-9.]/g, ""));
+  return Number.isFinite(n) ? n : 0;
+}
+
+function normalizeIssn(issn: string): string {
+  return issn.replace(/[^0-9xX]/g, "").toUpperCase();
+}
+
+/** Cart item names are stored as "Journal Name (Issue)" — drop the trailing parenthetical. */
+function stripIssueSuffix(name: string): string {
+  const idx = name.lastIndexOf(" (");
+  return (idx > 0 ? name.slice(0, idx) : name).trim();
+}
+
+/**
+ * Pure: build an authoritative price lookup from a catalog array. Returns a function that,
+ * given a cart item's issn/journalName/plan, returns the catalog base price (INR), or null
+ * when the journal can't be matched (matched first by ISSN, then by normalized name).
+ */
+export function makeCatalogPriceLookup(
+  catalog: CatalogPriceRow[]
+): (item: { issn?: string | null; journalName?: string | null; plan: CatalogPlan }) => number | null {
+  const byIssn = new Map<string, CatalogPriceRow>();
+  const byName = new Map<string, CatalogPriceRow>();
+  for (const j of catalog) {
+    if (j.issn) byIssn.set(normalizeIssn(j.issn), j);
+    if (j.journalName) byName.set(normalizeName(j.journalName), j);
+  }
+  return ({ issn, journalName, plan }) => {
+    let j: CatalogPriceRow | undefined;
+    if (issn) j = byIssn.get(normalizeIssn(issn));
+    if (!j && journalName) j = byName.get(normalizeName(stripIssueSuffix(journalName)));
+    if (!j) return null;
+    const raw = plan === "PRINT" ? j.printInr : plan === "ONLINE" ? j.onlineInr : j.combinedInr;
+    return toPriceNumber(raw);
+  };
+}
+
+/** Async: load the catalog and return a price lookup (see makeCatalogPriceLookup). */
+export async function buildCatalogPriceLookup() {
+  return makeCatalogPriceLookup(await getJournalCatalog());
+}
+
+/**
+ * Reset the in-memory catalog caches so the next read reflects fresh data. Call after an
+ * admin edits/deletes journals (the price file itself is read uncached, but these derived
+ * caches would otherwise stay stale for the life of the server process).
+ */
+export function invalidateCatalogCache(): void {
+  csvCache = null;
+  focusScopeCache = null;
+}

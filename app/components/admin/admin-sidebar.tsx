@@ -36,6 +36,8 @@ export default function AdminSidebar() {
         })}
       </nav>
       <div className="admin-sidebar-footer">
+        {/* Logout is a server route (clears the cookie) — a full navigation is intended. */}
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
         <a href="/api/auth/logout">Logout</a>
       </div>
     </aside>

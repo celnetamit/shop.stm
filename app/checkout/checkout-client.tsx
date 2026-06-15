@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useCart } from "@/app/components/cart-store";
 import { fetchPrefillUser, loadDraft, saveDraft } from "@/lib/client/form-prefill";
+import { computeTotals, computeSubtotal, type PricingPlan } from "@/lib/pricing";
 
 declare global {
   interface Window {
@@ -16,8 +17,6 @@ export default function CheckoutClient() {
   const params = useSearchParams();
   const { items, couponCode, discountPercent, clear } = useCart();
 
-  const queryTotal = Number(params.get("total") || 0);
-  
   // Form States
   const [name, setName] = useState(params.get("name") || "");
   const [email, setEmail] = useState(params.get("email") || "");
@@ -86,85 +85,51 @@ export default function CheckoutClient() {
 
   // 2. Inject Razorpay Secure Protocol Layer
   useEffect(() => {
+    const SRC = "https://checkout.razorpay.com/v1/checkout.js";
+    // Avoid double-injecting under Strict Mode / re-renders.
+    if (document.querySelector(`script[src="${SRC}"]`)) return;
     const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.src = SRC;
     script.async = true;
     document.body.appendChild(script);
     return () => {
-      document.body.removeChild(script);
+      // Guard against "node not found" if it was already removed.
+      if (script.parentNode) script.parentNode.removeChild(script);
     };
   }, []);
 
-  // Secure Pricing Hierarchy with identical itemized GST calculations
+  // Single source of truth for the money math (see lib/pricing.ts) — keeps the amount
+  // the customer pays identical to the proforma quote and the server-recorded order.
+  // The `?total=` URL fallback was removed earlier (it trusted an attacker-controllable
+  // value); pricing now comes only from the loaded quote or the cart, and an empty source
+  // yields 0 so payment is blocked in handlePaymentInitiation.
   const calculatedFinances = useMemo(() => {
-    // Determine product sources
     const sourceItems = quoteData ? (quoteData.items || []) : items;
-    
-    // Resolve applied discount percentage
-    let activeDiscountPercent = discountPercent;
-    if (quoteData) {
-      activeDiscountPercent = quoteData.couponPercent || 0;
-    }
+    const activeDiscountPercent = quoteData ? (quoteData.couponPercent || 0) : discountPercent;
 
-    let calcSubtotal = 0;
-    let calcDiscount = 0;
-    let calcTaxable = 0;
-    let calcCgst = 0;
-    let calcSgst = 0;
+    const pricingItems = sourceItems.map((it: { unitPrice?: number; qty?: number; plan?: string; selectedPlan?: string }) => ({
+      unitPrice: Number(it.unitPrice || 0),
+      qty: Number(it.qty || 1),
+      plan: (it.plan || it.selectedPlan || "PRINT") as PricingPlan
+    }));
+    const subtotal = computeSubtotal(pricingItems);
+    const isINR = quoteData ? quoteData.currency === "INR" : true; // direct checkout charges INR
+    const isExempt = quoteData?.subscriberCategory === "COLLEGE" || quoteData?.subscriberCategory === "EXISTING_PI";
 
-    sourceItems.forEach((it: any) => {
-      const unitPrice = Number(it.unitPrice || 0);
-      const qty = Number(it.qty || 1);
-      const totalItemPrice = unitPrice * qty;
-      
-      const itemDiscount = (totalItemPrice * activeDiscountPercent) / 100;
-      const itemTaxable = totalItemPrice - itemDiscount;
-
-      const rawPlan = it.plan || it.selectedPlan || "";
-      const isDigital = rawPlan === "ONLINE" || rawPlan === "PRINT_ONLINE";
-      // Direct checkout natively triggers Razorpay (INR)
-      const isINR = quoteData ? (quoteData.currency === "INR") : true;
-      const isGstExemptSubscriber = quoteData?.subscriberCategory === "COLLEGE" || quoteData?.subscriberCategory === "EXISTING_PI";
-      const itemGstRate = (isINR && isDigital && !isGstExemptSubscriber) ? 18 : 0;
-
-      const itemGst = itemTaxable * (itemGstRate / 100);
-      const itemCgst = itemGst / 2;
-      const itemSgst = itemGst / 2;
-
-      calcSubtotal += totalItemPrice;
-      calcDiscount += itemDiscount;
-      calcTaxable += itemTaxable;
-      calcCgst += itemCgst;
-      calcSgst += itemSgst;
+    return computeTotals({
+      items: pricingItems,
+      isINR,
+      isExempt,
+      discountAmount: (subtotal * activeDiscountPercent) / 100
     });
-
-    // Guard fallback for direct query parameters
-    if (!quoteData && items.length === 0 && queryTotal > 0) {
-      const fallbackCgst = Math.round(queryTotal * 0.09 * 10) / 10;
-      const fallbackSgst = Math.round(queryTotal * 0.09 * 10) / 10;
-      return {
-        subtotal: queryTotal,
-        discount: 0,
-        taxable: queryTotal,
-        cgst: fallbackCgst,
-        sgst: fallbackSgst,
-        total: Math.round((queryTotal + fallbackCgst + fallbackSgst) * 10) / 10
-      };
-    }
-
-    return {
-      subtotal: Math.round(calcSubtotal * 100) / 100,
-      discount: Math.round(calcDiscount * 100) / 100,
-      taxable: Math.round(calcTaxable * 100) / 100,
-      cgst: Math.round(calcCgst * 100) / 100,
-      sgst: Math.round(calcSgst * 100) / 100,
-      total: Math.round((calcTaxable + calcCgst + calcSgst) * 100) / 100
-    };
-  }, [quoteData, items, discountPercent, queryTotal]);
+  }, [quoteData, items, discountPercent]);
 
   const { subtotal, discount, taxable, cgst, sgst, total } = calculatedFinances;
 
-  const money = (n: number) => `₹${n.toLocaleString("en-IN")}`;
+  // Currency follows the linked quote (cart checkout is INR-only).
+  const checkoutCurrency: "INR" | "USD" = quoteData?.currency === "USD" ? "USD" : "INR";
+  const money = (n: number) =>
+    checkoutCurrency === "USD" ? `$${n.toLocaleString("en-US")}` : `₹${n.toLocaleString("en-IN")}`;
 
   async function handlePaymentInitiation() {
     setOrderMessage("");
@@ -180,11 +145,13 @@ export default function CheckoutClient() {
     setPlacingOrder(true);
 
     try {
-      // Step 1: Create Razorpay Order Intent on Server
+      // Step 1: Create the Razorpay order on the server. For quote-linked checkout the
+      // server computes the authoritative amount from the quote itself and ignores `amount`
+      // (sent only as a fallback for the cart path).
       const orderIntRes = await fetch("/api/checkout/razorpay-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: total, currency: "INR" })
+        body: JSON.stringify({ amount: total, currency: checkoutCurrency, quoteId: queryQuoteId || undefined })
       });
 
       const orderIntData = await orderIntRes.json();
@@ -257,7 +224,7 @@ export default function CheckoutClient() {
           receiverPhone: quoteData?.receiverPhone || null,
           gstNumber: gst || null,
           quoteId: queryQuoteId || null,
-          currency: "INR",
+          currency: checkoutCurrency,
           subtotal,
           discount,
           cgst,

@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Librarian Resources & Tools | STM Journals",
@@ -104,7 +105,7 @@ export default function ForLibrariansPage() {
           Instantly download our price sheets, request dynamic institutional proforma quotes, or recommend titles to your central library committee.
         </p>
         <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" }}>
-          <a href="/catalogues-list" style={{
+          <Link href="/catalogues-list" style={{
             background: "#0F172A",
             color: "#FFFFFF",
             padding: "12px 24px",
@@ -114,8 +115,8 @@ export default function ForLibrariansPage() {
             textDecoration: "none",
           }}>
             📑 Download Catalogue (PDF)
-          </a>
-          <a href="/get-proforma-invoice-quote" style={{
+          </Link>
+          <Link href="/get-proforma-invoice-quote" style={{
             background: "#2563EB",
             color: "#FFFFFF",
             padding: "12px 24px",
@@ -125,7 +126,7 @@ export default function ForLibrariansPage() {
             textDecoration: "none",
           }}>
             ✍️ Generate Proforma Quote
-          </a>
+          </Link>
         </div>
       </section>
 

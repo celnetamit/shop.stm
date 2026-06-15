@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentSession } from "@/lib/auth/session";
+import { errorResponse } from "@/lib/api-error";
 
 export async function GET() {
   try {
@@ -19,6 +20,7 @@ export async function GET() {
       orderBy: { updatedAt: "desc" },
       select: {
         id: true,
+        piNumber: true,
         organization: true,
         institutionName: true,
         contactName: true,
@@ -34,6 +36,6 @@ export async function GET() {
 
     return NextResponse.json({ ok: true, profile: latest || null });
   } catch (error) {
-    return NextResponse.json({ ok: false, error: error instanceof Error ? error.message : "Failed" }, { status: 500 });
+    return errorResponse("proforma.pi-latest.GET", error, "Failed to load your latest PI.");
   }
 }

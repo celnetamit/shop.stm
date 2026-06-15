@@ -31,6 +31,11 @@ async function getCatalogLite() {
   return catalogCache;
 }
 
+/** Reset the chatbot's cached journal list (call after an admin edits/deletes journals). */
+export function invalidateChatbotCatalogCache(): void {
+  catalogCache = null;
+}
+
 async function buildCatalogContext(userMessage: string): Promise<string> {
   const q = userMessage.toLowerCase().trim();
   if (!q) return "";

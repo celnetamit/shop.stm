@@ -139,6 +139,8 @@ export default function RegisterForm() {
       </div>
       {error ? <p className="auth-error">{error}</p> : null}
       {success ? <p className="auth-success">{success}</p> : null}
+      {/* OAuth start is a server route, not a page — a full navigation is intended. */}
+      {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
       <a className="auth-google" href="/api/auth/google/start" aria-label="Continue with Google">
         <svg className="google-logo" viewBox="0 0 24 24" aria-hidden="true">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -150,30 +152,30 @@ export default function RegisterForm() {
       </a>
       <p className="auth-divider">or verify email to register</p>
       <form className="auth-form" onSubmit={onSubmit}>
-        <label className="register-field-label">Email Address</label>
+        <label className="register-field-label" htmlFor="register-email">Email Address</label>
         <div className="register-email-row">
-          <input value={email} onChange={(e) => onEmailChange(e.target.value)} type="email" placeholder="you@institution.edu" required disabled={loading} />
+          <input id="register-email" value={email} onChange={(e) => onEmailChange(e.target.value)} type="email" placeholder="you@institution.edu" required aria-required="true" disabled={loading} />
           <button className="register-otp-btn" type="button" onClick={sendOtp} disabled={sendingOtp || !normalizedEmail || isEmailVerified}>
             {isEmailVerified ? "Verified" : sendingOtp ? "Sending..." : "Send OTP"}
           </button>
         </div>
         {!isEmailVerified ? (
           <div className="register-otp-panel">
-            <label className="register-field-label">Email OTP</label>
+            <label className="register-field-label" htmlFor="register-otp">Email OTP</label>
             <div className="register-email-row">
-              <input value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="6 digit code" />
+              <input id="register-otp" value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="6 digit code" />
               <button className="register-otp-btn" type="button" onClick={verifyOtp} disabled={verifyingOtp || otp.length !== 6}>
                 {verifyingOtp ? "Checking..." : "Verify"}
               </button>
             </div>
           </div>
         ) : null}
-        <label className="register-field-label">Full Name</label>
-        <input value={name} onChange={(e) => setName(e.target.value)} type="text" placeholder="Name (optional)" disabled={!isEmailVerified} />
-        <label className="register-field-label">Password</label>
-        <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Minimum 8 characters" required minLength={8} disabled={!isEmailVerified} />
-        <label className="register-field-label">Designation</label>
-        <select value={role} onChange={(e) => setRole(e.target.value as RegisterRole)} required disabled={!isEmailVerified}>
+        <label className="register-field-label" htmlFor="register-name">Full Name</label>
+        <input id="register-name" value={name} onChange={(e) => setName(e.target.value)} type="text" placeholder="Name (optional)" disabled={!isEmailVerified} />
+        <label className="register-field-label" htmlFor="register-password">Password</label>
+        <input id="register-password" value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Minimum 8 characters" required aria-required="true" minLength={8} disabled={!isEmailVerified} />
+        <label className="register-field-label" htmlFor="register-role">Designation</label>
+        <select id="register-role" value={role} onChange={(e) => setRole(e.target.value as RegisterRole)} required aria-required="true" disabled={!isEmailVerified}>
           <option value="LIBRARIAN">Librarian</option>
           <option value="AGENCY">Agency</option>
           <option value="USER">College / Institution</option>
@@ -181,10 +183,10 @@ export default function RegisterForm() {
         </select>
         {ACADEMIC_ROLES.includes(role) ? (
           <>
-            <label className="register-field-label">College Name</label>
-            <input value={collegeName} onChange={(e) => setCollegeName(e.target.value)} type="text" placeholder="College / Institution Name" disabled={!isEmailVerified} />
-            <label className="register-field-label">College Address</label>
-            <input value={collegeAddress} onChange={(e) => setCollegeAddress(e.target.value)} type="text" placeholder="College Address" disabled={!isEmailVerified} />
+            <label className="register-field-label" htmlFor="register-college-name">College Name</label>
+            <input id="register-college-name" value={collegeName} onChange={(e) => setCollegeName(e.target.value)} type="text" placeholder="College / Institution Name" disabled={!isEmailVerified} />
+            <label className="register-field-label" htmlFor="register-college-address">College Address</label>
+            <input id="register-college-address" value={collegeAddress} onChange={(e) => setCollegeAddress(e.target.value)} type="text" placeholder="College Address" disabled={!isEmailVerified} />
           </>
         ) : null}
         <button className="auth-btn register-submit-btn" type="submit" disabled={loading || !isEmailVerified}>{loading ? "Creating..." : "Create Account"}</button>

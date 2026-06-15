@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentSession } from "@/lib/auth/session";
+import { errorResponse } from "@/lib/api-error";
 
 function missingCouponTable(error: unknown): boolean {
   if (!(error instanceof Error)) return false;
@@ -19,7 +20,7 @@ export async function GET() {
     return NextResponse.json({ ok: true, coupons: hasFallback ? rows : [fallbackCoupon, ...rows] });
   } catch (error) {
     if (!missingCouponTable(error)) {
-      return NextResponse.json({ ok: false, error: error instanceof Error ? error.message : "Failed" }, { status: 500 });
+      return errorResponse("coupons.GET", error, "Failed to load coupons.");
     }
     return NextResponse.json({ ok: true, coupons: [fallbackCoupon], warning: "Coupon table missing" });
   }
@@ -87,6 +88,6 @@ export async function POST(req: NextRequest) {
     if (missingCouponTable(error)) {
       return NextResponse.json({ ok: false, error: "Coupon table missing. Run prisma db push." }, { status: 500 });
     }
-    return NextResponse.json({ ok: false, error: error instanceof Error ? error.message : "Failed" }, { status: 500 });
+    return errorResponse("coupons.POST", error, "Failed to save coupon.");
   }
 }

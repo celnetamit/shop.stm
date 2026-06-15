@@ -110,7 +110,7 @@ export default function AdminAgencyQueriesPage() {
                         </span>
                         {r.message && (
                           <p style={{ margin: 0, fontSize: "13px", color: "#64748B", lineHeight: "1.5", fontStyle: "italic" }}>
-                            "{r.message}"
+                            &quot;{r.message}&quot;
                           </p>
                         )}
                       </td>

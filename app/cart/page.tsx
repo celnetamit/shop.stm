@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { useCart } from "@/app/components/cart-store";
+import { useCart, lineKey } from "@/app/components/cart-store";
 
 export default function CartPage() {
   const { items, setQty, removeItem, couponCode, discountPercent, setCoupon } = useCart();
@@ -79,8 +79,9 @@ export default function CartPage() {
               lowerName.includes("textbook");
             const itemHsn = it.plan === "ONLINE" ? "998431" : isBook ? "4901" : "4902";
 
+            const key = lineKey(it);
             return (
-              <article key={it.id} className="cart-row">
+              <article key={key} className="cart-row">
                 <img src={it.image} alt={it.journalName} />
                 <div>
                   <h3>{it.journalName}</h3>
@@ -93,12 +94,12 @@ export default function CartPage() {
                   </p>
                 </div>
                 <div className="cart-qty">
-                  <button onClick={() => setQty(it.id, it.qty - 1)}>-</button>
+                  <button onClick={() => setQty(key, it.qty - 1)}>-</button>
                   <span>{it.qty}</span>
-                  <button onClick={() => setQty(it.id, it.qty + 1)}>+</button>
+                  <button onClick={() => setQty(key, it.qty + 1)}>+</button>
                 </div>
                 <strong>{money(it.unitPrice * it.qty)}</strong>
-                <button className="cart-remove" onClick={() => removeItem(it.id)}>x</button>
+                <button className="cart-remove" onClick={() => removeItem(key)}>x</button>
               </article>
             );
           })}

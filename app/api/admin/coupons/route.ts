@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentSession } from "@/lib/auth/session";
+import { requireAdmin } from "@/lib/auth/guards";
 
 function missingCouponTable(error: unknown): boolean {
   if (!(error instanceof Error)) return false;
@@ -13,8 +13,8 @@ function missingCouponTable(error: unknown): boolean {
 const fallbackCoupon = { id: "fallback-manish10", code: "MANISH10", discount: 10, isActive: true, createdAt: new Date().toISOString() };
 
 export async function GET() {
-  const session = await getCurrentSession();
-  if (!session || session.role !== "ADMIN") return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  const session = await requireAdmin();
+  if (!session) return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
 
   try {
     const coupons = await prisma.coupon.findMany({ orderBy: { createdAt: "desc" }, take: 200 });
