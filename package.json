@@ -15,7 +15,7 @@
     "start:prod": "next start -H 0.0.0.0 -p 3000"
   },
   "dependencies": {
-    "@aws-sdk/client-ses": "^3.1045.0",
+    "@aws-sdk/client-ses": "^3.1069.0",
     "@prisma/client": "^6.8.2",
     "bcryptjs": "^3.0.3",
     "cheerio": "^1.1.0",
@@ -23,16 +23,16 @@
     "isomorphic-dompurify": "^2.36.0",
     "jose": "^6.2.3",
     "jspdf": "^4.2.1",
-    "jspdf-autotable": "^5.0.7",
+    "jspdf-autotable": "^5.0.8",
     "next": "^15.5.19",
-    "pg": "^8.13.1",
+    "pg": "^8.21.0",
     "razorpay": "^2.9.6",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
   },
   "devDependencies": {
     "@types/node": "^22.15.17",
-    "@types/react": "^19.1.4",
+    "@types/react": "^19.2.17",
     "@types/react-dom": "^19.1.5",
     "eslint": "^8.57.1",
     "eslint-config-next": "^15.5.19",
