@@ -34,7 +34,7 @@
     "@types/node": "^22.15.17",
     "@types/react": "^19.1.4",
     "@types/react-dom": "^19.1.5",
-    "eslint": "^8.57.1",
+    "eslint": "^10.5.0",
     "eslint-config-next": "^15.5.19",
     "prisma": "^6.8.2",
     "typescript": "^5.8.3",
