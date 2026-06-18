@@ -19,6 +19,7 @@ COPY . .
 # Environment variables must be present at build time
 # Explicitly mark build phase to bypass runtime database calls if necessary
 ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_OPTIONS="--max-old-space-size=1536"
 
 RUN npx prisma@6 generate && npm run build
 
