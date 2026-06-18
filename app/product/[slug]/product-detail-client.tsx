@@ -45,11 +45,10 @@ type Tab = "DESCRIPTION" | "ABOUT" | "FOCUS" | "INDEXING";
 
 export default function ProductDetailClient({ journal, domains, description, about, focus }: Props) {
   const { addItem, items } = useCart();
-  const year = new Date().getFullYear();
-  const years = [year, year - 1, year - 2];
+  const years = [2026, 2025, 2024];
 
   const [plan, setPlan] = useState<Plan>("ONLINE");
-  const [selectedYear, setSelectedYear] = useState<string>(String(year));
+  const [selectedYear, setSelectedYear] = useState<string>("2026");
   const [selectedIssue, setSelectedIssue] = useState<string>("All(Jan-Dec)");
   const [tab, setTab] = useState<Tab>("DESCRIPTION");
 

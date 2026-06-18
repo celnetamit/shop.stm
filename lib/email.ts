@@ -132,7 +132,7 @@ function buildModernEmailTemplate(content: string, title: string, isJournalsPub?
           <p style="margin:0 0 6px; color:#ffffff; font-weight:600; font-family: Arial, sans-serif; letter-spacing: 0.5px;">Empowering Scientific Innovation</p>
           <p style="margin:0; color:#94a3b8; font-size:11px;">&copy; ${new Date().getFullYear()} ${brandCopyright}</p>
           <p style="margin:4px 0 0; color:#94a3b8; font-size:11px;">${brandAddress} | <a href="mailto:${brandEmail}" style="color:#38bdf8; text-decoration:none;">${brandEmail}</a></p>
-          <p style="margin:6px 0 0; color:#94a3b8; font-size:11px;">+91-9810078950 (M) | +91-0120-4781200 / 206 (L)</p>
+          <p style="margin:6px 0 0; color:#94a3b8; font-size:11px;">+91-9810078958 (M) | +91-0120-4781200 / 206 (L)</p>
         </td>
       </tr>
     </table>

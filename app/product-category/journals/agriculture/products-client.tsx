@@ -4,6 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/app/components/cart-store";
 import { fetchPrefillUser, loadDraft, saveDraft } from "@/lib/client/form-prefill";
+import {
+  buildJournalCartItemId,
+  getCurrentSubscriptionYears,
+  getIssueCountFromFrequency,
+  getIssueLabels,
+  getIssueWiseUnitPrice
+} from "@/lib/journal-cart";
 
 type Journal = {
   id: string;
@@ -21,9 +28,11 @@ type Journal = {
 };
 
 export default function AgricultureCatalogClient({ journals }: { journals: Journal[] }) {
-  const { addItem, items } = useCart();
+  const { addItem, items, removeItem, setQty } = useCart();
   const [query, setQuery] = useState("");
   const [planById, setPlanById] = useState<Record<string, "PRINT" | "ONLINE" | "PRINT_ONLINE">>({});
+  const [rowConfigById, setRowConfigById] = useState<Record<string, { year: string; issue: string }>>({});
+  const years = getCurrentSubscriptionYears();
 
   // Form States
   const [name, setName] = useState("");
@@ -74,6 +83,10 @@ export default function AgricultureCatalogClient({ journals }: { journals: Journ
 
   const getPrice = (j: Journal, plan: "PRINT" | "ONLINE" | "PRINT_ONLINE") =>
     plan === "ONLINE" ? j.onlineInr : plan === "PRINT_ONLINE" ? j.combinedInr : j.printInr;
+
+  function getRowConfig(id: string) {
+    return rowConfigById[id] || { year: String(years[0]), issue: "All(Jan-Dec)" };
+  }
 
   async function submitQuery(e: React.FormEvent) {
     e.preventDefault();
@@ -128,10 +141,12 @@ export default function AgricultureCatalogClient({ journals }: { journals: Journ
       <section className="agri-grid">
         {filtered.map((j) => {
           const plan = planById[j.id] || "PRINT";
-          const price = getPrice(j, plan);
-          const qty = items
-            .filter((it) => it.id.startsWith(`${j.id}-`))
-            .reduce((sum, it) => sum + it.qty, 0);
+          const rowConfig = getRowConfig(j.id);
+          const totalIssues = getIssueCountFromFrequency(j.frequency);
+          const issueLabels = getIssueLabels(totalIssues);
+          const price = getIssueWiseUnitPrice(getPrice(j, plan), totalIssues, rowConfig.issue);
+          const cartItemId = buildJournalCartItemId(j.id, plan, rowConfig.year, rowConfig.issue);
+          const qty = items.filter((it) => it.id === cartItemId).reduce((sum, it) => sum + it.qty, 0);
 
           const isBook =
             j.subject.toLowerCase().includes("book") ||
@@ -165,25 +180,72 @@ export default function AgricultureCatalogClient({ journals }: { journals: Journ
                     <option value="ONLINE">Online</option>
                     <option value="PRINT_ONLINE">Print + Online</option>
                   </select>
+                  <select
+                    value={rowConfig.year}
+                    onChange={(e) => setRowConfigById((prev) => ({ ...prev, [j.id]: { ...rowConfig, year: e.target.value } }))}
+                  >
+                    {years.map((year) => (
+                      <option key={year} value={String(year)}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={rowConfig.issue}
+                    onChange={(e) => setRowConfigById((prev) => ({ ...prev, [j.id]: { ...rowConfig, issue: e.target.value } }))}
+                  >
+                    <option value="All(Jan-Dec)">All issues</option>
+                    {issueLabels.map((label) => (
+                      <option key={label} value={label}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
                   <span className="agri-price">₹{price.toLocaleString("en-IN")}</span>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    addItem({
-                      id: `${j.id}-${plan}`,
-                      journalName: j.journalName,
-                      subject: j.subject,
-                      issn: j.issn,
-                      image: j.imageUrl || "https://dummyimage.com/360x460/eaf0ff/17366f.png&text=STM+Journal",
-                      year: "2026",
-                      plan,
-                      unitPrice: price
-                    });
-                  }}
-                >
-                  Add to Cart
-                </button>
+                {qty > 0 ? (
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                    <button type="button" onClick={() => setQty(cartItemId, qty - 1)} className="agri-cart-mini">-</button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        addItem({
+                          id: cartItemId,
+                          journalName: `${j.journalName}${rowConfig.issue === "All(Jan-Dec)" ? "" : ` (${rowConfig.issue})`}`,
+                          subject: j.subject,
+                          issn: j.issn,
+                          image: j.imageUrl || "https://dummyimage.com/360x460/eaf0ff/17366f.png&text=STM+Journal",
+                          year: rowConfig.year,
+                          issue: rowConfig.issue,
+                          plan,
+                          unitPrice: price
+                        })
+                      }
+                    >
+                      In Cart: {qty}
+                    </button>
+                    <button type="button" onClick={() => removeItem(cartItemId)} className="agri-cart-mini">Remove</button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      addItem({
+                        id: cartItemId,
+                        journalName: `${j.journalName}${rowConfig.issue === "All(Jan-Dec)" ? "" : ` (${rowConfig.issue})`}`,
+                        subject: j.subject,
+                        issn: j.issn,
+                        image: j.imageUrl || "https://dummyimage.com/360x460/eaf0ff/17366f.png&text=STM+Journal",
+                        year: rowConfig.year,
+                        issue: rowConfig.issue,
+                        plan,
+                        unitPrice: price
+                      })
+                    }
+                  >
+                    Add to Cart
+                  </button>
+                )}
                 {qty > 0 ? <div className="agri-qty-badge">{qty}</div> : null}
               </div>
             </article>

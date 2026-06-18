@@ -75,7 +75,7 @@ function BookImage({ src, title, category }: { src: string | null; title: string
 
 
 export default function BooksClient({ initialBooks, categories }: Props) {
-  const { addItem, items } = useCart();
+  const { addItem, items, removeItem, setQty } = useCart();
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [addedAnimationId, setAddedAnimationId] = useState<string | null>(null);
@@ -381,50 +381,109 @@ export default function BooksClient({ initialBooks, categories }: Props) {
                         )}
                       </div>
 
-                      {/* Interactive Add Action Trigger */}
-                      <button
-                        onClick={() => handleAddToCart(book)}
-                        disabled={isAnimating}
-                        style={{
-                          width: "100%",
-                          background: isAnimating ? "#10b981" : "#0f172a",
-                          color: "#ffffff",
-                          border: "none",
-                          padding: "14px 20px",
-                          borderRadius: "12px",
-                          fontWeight: "700",
-                          fontSize: "14px",
-                          cursor: "pointer",
-                          transition: "all 0.2s ease",
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                          gap: "8px"
-                        }}
-                        onMouseOver={(e) => {
-                          if (!isAnimating) {
-                            e.currentTarget.style.background = "#1e293b";
-                          }
-                        }}
-                        onMouseOut={(e) => {
-                          if (!isAnimating) {
-                            e.currentTarget.style.background = "#0f172a";
-                          }
-                        }}
-                      >
-                        {isAnimating ? (
-                          <>
-                            <span>✓</span> Added successfully!
-                          </>
-                        ) : (
-                          <>
-                            <svg style={{ width: "16px", height: "16px" }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
-                            Add to Cart
-                          </>
-                        )}
-                      </button>
+                      {cartQty > 0 ? (
+                        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                          <button
+                            type="button"
+                            onClick={() => setQty(`book-${book.id}`, cartQty - 1)}
+                            style={{
+                              width: "44px",
+                              height: "46px",
+                              borderRadius: "12px",
+                              border: "1px solid #cbd5e1",
+                              background: "#f8fafc",
+                              color: "#0f172a",
+                              fontWeight: "800",
+                              cursor: "pointer"
+                            }}
+                          >
+                            -
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleAddToCart(book)}
+                            disabled={isAnimating}
+                            style={{
+                              flex: 1,
+                              background: isAnimating ? "#10b981" : "#0f172a",
+                              color: "#ffffff",
+                              border: "none",
+                              padding: "14px 20px",
+                              borderRadius: "12px",
+                              fontWeight: "700",
+                              fontSize: "14px",
+                              cursor: "pointer",
+                              transition: "all 0.2s ease",
+                              display: "flex",
+                              justifyContent: "center",
+                              alignItems: "center",
+                              gap: "8px"
+                            }}
+                          >
+                            {isAnimating ? "Added successfully!" : `In Cart: ${cartQty}`}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => removeItem(`book-${book.id}`)}
+                            style={{
+                              width: "74px",
+                              height: "46px",
+                              borderRadius: "12px",
+                              border: "1px solid #cbd5e1",
+                              background: "#f8fafc",
+                              color: "#0f172a",
+                              fontWeight: "700",
+                              cursor: "pointer"
+                            }}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleAddToCart(book)}
+                          disabled={isAnimating}
+                          style={{
+                            width: "100%",
+                            background: isAnimating ? "#10b981" : "#0f172a",
+                            color: "#ffffff",
+                            border: "none",
+                            padding: "14px 20px",
+                            borderRadius: "12px",
+                            fontWeight: "700",
+                            fontSize: "14px",
+                            cursor: "pointer",
+                            transition: "all 0.2s ease",
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            gap: "8px"
+                          }}
+                          onMouseOver={(e) => {
+                            if (!isAnimating) {
+                              e.currentTarget.style.background = "#1e293b";
+                            }
+                          }}
+                          onMouseOut={(e) => {
+                            if (!isAnimating) {
+                              e.currentTarget.style.background = "#0f172a";
+                            }
+                          }}
+                        >
+                          {isAnimating ? (
+                            <>
+                              <span>✓</span> Added successfully!
+                            </>
+                          ) : (
+                            <>
+                              <svg style={{ width: "16px", height: "16px" }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                              </svg>
+                              Add to Cart
+                            </>
+                          )}
+                        </button>
+                      )}
                     </div>
                   </div>
 

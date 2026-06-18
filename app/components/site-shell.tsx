@@ -19,6 +19,7 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
   const { items } = useCart();
   const [user, setUser] = useState<SessionUser | null>(null);
   const [domains, setDomains] = useState<DomainCount[]>([]);
+  const [totalJournals, setTotalJournals] = useState<number>(0);
   const hideChrome = pathname.startsWith("/checkout") || pathname.startsWith("/payment");
   const count = items.reduce((s, i) => s + i.qty, 0);
 
@@ -69,13 +70,15 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
     let active = true;
     fetch("/api/domains", { cache: "no-store" })
       .then((res) => res.json())
-      .then((json: { ok: boolean; domains?: DomainCount[] }) => {
+      .then((json: { ok: boolean; domains?: DomainCount[]; total?: number }) => {
         if (!active) return;
         setDomains(json.ok && json.domains ? json.domains : []);
+        setTotalJournals(json.ok && typeof json.total === "number" ? json.total : (json.domains || []).reduce((sum, item) => sum + item.count, 0));
       })
       .catch(() => {
         if (!active) return;
         setDomains([]);
+        setTotalJournals(0);
       });
     return () => {
       active = false;
@@ -357,6 +360,11 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
                   onMouseOut={e => e.currentTarget.style.color = openDropdown === "disciplines" ? "var(--brand)" : "var(--text)"}
                 >
                   Browse Disciplines
+                  {totalJournals > 0 ? (
+                    <span style={{ fontSize: "11px", fontWeight: 800, color: "var(--brand)", background: "var(--accent-glow)", borderRadius: "999px", padding: "2px 8px" }}>
+                      {totalJournals}
+                    </span>
+                  ) : null}
                   <span style={{ fontSize: "10px", transform: openDropdown === "disciplines" ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>▼</span>
                 </button>
                 
@@ -370,7 +378,10 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
                       ))}
                     </div>
                     <div style={{ marginTop: "24px", textAlign: "center" }}>
-                      <Link href="/catalogues-list" onClick={() => setOpenDropdown(null)} style={{ background: "var(--brand)", color: "white", padding: "10px 24px", borderRadius: "99px", textDecoration: "none", fontSize: "14px", fontWeight: "bold", display: "inline-block" }}>View Full Catalog</Link>
+                      <Link href="/catalogues-list" onClick={() => setOpenDropdown(null)} style={{ background: "var(--brand)", color: "white", padding: "10px 24px", borderRadius: "99px", textDecoration: "none", fontSize: "14px", fontWeight: "bold", display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                        View Full Catalog
+                        {totalJournals > 0 ? <span style={{ background: "rgba(255,255,255,0.18)", padding: "2px 8px", borderRadius: "999px", fontSize: "11px" }}>{totalJournals}</span> : null}
+                      </Link>
                     </div>
                   </div>
                 )}
@@ -410,7 +421,7 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
                 <div style={{ display: "flex", gap: "10px", alignItems: "flex-start", justifyContent: "center" }}>
                   <span style={{ fontSize: "14px", marginTop: "2px" }}>📞</span>
                   <div style={{ textAlign: "left" }}>
-                    <a href="tel:+919810078950" style={{ color: "#8b9ebd", textDecoration: "none", display: "block" }}>+91-9810078950 (M)</a>
+                    <a href="tel:+919810078958" style={{ color: "#8b9ebd", textDecoration: "none", display: "block" }}>+91-9810078958 (M)</a>
                     <a href="tel:+911204781200" style={{ color: "#8b9ebd", textDecoration: "none", display: "block", marginTop: "4px" }}>+91-0120-4781200 / 208 (L)</a>
                   </div>
                 </div>

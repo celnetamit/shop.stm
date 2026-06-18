@@ -292,6 +292,20 @@ export default function PublicChatbot() {
           70% { transform: scale(1.18); opacity: 0; }
           100% { transform: scale(1.2); opacity: 0; }
         }
+
+        .public-chatbot-root {
+          color: var(--text);
+        }
+
+        .public-chatbot-root input {
+          color: var(--text);
+          background: var(--surface-soft);
+          border-color: var(--line);
+        }
+
+        .public-chatbot-root input::placeholder {
+          color: var(--muted);
+        }
       ` }} />
 
       {open && (
@@ -303,8 +317,8 @@ export default function PublicChatbot() {
             bottom: "92px",
             width: "min(360px, calc(100vw - 24px))",
             height: "500px",
-            background: "#fff",
-            border: "1px solid #dbe3f1",
+            background: "var(--surface)",
+            border: "1px solid var(--line)",
             borderRadius: "14px",
             boxShadow: "0 20px 40px rgba(2, 12, 27, 0.18)",
             zIndex: 9998,
@@ -313,23 +327,23 @@ export default function PublicChatbot() {
             overflow: "hidden"
           }}
         >
-          <div style={{ padding: "12px 14px", borderBottom: "1px solid #e5ebf5", background: "#0f2a57", color: "#fff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ padding: "12px 14px", borderBottom: "1px solid var(--line)", background: "linear-gradient(135deg, var(--brand), #1e3a8a)", color: "#fff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <strong style={{ fontSize: "14px" }}>STM Assistant</strong>
             <button onClick={() => setOpen(false)} style={{ background: "transparent", border: "none", color: "#fff", cursor: "pointer", fontSize: "16px" }} aria-label="Close assistant">x</button>
           </div>
 
-          <div style={{ padding: "10px", display: "flex", gap: "6px", flexWrap: "wrap", borderBottom: "1px solid #eef2f8" }}>
+          <div style={{ padding: "10px", display: "flex", gap: "6px", flexWrap: "wrap", borderBottom: "1px solid var(--line)" }}>
             {quickPrompts.map((p) => (
-              <button key={p} onClick={() => send(p)} style={{ border: "1px solid #cfe0ff", background: "#f3f7ff", color: "#1f4ea1", borderRadius: "999px", padding: "5px 10px", fontSize: "11px", cursor: "pointer" }}>
+              <button key={p} onClick={() => send(p)} style={{ border: "1px solid var(--line)", background: "var(--surface-soft)", color: "var(--text)", borderRadius: "999px", padding: "5px 10px", fontSize: "11px", cursor: "pointer" }}>
                 {p}
               </button>
             ))}
           </div>
 
-          <div style={{ flex: 1, overflowY: "auto", padding: "12px", background: "#f8fbff" }}>
+          <div style={{ flex: 1, overflowY: "auto", padding: "12px", background: "var(--surface)" }}>
             {messages.map((m) => (
               <div key={m.id} style={{ marginBottom: "10px", display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
-                <div style={{ maxWidth: "88%", background: m.role === "user" ? "#1d4ed8" : "#ffffff", color: m.role === "user" ? "#fff" : "#1e293b", border: m.role === "user" ? "none" : "1px solid #dbe5f4", borderRadius: "10px", padding: "9px 10px", fontSize: "12px", lineHeight: 1.45 }}>
+                <div style={{ maxWidth: "88%", background: m.role === "user" ? "var(--brand)" : "var(--surface-soft)", color: m.role === "user" ? "#fff" : "var(--text)", border: m.role === "user" ? "none" : "1px solid var(--line)", borderRadius: "10px", padding: "9px 10px", fontSize: "12px", lineHeight: 1.45 }}>
                   <div>{m.text}</div>
                   {m.steps && m.steps.length > 0 && (
                     <ol style={{ margin: "8px 0 0 16px", padding: 0 }}>
@@ -341,7 +355,7 @@ export default function PublicChatbot() {
                   {m.links && m.links.length > 0 && (
                     <div style={{ marginTop: "8px", display: "flex", gap: "6px", flexWrap: "wrap" }}>
                       {m.links.map((l) => (
-                        <a key={`${m.id}-${l.href}`} href={l.href} style={{ textDecoration: "none", fontWeight: 700, fontSize: "11px", color: m.role === "user" ? "#dbeafe" : "#1d4ed8" }}>
+                        <a key={`${m.id}-${l.href}`} href={l.href} style={{ textDecoration: "none", fontWeight: 700, fontSize: "11px", color: m.role === "user" ? "#dbeafe" : "var(--brand)" }}>
                           {l.label}
                         </a>
                       ))}
@@ -352,7 +366,7 @@ export default function PublicChatbot() {
             ))}
           </div>
 
-          <div style={{ display: "flex", gap: "8px", padding: "10px", borderTop: "1px solid #e7edf6", background: "#fff" }}>
+          <div style={{ display: "flex", gap: "8px", padding: "10px", borderTop: "1px solid var(--line)", background: "var(--surface)" }}>
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -360,9 +374,9 @@ export default function PublicChatbot() {
                 if (e.key === "Enter") send();
               }}
               placeholder="Ask about process, page, invoice, PI..."
-              style={{ flex: 1, border: "1px solid #cdd8ea", borderRadius: "8px", padding: "8px 10px", fontSize: "12px", outline: "none" }}
+              style={{ flex: 1, border: "1px solid var(--line)", borderRadius: "8px", padding: "8px 10px", fontSize: "12px", outline: "none", background: "var(--surface-soft)", color: "var(--text)" }}
             />
-            <button onClick={() => send()} style={{ border: "none", borderRadius: "8px", background: "#1d4ed8", color: "#fff", padding: "8px 12px", fontSize: "12px", fontWeight: 700, cursor: "pointer" }}>
+            <button onClick={() => send()} style={{ border: "none", borderRadius: "8px", background: "var(--brand)", color: "#fff", padding: "8px 12px", fontSize: "12px", fontWeight: 700, cursor: "pointer" }}>
               {isSending ? "..." : "Send"}
             </button>
           </div>

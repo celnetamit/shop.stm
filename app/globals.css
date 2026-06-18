@@ -913,7 +913,7 @@ a {
 
 .catalogues-table-v2 {
   width: 100%;
-  min-width: 1100px;
+  min-width: 1450px;
   border-collapse: collapse;
   background: #fff;
 }
@@ -2194,6 +2194,16 @@ a {
   pointer-events: none;
 }
 
+.agri-cart-mini {
+  border: 1px solid #ced9ef;
+  border-radius: 8px;
+  background: #f5f8ff;
+  color: #0f172a;
+  padding: 8px 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
 .cart-page {
   max-width: 1220px;
   margin: 0 auto;
@@ -2469,6 +2479,7 @@ a {
   --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   --card-shadow-hover: 0 20px 40px rgba(0, 0, 0, 0.5);
   --hero-bg: linear-gradient(135deg, rgba(0, 0, 0, 0.96) 0%, rgba(5, 5, 5, 0.94) 50%, rgba(10, 10, 10, 0.96) 100%), url('/boztay_akimkhan-book-1934675.jpg');
+  color-scheme: dark;
 }
 
 html,
@@ -2492,6 +2503,93 @@ a {
 }
 a:hover {
   color: var(--accent);
+}
+
+.dark input,
+.dark textarea,
+.dark select {
+  background: var(--surface-soft);
+  color: var(--text);
+  border-color: var(--line);
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: var(--muted);
+}
+
+.dark .catalogues-v2,
+.dark .product-v2-page,
+.dark .books-catalog-page,
+.dark .agri-page,
+.dark .cart-page,
+.dark .home-page-v3,
+.dark .proforma-page {
+  color: var(--text);
+}
+
+.dark .catalogue-grid-card,
+.dark .catalogues-table-v2,
+.dark .catalogues-page-footer,
+.dark .product-v2-main,
+.dark .product-v2-panel,
+.dark .product-v2-sidebar,
+.dark .books-catalog-page article,
+.dark .agri-card,
+.dark .cart-row,
+.dark .home-section-block,
+.dark .proforma-card,
+.dark .proforma-main,
+.dark .proforma-summary,
+.dark .proforma-invoice,
+.dark .coupon-card,
+.dark .coupon-table-card,
+.dark .auth-card,
+.dark .login-card,
+.dark .register-card {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--text);
+}
+
+.dark .catalogues-journal,
+.dark .catalogues-subject,
+.dark .catalogue-grid-card .journal-title,
+.dark .catalogue-grid-card .card-details p,
+.dark .proforma-row-title strong,
+.dark .proforma-row-title div,
+.dark .proforma-section-title,
+.dark .proforma-step-one h2,
+.dark .proforma-main h2,
+.dark .proforma-title,
+.dark .login-card h1,
+.dark .register-head h1,
+.dark .register-head p,
+.dark .login-subtitle {
+  color: var(--text);
+}
+
+.dark .catalogue-grid-card,
+.dark .catalogues-table-v2,
+.dark .catalogues-page-footer,
+.dark .product-v2-main,
+.dark .product-v2-panel,
+.dark .product-v2-sidebar,
+.dark .agri-card,
+.dark .cart-row,
+.dark .home-section-block,
+.dark .proforma-card,
+.dark .proforma-main,
+.dark .proforma-summary,
+.dark .proforma-invoice,
+.dark .coupon-card,
+.dark .coupon-table-card,
+.dark .auth-card,
+.dark .login-card,
+.dark .register-card {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+  color: var(--text) !important;
 }
 
 /* Custom premium scrollbar */

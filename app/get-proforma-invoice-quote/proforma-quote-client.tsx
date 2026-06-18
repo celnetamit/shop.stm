@@ -216,7 +216,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
         {
           id: `initial-${serialNo}`,
           type: "ANNUAL",
-          year: 2025,
+          year: 2026,
           plan: "PRINT",
           selectedIssues: Array.from({ length: totalIssues }, (_, i) => i + 1)
         }
@@ -229,13 +229,13 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
     const totalIssues = getIssueCountFromFrequency(frequency);
     const current = getConfigsForJournal(serialNo, frequency);
     
-    const lastYear = current.length > 0 ? Math.max(...current.map(c => c.year)) : 2025;
+    const lastYear = current.length > 0 ? Math.max(...current.map(c => c.year)) : 2026;
     const nextYear = lastYear + 1;
 
     const newConfig: SubscriptionConfig = {
       id: `${serialNo}-${Date.now()}-${Math.random()}`,
       type: "ANNUAL",
-      year: nextYear <= 2027 ? nextYear : 2025,
+      year: nextYear <= 2027 ? nextYear : 2026,
       plan: "PRINT",
       selectedIssues: Array.from({ length: totalIssues }, (_, i) => i + 1)
     };
@@ -739,7 +739,8 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
     }
 
     setStep(3);
-    setSendEmailAfterPreview(true);
+    const shouldAutoSendEmail = userRole !== "ADMIN" && userRole !== "MANAGER";
+    setSendEmailAfterPreview(shouldAutoSendEmail);
   }
 
   async function onApplyCoupon() {

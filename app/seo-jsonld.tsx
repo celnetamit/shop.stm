@@ -12,7 +12,7 @@ export default function SeoJsonLd({ additionalNodes = [] }: { additionalNodes?: 
         logo: `${siteUrl}/favicon.ico`,
         contactPoint: {
           "@type": "ContactPoint",
-          telephone: "+91-9810078950",
+          telephone: "+91-9810078958",
           contactType: "customer service",
           email: "subscriptions@stmjournals.com",
           availableLanguage: "English"

@@ -74,7 +74,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         });
       },
       removeItem: (id) => setItems((prev) => prev.filter((x) => x.id !== id)),
-      setQty: (id, qty) => setItems((prev) => prev.map((x) => (x.id === id ? { ...x, qty: Math.max(1, qty) } : x))),
+      setQty: (id, qty) =>
+        setItems((prev) =>
+          qty <= 0
+            ? prev.filter((x) => x.id !== id)
+            : prev.map((x) => (x.id === id ? { ...x, qty } : x))
+        ),
       clear: () => {
         setItems([]);
         setCouponCode("");

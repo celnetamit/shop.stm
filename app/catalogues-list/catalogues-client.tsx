@@ -3,6 +3,14 @@
 import { useMemo, useState } from "react";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { useCart } from "@/app/components/cart-store";
+import {
+  buildJournalCartItemId,
+  getCurrentSubscriptionYears,
+  getIssueCountFromFrequency,
+  getIssueLabels,
+  getIssueWiseUnitPrice
+} from "@/lib/journal-cart";
 
 type JournalItem = {
   serialNo: number;
@@ -26,10 +34,13 @@ type Props = {
 };
 
 export default function CataloguesClient({ journals, initialCurrency = "INR" }: Props) {
+  const { addItem, items, removeItem, setQty } = useCart();
   const [keyword, setKeyword] = useState("");
   const [domain, setDomain] = useState("All Domains");
   const [currency, setCurrency] = useState<"INR" | "USD">(initialCurrency);
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  const [rowConfigById, setRowConfigById] = useState<Record<number, { year: string; issue: string; plan: "PRINT" | "ONLINE" | "PRINT_ONLINE" }>>({});
+  const years = getCurrentSubscriptionYears();
 
   const domains = useMemo(() => {
     const set = new Set(journals.map((j) => j.subject).filter(Boolean));
@@ -56,6 +67,31 @@ export default function CataloguesClient({ journals, initialCurrency = "INR" }: 
       return haystack.includes(q);
     });
   }, [journals, keyword, domain]);
+
+  function getRowConfig(serialNo: number) {
+    return rowConfigById[serialNo] || { year: String(years[0]), issue: "All(Jan-Dec)", plan: "ONLINE" as const };
+  }
+
+  function addJournalToCart(item: JournalItem) {
+    const config = getRowConfig(item.serialNo);
+    const totalIssues = getIssueCountFromFrequency(item.frequency);
+    const priceBase =
+      config.plan === "ONLINE" ? item.onlineInr : config.plan === "PRINT_ONLINE" ? item.combinedInr : item.printInr;
+    const unitPrice = getIssueWiseUnitPrice(priceBase, totalIssues, config.issue);
+    const cartItemId = buildJournalCartItemId(String(item.serialNo), config.plan, config.year, config.issue);
+
+    addItem({
+      id: cartItemId,
+      journalName: `${item.journalName}${config.issue === "All(Jan-Dec)" ? "" : ` (${config.issue})`}`,
+      subject: item.subject,
+      issn: item.issn,
+      image: "/stmlogo.png",
+      year: config.year,
+      issue: config.issue,
+      plan: config.plan,
+      unitPrice
+    });
+  }
 
   function onPrint() {
     window.print();
@@ -352,6 +388,11 @@ export default function CataloguesClient({ journals, initialCurrency = "INR" }: 
             const combined = currency === "INR" ? item.combinedInr : item.combinedUsd;
             const fmt = (v: number) =>
               currency === "INR" ? `₹${v.toLocaleString("en-IN")}` : `$${v.toLocaleString("en-US")}`;
+            const config = getRowConfig(item.serialNo);
+            const totalIssues = getIssueCountFromFrequency(item.frequency);
+            const issueLabels = getIssueLabels(totalIssues);
+            const cartItemId = buildJournalCartItemId(String(item.serialNo), config.plan, config.year, config.issue);
+            const qty = items.filter((it) => it.id === cartItemId).reduce((sum, it) => sum + it.qty, 0);
 
             return (
               <article key={item.serialNo} className="catalogue-grid-card">
@@ -378,6 +419,78 @@ export default function CataloguesClient({ journals, initialCurrency = "INR" }: 
                     <strong>{fmt(combined)}</strong>
                   </div>
                 </div>
+
+                <div style={{ display: "grid", gap: "10px", marginTop: "16px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "8px" }}>
+                    <select
+                      value={config.year}
+                      onChange={(e) => setRowConfigById((prev) => ({ ...prev, [item.serialNo]: { ...config, year: e.target.value } }))}
+                      style={{ border: "1px solid #cfd5df", borderRadius: "8px", padding: "8px", background: "#fff", fontSize: "13px" }}
+                    >
+                      {years.map((year) => (
+                        <option key={year} value={String(year)}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      value={config.issue}
+                      onChange={(e) => setRowConfigById((prev) => ({ ...prev, [item.serialNo]: { ...config, issue: e.target.value } }))}
+                      style={{ border: "1px solid #cfd5df", borderRadius: "8px", padding: "8px", background: "#fff", fontSize: "13px" }}
+                    >
+                      <option value="All(Jan-Dec)">All issues</option>
+                      {issueLabels.map((label) => (
+                        <option key={label} value={label}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      value={config.plan}
+                      onChange={(e) => setRowConfigById((prev) => ({ ...prev, [item.serialNo]: { ...config, plan: e.target.value as "PRINT" | "ONLINE" | "PRINT_ONLINE" } }))}
+                      style={{ border: "1px solid #cfd5df", borderRadius: "8px", padding: "8px", background: "#fff", fontSize: "13px" }}
+                    >
+                      <option value="PRINT">Print</option>
+                      <option value="ONLINE">Digital</option>
+                      <option value="PRINT_ONLINE">Combined</option>
+                    </select>
+                  </div>
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                    {qty > 0 ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setQty(cartItemId, qty - 1)}
+                          style={{ width: "44px", height: "40px", borderRadius: "8px", border: "1px solid #cfd5df", background: "#fff", cursor: "pointer" }}
+                        >
+                          -
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => addJournalToCart(item)}
+                          style={{ flex: 1, border: "none", borderRadius: "8px", padding: "10px", background: "#2563eb", color: "#fff", fontWeight: 700, cursor: "pointer" }}
+                        >
+                          In Cart: {qty}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removeItem(cartItemId)}
+                          style={{ width: "74px", height: "40px", borderRadius: "8px", border: "1px solid #cfd5df", background: "#fff", cursor: "pointer" }}
+                        >
+                          Remove
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => addJournalToCart(item)}
+                        style={{ width: "100%", border: "none", borderRadius: "8px", padding: "10px", background: "#2563eb", color: "#fff", fontWeight: 700, cursor: "pointer" }}
+                      >
+                        Add to Cart
+                      </button>
+                    )}
+                  </div>
+                </div>
               </article>
             );
           })}
@@ -391,9 +504,13 @@ export default function CataloguesClient({ journals, initialCurrency = "INR" }: 
                 <th>JOURNAL TITLE</th>
                 <th>ISSN</th>
                 <th>FREQUENCY</th>
+                <th>YEAR</th>
+                <th>ISSUE</th>
+                <th>PLAN</th>
                 <th>{currency === "INR" ? "PRINT (INR)" : "PRINT (USD)"}</th>
                 <th>{currency === "INR" ? "DIGITAL (INR)" : "DIGITAL (USD)"}</th>
                 <th>{currency === "INR" ? "COMBINED (INR)" : "COMBINED (USD)"}</th>
+                <th>ACTION</th>
               </tr>
             </thead>
             <tbody>
@@ -403,6 +520,11 @@ export default function CataloguesClient({ journals, initialCurrency = "INR" }: 
                 const combined = currency === "INR" ? item.combinedInr : item.combinedUsd;
                 const fmt = (v: number) =>
                   currency === "INR" ? `₹${v.toLocaleString("en-IN")}` : `$${v.toLocaleString("en-US")}`;
+                const config = getRowConfig(item.serialNo);
+                const totalIssues = getIssueCountFromFrequency(item.frequency);
+                const issueLabels = getIssueLabels(totalIssues);
+                const cartItemId = buildJournalCartItemId(String(item.serialNo), config.plan, config.year, config.issue);
+                const qty = items.filter((it) => it.id === cartItemId).reduce((sum, it) => sum + it.qty, 0);
 
                 return (
                   <tr key={item.serialNo}>
@@ -413,9 +535,46 @@ export default function CataloguesClient({ journals, initialCurrency = "INR" }: 
                     </td>
                     <td>{item.issn || "-"}</td>
                     <td>{item.frequency || "-"}</td>
+                    <td>
+                      <select value={config.year} onChange={(e) => setRowConfigById((prev) => ({ ...prev, [item.serialNo]: { ...config, year: e.target.value } }))} style={{ width: "100%", border: "1px solid #cfd5df", borderRadius: "8px", padding: "8px", background: "#fff" }}>
+                        {years.map((year) => (
+                          <option key={year} value={String(year)}>
+                            {year}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td>
+                      <select value={config.issue} onChange={(e) => setRowConfigById((prev) => ({ ...prev, [item.serialNo]: { ...config, issue: e.target.value } }))} style={{ width: "100%", border: "1px solid #cfd5df", borderRadius: "8px", padding: "8px", background: "#fff" }}>
+                        <option value="All(Jan-Dec)">All issues</option>
+                        {issueLabels.map((label) => (
+                          <option key={label} value={label}>
+                            {label}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td>
+                      <select value={config.plan} onChange={(e) => setRowConfigById((prev) => ({ ...prev, [item.serialNo]: { ...config, plan: e.target.value as "PRINT" | "ONLINE" | "PRINT_ONLINE" } }))} style={{ width: "100%", border: "1px solid #cfd5df", borderRadius: "8px", padding: "8px", background: "#fff" }}>
+                        <option value="PRINT">Print</option>
+                        <option value="ONLINE">Digital</option>
+                        <option value="PRINT_ONLINE">Combined</option>
+                      </select>
+                    </td>
                     <td className="price print">{fmt(print)}</td>
                     <td className="price online">{fmt(online)}</td>
                     <td className="price combo">{fmt(combined)}</td>
+                    <td>
+                      {qty > 0 ? (
+                        <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                          <button type="button" onClick={() => setQty(cartItemId, qty - 1)} style={{ width: "32px", height: "32px", borderRadius: "8px", border: "1px solid #cfd5df", background: "#fff", cursor: "pointer" }}>-</button>
+                          <button type="button" onClick={() => addJournalToCart(item)} style={{ border: "none", borderRadius: "8px", padding: "8px 12px", background: "#2563eb", color: "#fff", fontWeight: 700, cursor: "pointer" }}>In Cart: {qty}</button>
+                          <button type="button" onClick={() => removeItem(cartItemId)} style={{ border: "1px solid #cfd5df", borderRadius: "8px", padding: "8px 12px", background: "#fff", cursor: "pointer" }}>Remove</button>
+                        </div>
+                      ) : (
+                        <button type="button" onClick={() => addJournalToCart(item)} style={{ border: "none", borderRadius: "8px", padding: "8px 12px", background: "#2563eb", color: "#fff", fontWeight: 700, cursor: "pointer" }}>Add</button>
+                      )}
+                    </td>
                   </tr>
                 );
               })}
@@ -430,4 +589,3 @@ export default function CataloguesClient({ journals, initialCurrency = "INR" }: 
     </main>
   );
 }
-

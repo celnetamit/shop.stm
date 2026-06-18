@@ -95,7 +95,7 @@ export default function CataloguesMirrorPage() {
                 <p style={domainText}>Peer-reviewed titles with Print, Online, and Print + Online subscription options.</p>
                 <div style={domainActions}>
                   <a href={masterLinks.stmPdf} target="_blank" rel="noreferrer" style={cardLightBtn}>PDF</a>
-                  <a href={item.href} target="_blank" rel="noreferrer" style={cardPrimaryBtn}>View Collection</a>
+                  <a href={`/product-category/journals/${encodeURIComponent(item.title)}`} style={cardPrimaryBtn}>View Collection</a>
                 </div>
               </div>
             </article>

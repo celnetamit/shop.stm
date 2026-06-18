@@ -70,7 +70,7 @@ export default function ForAgenciesPage() {
     {
       icon: "📚",
       title: "High-Quality Peer-Reviewed Content",
-      desc: "Offer your clients access to over 274+ leading journals across scientific, engineering, biomedical, and multidisciplinary streams."
+      desc: "Offer your clients access to over 457 leading journals across scientific, engineering, biomedical, and multidisciplinary streams."
     },
     {
       icon: "🌍",
