@@ -191,7 +191,7 @@ export default function ProductDetailClient({ journal, domains, description, abo
 
               <div className="product-v2-current-price" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px" }}>
                 <span>Selected Price: ₹{price.toLocaleString("en-IN")}</span>
-                <span style={{ fontSize: "14px", fontWeight: "normal", color: "#64748B", background: "#f1f5f9", padding: "4px 8px", borderRadius: "6px" }}>
+                <span className="product-v2-price-chip">
                   HSN/SAC: {hsnCode}
                 </span>
               </div>

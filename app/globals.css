@@ -2665,6 +2665,38 @@ a:hover {
 .dark .catalogues-subject,
 .dark .catalogues-inline-field,
 .dark .catalogues-inline-field select,
+.dark .catalogue-grid-card .subject-label,
+.dark .catalogue-grid-card .indexing-text,
+.dark .catalogue-grid-card .price-row span,
+.dark .catalogue-grid-card .price-row strong,
+.dark .catalogue-grid-card .card-details p span,
+.dark .home-section-block h2,
+.dark .home-discipline-grid a,
+.dark .home-trend-card h3 a,
+.dark .home-trend-card p,
+.dark .home-trend-controls select,
+.dark .home-trend-controls strong,
+.dark .home-trend-card button,
+.dark .product-v2-head h1,
+.dark .product-v2-meta,
+.dark .product-v2-copy,
+.dark .product-v2-price-grid span,
+.dark .product-v2-price-grid strong,
+.dark .product-v2-current-price,
+.dark .product-v2-cart-actions span,
+.dark .product-v2-cart-actions a,
+.dark .product-v2-sidebar h3,
+.dark .product-v2-domain-list a,
+.dark .product-v2-tabs button,
+.dark .product-v2-html-content h2,
+.dark .product-v2-html-content h3,
+.dark .product-v2-html-content p,
+.dark .product-v2-html-content li,
+.dark .product-v2-about-table th,
+.dark .product-v2-about-table td,
+.dark .product-focus-scope-card h4,
+.dark .product-focus-scope-card div,
+.dark .editorial-board-btn,
 .dark .catalogue-grid-card .journal-title,
 .dark .catalogue-grid-card .card-details p,
 .dark .proforma-row-title strong,
@@ -2683,6 +2715,8 @@ a:hover {
 .dark .catalogue-grid-card,
 .dark .catalogues-table-v2,
 .dark .catalogues-page-footer,
+.dark .home-trend-card,
+.dark .home-discipline-grid a,
 .dark .product-v2-main,
 .dark .product-v2-panel,
 .dark .product-v2-sidebar,
@@ -2707,6 +2741,408 @@ a:hover {
 .dark .catalogues-remove-btn,
 .dark .catalogues-qty-btn {
   background: var(--surface-soft) !important;
+  border-color: var(--line) !important;
+  color: var(--text) !important;
+}
+
+.dark .home-section-block {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 10px 28px rgba(0, 0, 0, 0.16) !important;
+}
+
+.dark .home-discipline-grid a {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-color: var(--line) !important;
+}
+
+.dark .home-discipline-grid a:hover {
+  background: rgba(37, 99, 235, 0.12) !important;
+  color: #dbeafe !important;
+}
+
+.dark .home-trend-card {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 10px 24px rgba(0, 0, 0, 0.16) !important;
+}
+
+.dark .home-trend-card img {
+  background: var(--surface-soft) !important;
+}
+
+.dark .home-trend-card h3 a {
+  color: var(--text) !important;
+}
+
+.dark .home-trend-card p {
+  color: var(--muted) !important;
+}
+
+.dark .home-trend-controls select {
+  background: var(--surface-soft) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+
+.dark .home-trend-controls strong {
+  color: #c9ddff !important;
+}
+
+.dark .home-trend-card button {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+  color: #fff !important;
+}
+
+.dark .catalogue-grid-card .subject-label,
+.dark .catalogue-grid-card .indexing-text,
+.dark .catalogue-grid-card .card-details p span {
+  color: var(--muted) !important;
+}
+
+.dark .catalogue-grid-card .indexing-text {
+  background: rgba(255, 255, 255, 0.03) !important;
+}
+
+.dark .catalogue-grid-card .price-rows {
+  border-top-color: var(--line) !important;
+}
+
+.dark .catalogue-grid-card .price-row span {
+  color: var(--muted) !important;
+}
+
+.dark .catalogue-grid-card .price-row.print strong {
+  color: #7db3ff !important;
+}
+
+.dark .catalogue-grid-card .price-row.online strong {
+  color: #6ee7b7 !important;
+}
+
+.dark .catalogue-grid-card .price-row.combo strong {
+  color: #c4b5fd !important;
+}
+
+.dark .agri-page {
+  background: radial-gradient(circle at top, #0f172a 0%, #020617 55%, #020617 100%) !important;
+}
+
+.dark .agri-hero {
+  background: linear-gradient(135deg, #1d4ed8 0%, #0f172a 100%) !important;
+  border-color: var(--line) !important;
+}
+
+.dark .agri-card {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+}
+
+.dark .agri-card img {
+  background: var(--surface-soft) !important;
+}
+
+.dark .agri-card-body h3,
+.dark .agri-card-body h3 a {
+  color: var(--text) !important;
+}
+
+.dark .agri-card-body p {
+  color: var(--muted) !important;
+}
+
+.dark .agri-controls select,
+.dark .agri-hero-actions input,
+.dark .agri-cart-mini {
+  background: var(--surface-soft) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+
+.dark .agri-price,
+.dark .agri-card button,
+.dark .agri-qty-badge {
+  color: #fff !important;
+}
+
+.dark .product-v2-page {
+  background: radial-gradient(circle at top, #0f172a 0%, #020617 55%, #020617 100%) !important;
+}
+
+.dark .product-v2-sidebar,
+.dark .product-v2-main,
+.dark .product-v2-panel {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+  color: var(--text) !important;
+}
+
+.dark .product-v2-domain-list a.active,
+.dark .product-v2-domain-list a:hover {
+  background: rgba(37, 99, 235, 0.15) !important;
+  color: #bfdbfe !important;
+}
+
+.dark .product-v2-head img {
+  background: var(--surface-soft) !important;
+  border-color: var(--line) !important;
+}
+
+.dark .product-breadcrumb {
+  color: var(--muted) !important;
+}
+
+.dark .product-breadcrumb a {
+  color: #c9d7ef !important;
+}
+
+.dark .product-breadcrumb span {
+  color: #7f95b5 !important;
+}
+
+.dark .product-v2-head {
+  gap: 20px;
+}
+
+.dark .product-v2-head h1 {
+  letter-spacing: -0.03em;
+}
+
+.dark .product-v2-meta {
+  color: #b7c7e4 !important;
+}
+
+.dark .product-v2-price-chip {
+  background: rgba(37, 99, 235, 0.14) !important;
+  color: #d8e6ff !important;
+  border-color: rgba(96, 165, 250, 0.22) !important;
+}
+
+.dark .product-v2-price-grid div,
+.dark .product-v2-controls,
+.dark .product-v2-about-table,
+.dark .product-focus-scope-card {
+  background: var(--surface-soft) !important;
+  border-color: var(--line) !important;
+}
+
+.dark .product-v2-price-grid div {
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.06);
+}
+
+.dark .product-v2-tabs button {
+  background: var(--surface-soft) !important;
+  color: var(--text) !important;
+}
+
+.dark .product-v2-tabs {
+  border-bottom-color: var(--line) !important;
+}
+
+.dark .product-v2-panel {
+  line-height: 1.8;
+}
+
+.dark .product-v2-price-grid span {
+  color: var(--muted) !important;
+}
+
+.dark .product-v2-price-grid strong,
+.dark .product-v2-price-grid div.active strong {
+  color: var(--text) !important;
+}
+
+.dark .product-v2-controls select {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+
+.dark .product-v2-about-table td {
+  color: var(--text) !important;
+}
+
+.dark .product-v2-about-table th {
+  background: rgba(255, 255, 255, 0.03) !important;
+}
+
+.dark .product-focus-scope-card {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 10px 24px rgba(0, 0, 0, 0.18);
+}
+
+.dark .product-v2-html-content table th,
+.dark .product-v2-html-content table td,
+.dark .product-v2-about-table th,
+.dark .product-v2-about-table td {
+  border-color: var(--line) !important;
+}
+
+.dark .product-v2-html-content h2,
+.dark .product-v2-html-content h3 {
+  letter-spacing: -0.01em;
+}
+
+.dark .product-v2-about-table th {
+  background: var(--surface-soft) !important;
+}
+
+.dark .product-v2-tabs button.active {
+  background: var(--brand) !important;
+  color: #fff !important;
+}
+
+.dark .product-v2-cart-actions button {
+  background: var(--brand) !important;
+  color: #fff !important;
+}
+
+.dark .editorial-board-btn {
+  background: rgba(37, 99, 235, 0.18) !important;
+  border-color: rgba(59, 130, 246, 0.35) !important;
+  color: #bfdbfe !important;
+}
+
+.dark .shipping-page,
+.dark .policy-page,
+.dark .contact-page,
+.dark .product-page,
+.dark .checkout-page,
+.dark .admin-page,
+.dark .catalogues-v2,
+.dark .home-page-v3,
+.dark .proforma-page {
+  color: var(--text) !important;
+}
+
+.dark .shipping-page h1,
+.dark .shipping-page h2,
+.dark .shipping-page h3,
+.dark .shipping-page p,
+.dark .shipping-page li,
+.dark .shipping-page strong,
+.dark .shipping-page a,
+.dark .policy-page h1,
+.dark .policy-page h2,
+.dark .policy-page h3,
+.dark .policy-page p,
+.dark .policy-page li,
+.dark .policy-page strong,
+.dark .policy-page a {
+  color: var(--text) !important;
+}
+
+.dark .shipping-page > div,
+.dark .shipping-page section > div,
+.dark .policy-page > div,
+.dark .policy-page section > div,
+.dark .contact-info-card,
+.dark .contact-form-card,
+.dark .product-head,
+.dark .product-tabs,
+.dark .checkout-form,
+.dark .admin-page,
+.dark .admin-page-section,
+.dark .admin-overview-card,
+.dark .admin-table-wrap {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+  color: var(--text) !important;
+}
+
+.dark .shipping-page a,
+.dark .policy-page a,
+.dark .contact-page a,
+.dark .product-page a {
+  color: #93c5fd !important;
+}
+
+.dark .contact-page {
+  background: radial-gradient(circle at top, #0f172a 0%, #020617 60%, #020617 100%) !important;
+}
+
+.dark .contact-info-card h2,
+.dark .contact-form-card h2,
+.dark .contact-info-card p,
+.dark .contact-form-card p,
+.dark .contact-info-list strong,
+.dark .contact-info-list span {
+  color: var(--text) !important;
+}
+
+.dark .contact-form input,
+.dark .contact-form textarea {
+  background: var(--surface-soft) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+
+.dark .contact-status {
+  background: rgba(37, 99, 235, 0.12) !important;
+  color: #bfdbfe !important;
+  border-color: rgba(59, 130, 246, 0.22) !important;
+}
+
+.dark .product-page {
+  background: radial-gradient(circle at top, #0f172a 0%, #020617 60%, #020617 100%) !important;
+}
+
+.dark .product-head h1,
+.dark .product-meta,
+.dark .product-description,
+.dark .product-tabs h2,
+.dark .product-tabs p,
+.dark .product-pricing span,
+.dark .product-pricing strong {
+  color: var(--text) !important;
+}
+
+.dark .product-head img,
+.dark .product-pricing div {
+  background: var(--surface-soft) !important;
+  border-color: var(--line) !important;
+}
+
+.dark .product-pricing strong {
+  color: #bfdbfe !important;
+}
+
+.dark .admin-layout,
+.dark .checkout-page,
+.dark .auth-shell {
+  background: radial-gradient(circle at top, #0f172a 0%, #020617 60%, #020617 100%) !important;
+}
+
+.dark .admin-page h1,
+.dark .admin-page h2,
+.dark .admin-page h3,
+.dark .admin-page p,
+.dark .admin-page-section h2,
+.dark .admin-page-head p,
+.dark .admin-overview-card h3,
+.dark .admin-overview-card p,
+.dark .admin-table th,
+.dark .admin-table td {
+  color: var(--text) !important;
+}
+
+.dark .admin-table th {
+  background: rgba(255, 255, 255, 0.03) !important;
+}
+
+.dark .admin-table select,
+.dark .admin-table button {
+  background: var(--surface-soft) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+
+.dark .checkout-form,
+.dark .auth-card,
+.dark .login-card,
+.dark .register-card,
+.dark .proforma-card,
+.dark .proforma-main,
+.dark .proforma-summary,
+.dark .proforma-invoice {
+  background: var(--surface) !important;
   border-color: var(--line) !important;
   color: var(--text) !important;
 }
@@ -3451,13 +3887,13 @@ textarea:focus {
 }
 
 .product-v2-main {
-  padding: 28px;
+  padding: 30px;
 }
 
 .product-v2-head {
   display: grid;
   grid-template-columns: 210px 1fr;
-  gap: 28px;
+  gap: 22px;
 }
 
 .product-v2-head img {
@@ -3481,7 +3917,7 @@ textarea:focus {
 }
 
 .product-v2-meta {
-  margin: 10px 0 14px;
+  margin: 10px 0 16px;
   color: #3663ad;
   font-weight: 700;
   font-size: 15px;
@@ -3500,15 +3936,15 @@ textarea:focus {
 .product-v2-price-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: 14px;
+  margin-bottom: 18px;
 }
 
 .product-v2-price-grid div {
   border: 1.5px solid #dbe3ef;
   background: #fdfdfd;
   border-radius: 12px;
-  padding: 14px;
+  padding: 15px;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   outline: none;
@@ -3550,11 +3986,11 @@ textarea:focus {
 }
 
 .product-v2-controls {
-  margin-top: 12px;
+  margin-top: 10px;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  padding: 16px;
+  gap: 14px;
+  padding: 18px;
   background: #f8fbfd;
   border-radius: 12px;
   border: 1px solid #e9f0fa;
@@ -3590,14 +4026,24 @@ textarea:focus {
 }
 
 .product-v2-current-price {
-  margin-top: 18px;
+  margin-top: 16px;
   font-size: 18px;
   font-weight: 800;
   color: #103482;
 }
 
+.product-v2-price-chip {
+  font-size: 13px;
+  font-weight: 700;
+  color: #4b5e7e;
+  background: #edf3fb;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid #d9e3f0;
+}
+
 .product-v2-cart-actions {
-  margin-top: 14px;
+  margin-top: 16px;
   display: flex;
   align-items: center;
   gap: 16px;
@@ -3643,7 +4089,7 @@ textarea:focus {
 }
 
 .product-v2-tabs {
-  margin-top: 14px;
+  margin-top: 16px;
   display: flex;
   gap: 8px;
   border-bottom: 1px solid #e5ebf7;
@@ -3665,7 +4111,7 @@ textarea:focus {
 }
 
 .product-v2-panel {
-  padding: 14px 2px 4px;
+  padding: 18px 4px 6px;
   color: #3f567d;
   line-height: 1.7;
 }
@@ -3735,6 +4181,10 @@ textarea:focus {
   width: 220px;
   background: #f6f9ff;
   color: #2b487a;
+}
+
+.product-v2-about-table td {
+  color: #2d4468;
 }
 
 /* Editorial Board Button Styling */
