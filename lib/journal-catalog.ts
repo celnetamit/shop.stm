@@ -193,9 +193,11 @@ function stemWord(name: string): string {
 export async function getDomainCountsFromCsv(): Promise<Array<{ domain: string; count: number }>> {
   const rows = await loadCsvRows();
   const map = new Map<string, number>();
+  const excludedDomains = new Set(["engineering"]);
   for (const r of rows) {
     const domain = (r["Domain"] || "").trim();
     if (!domain) continue;
+    if (excludedDomains.has(domain.toLowerCase())) continue;
     map.set(domain, (map.get(domain) || 0) + 1);
   }
   return Array.from(map.entries())
