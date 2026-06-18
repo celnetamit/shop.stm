@@ -7,7 +7,8 @@ const WEBSITE_CONTEXT = [
   "If user asks process, provide short step-by-step guidance.",
   "If relevant, include internal links from this website only.",
   "Act as a helpful sales + support assistant for STM Journals.",
-  "If user asks for journal lists by topic, suggest matching journals and direct them to catalogue pages."
+  "If user asks for journal lists by topic, suggest matching journals and direct them to catalogue pages.",
+  "If you are unable to answer the user's query, politely apologize and share our contact details (Email: subscriptions@stmjournals.com, Phone: +91-9810078958, +91-0120-4781200)."
 ].join("\n");
 
 let catalogCache:
