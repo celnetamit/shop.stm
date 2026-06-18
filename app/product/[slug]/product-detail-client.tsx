@@ -52,11 +52,50 @@ export default function ProductDetailClient({ journal, domains, description, abo
   const [selectedIssue, setSelectedIssue] = useState<string>("All(Jan-Dec)");
   const [tab, setTab] = useState<Tab>("DESCRIPTION");
 
+  const issueCount = useMemo(() => {
+    if (!journal.frequency) return 2;
+    const cleaned = journal.frequency.trim().toLowerCase();
+    if (cleaned.includes("bi-annual") || cleaned.includes("biannual")) return 2;
+    const match = cleaned.match(/^(\d+)/);
+    if (match) return parseInt(match[1], 10);
+    return 2;
+  }, [journal.frequency]);
+
+  const issueOptions = useMemo(() => {
+    if (issueCount === 2) {
+      return ["1(Jan-June)", "2(July-Dec)", "All(Jan-Dec)"];
+    }
+    if (issueCount === 3) {
+      return ["1(Jan-Apr)", "2(May-Aug)", "3(Sep-Dec)", "All(Jan-Dec)"];
+    }
+    if (issueCount === 4) {
+      return ["1(Jan-Mar)", "2(Apr-June)", "3(July-Sep)", "4(Oct-Dec)", "All(Jan-Dec)"];
+    }
+    if (issueCount === 6) {
+      return ["1(Jan-Feb)", "2(Mar-Apr)", "3(May-June)", "4(July-Aug)", "5(Sep-Oct)", "6(Nov-Dec)", "All(Jan-Dec)"];
+    }
+    if (issueCount === 12) {
+      return ["1(Jan)", "2(Feb)", "3(Mar)", "4(Apr)", "5(May)", "6(June)", "7(July)", "8(Aug)", "9(Sep)", "10(Oct)", "11(Nov)", "12(Dec)", "All(Jan-Dec)"];
+    }
+    return Array.from({ length: issueCount }, (_, i) => `Issue ${i + 1}`).concat("All(Jan-Dec)");
+  }, [issueCount]);
+
+  useEffect(() => {
+    if (!issueOptions.includes(selectedIssue)) {
+      setSelectedIssue("All(Jan-Dec)");
+    }
+  }, [issueOptions, selectedIssue]);
+
   const price = useMemo(() => {
-    if (plan === "PRINT") return journal.printInr;
-    if (plan === "ONLINE") return journal.onlineInr;
-    return journal.combinedInr;
-  }, [plan, journal]);
+    let base = journal.combinedInr;
+    if (plan === "PRINT") base = journal.printInr;
+    if (plan === "ONLINE") base = journal.onlineInr;
+    
+    if (selectedIssue !== "All(Jan-Dec)") {
+      return Math.round(base / issueCount);
+    }
+    return base;
+  }, [plan, journal, selectedIssue, issueCount]);
 
   const hsnCode = useMemo(() => {
     if (plan === "ONLINE") return "998431";
@@ -182,9 +221,7 @@ export default function ProductDetailClient({ journal, domains, description, abo
                 <div>
                   <label>Issue</label>
                   <select value={selectedIssue} onChange={(e) => setSelectedIssue(e.target.value)}>
-                    <option value="1(Jan-June)">1(Jan-June)</option>
-                    <option value="2(July-Dec)">2(July-Dec)</option>
-                    <option value="All(Jan-Dec)">All(Jan-Dec)</option>
+                    {issueOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                   </select>
                 </div>
               </div>
