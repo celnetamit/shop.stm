@@ -504,9 +504,6 @@ export default function CataloguesClient({ journals, initialCurrency = "INR" }: 
                 <th>JOURNAL TITLE</th>
                 <th>ISSN</th>
                 <th>FREQUENCY</th>
-                <th>YEAR</th>
-                <th>ISSUE</th>
-                <th>PLAN</th>
                 <th>{currency === "INR" ? "PRINT (INR)" : "PRINT (USD)"}</th>
                 <th>{currency === "INR" ? "DIGITAL (INR)" : "DIGITAL (USD)"}</th>
                 <th>{currency === "INR" ? "COMBINED (INR)" : "COMBINED (USD)"}</th>
@@ -535,45 +532,103 @@ export default function CataloguesClient({ journals, initialCurrency = "INR" }: 
                     </td>
                     <td>{item.issn || "-"}</td>
                     <td>{item.frequency || "-"}</td>
-                    <td>
-                      <select value={config.year} onChange={(e) => setRowConfigById((prev) => ({ ...prev, [item.serialNo]: { ...config, year: e.target.value } }))} style={{ width: "100%", border: "1px solid #cfd5df", borderRadius: "8px", padding: "8px", background: "#fff" }}>
-                        {years.map((year) => (
-                          <option key={year} value={String(year)}>
-                            {year}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td>
-                      <select value={config.issue} onChange={(e) => setRowConfigById((prev) => ({ ...prev, [item.serialNo]: { ...config, issue: e.target.value } }))} style={{ width: "100%", border: "1px solid #cfd5df", borderRadius: "8px", padding: "8px", background: "#fff" }}>
-                        <option value="All(Jan-Dec)">All issues</option>
-                        {issueLabels.map((label) => (
-                          <option key={label} value={label}>
-                            {label}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td>
-                      <select value={config.plan} onChange={(e) => setRowConfigById((prev) => ({ ...prev, [item.serialNo]: { ...config, plan: e.target.value as "PRINT" | "ONLINE" | "PRINT_ONLINE" } }))} style={{ width: "100%", border: "1px solid #cfd5df", borderRadius: "8px", padding: "8px", background: "#fff" }}>
-                        <option value="PRINT">Print</option>
-                        <option value="ONLINE">Digital</option>
-                        <option value="PRINT_ONLINE">Combined</option>
-                      </select>
-                    </td>
                     <td className="price print">{fmt(print)}</td>
                     <td className="price online">{fmt(online)}</td>
                     <td className="price combo">{fmt(combined)}</td>
                     <td>
-                      {qty > 0 ? (
-                        <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                          <button type="button" onClick={() => setQty(cartItemId, qty - 1)} style={{ width: "32px", height: "32px", borderRadius: "8px", border: "1px solid #cfd5df", background: "#fff", cursor: "pointer" }}>-</button>
-                          <button type="button" onClick={() => addJournalToCart(item)} style={{ border: "none", borderRadius: "8px", padding: "8px 12px", background: "#2563eb", color: "#fff", fontWeight: 700, cursor: "pointer" }}>In Cart: {qty}</button>
-                          <button type="button" onClick={() => removeItem(cartItemId)} style={{ border: "1px solid #cfd5df", borderRadius: "8px", padding: "8px 12px", background: "#fff", cursor: "pointer" }}>Remove</button>
+                      <div className="catalogues-action-stack">
+                        <div className="catalogues-select-grid">
+                          <label className="catalogues-inline-field">
+                            <span>Year</span>
+                            <select
+                              value={config.year}
+                              onChange={(e) =>
+                                setRowConfigById((prev) => ({
+                                  ...prev,
+                                  [item.serialNo]: { ...config, year: e.target.value }
+                                }))
+                              }
+                            >
+                              {years.map((year) => (
+                                <option key={year} value={String(year)}>
+                                  {year}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                          <label className="catalogues-inline-field">
+                            <span>Issue</span>
+                            <select
+                              value={config.issue}
+                              onChange={(e) =>
+                                setRowConfigById((prev) => ({
+                                  ...prev,
+                                  [item.serialNo]: { ...config, issue: e.target.value }
+                                }))
+                              }
+                            >
+                              <option value="All(Jan-Dec)">All issues</option>
+                              {issueLabels.map((label) => (
+                                <option key={label} value={label}>
+                                  {label}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                          <label className="catalogues-inline-field">
+                            <span>Plan</span>
+                            <select
+                              value={config.plan}
+                              onChange={(e) =>
+                                setRowConfigById((prev) => ({
+                                  ...prev,
+                                  [item.serialNo]: {
+                                    ...config,
+                                    plan: e.target.value as "PRINT" | "ONLINE" | "PRINT_ONLINE"
+                                  }
+                                }))
+                              }
+                            >
+                              <option value="PRINT">Print</option>
+                              <option value="ONLINE">Digital</option>
+                              <option value="PRINT_ONLINE">Combined</option>
+                            </select>
+                          </label>
                         </div>
-                      ) : (
-                        <button type="button" onClick={() => addJournalToCart(item)} style={{ border: "none", borderRadius: "8px", padding: "8px 12px", background: "#2563eb", color: "#fff", fontWeight: 700, cursor: "pointer" }}>Add</button>
-                      )}
+                        {qty > 0 ? (
+                          <div className="catalogues-cart-actions">
+                            <button
+                              type="button"
+                              onClick={() => setQty(cartItemId, qty - 1)}
+                              className="catalogues-qty-btn"
+                            >
+                              -
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => addJournalToCart(item)}
+                              className="catalogues-cart-btn"
+                            >
+                              In Cart: {qty}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => removeItem(cartItemId)}
+                              className="catalogues-remove-btn"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => addJournalToCart(item)}
+                            className="catalogues-cart-btn catalogues-cart-btn-full"
+                          >
+                            Add to Cart
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
