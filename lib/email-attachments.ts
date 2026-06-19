@@ -3,14 +3,36 @@ import { createSimplePdf } from "@/lib/simple-pdf";
 import { formatPiNumber } from "@/lib/pi-number";
 
 export async function buildProformaPdfAttachment(quoteId: string) {
-  const quote = await prisma.proformaQuote.findUnique({ where: { id: quoteId }, include: { items: true } });
+  const quote = await prisma.proformaQuote.findUnique({
+    where: { id: quoteId },
+    include: { items: true, createdBy: true }
+  });
   if (!quote) return null;
 
   const piNo = formatPiNumber({ id: quote.id, createdAt: quote.createdAt });
   const subtotal = quote.items.reduce((s, i) => s + Number(i.unitPrice || 0), 0);
   const discount = Math.round((subtotal * (quote.couponPercent || 0)) / 100);
   const taxable = subtotal - discount;
-  const gst = quote.currency === "INR" ? Math.round(taxable * 0.18) : 0;
+
+  let isGstExempt = true;
+  if (quote.createdBy) {
+    if (quote.createdBy.role === "LIBRARIAN" || quote.createdBy.role === "USER") {
+      isGstExempt = true;
+    } else if (
+      quote.createdBy.role === "AGENCY" ||
+      quote.createdBy.role === "STUDENT" ||
+      quote.createdBy.role === "SCHOLAR"
+    ) {
+      isGstExempt = false;
+    } else {
+      isGstExempt = false;
+    }
+  } else {
+    isGstExempt = quote.subscriberCategory === "COLLEGE" || quote.subscriberCategory === "EXISTING_PI";
+  }
+
+  const hasDigital = quote.items.some((it) => it.selectedPlan === "ONLINE" || it.selectedPlan === "PRINT_ONLINE");
+  const gst = (quote.currency === "INR" && hasDigital && !isGstExempt) ? Math.round(taxable * 0.18) : 0;
   const total = taxable + gst;
 
   const lines: string[] = [
@@ -34,7 +56,9 @@ export async function buildProformaPdfAttachment(quoteId: string) {
   lines.push("");
   lines.push(`Subtotal: ${quote.currency} ${subtotal.toFixed(2)}`);
   lines.push(`Discount: ${quote.currency} ${discount.toFixed(2)}`);
-  lines.push(`GST: ${quote.currency} ${gst.toFixed(2)}`);
+  if (gst > 0) {
+    lines.push(`GST: ${quote.currency} ${gst.toFixed(2)}`);
+  }
   lines.push(`Total: ${quote.currency} ${total.toFixed(2)}`);
 
   return {
@@ -77,8 +101,10 @@ export async function buildOrderPdfAttachment(orderId: string) {
   lines.push("");
   lines.push(`Subtotal: ${order.currency} ${subtotal.toFixed(2)}`);
   lines.push(`Discount: ${order.currency} ${discount.toFixed(2)}`);
-  lines.push(`CGST: ${order.currency} ${cgst.toFixed(2)}`);
-  lines.push(`SGST: ${order.currency} ${sgst.toFixed(2)}`);
+  if (cgst > 0 || sgst > 0) {
+    lines.push(`CGST: ${order.currency} ${cgst.toFixed(2)}`);
+    lines.push(`SGST: ${order.currency} ${sgst.toFixed(2)}`);
+  }
   lines.push(`Total: ${order.currency} ${total.toFixed(2)}`);
 
   return {

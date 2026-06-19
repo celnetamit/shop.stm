@@ -19,6 +19,88 @@ export default function ForAgenciesPage() {
   const [success, setSuccess] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Email verification state variables
+  const [verifiedEmail, setVerifiedEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [otpMessage, setOtpMessage] = useState<string | null>(null);
+  const [otpError, setOtpError] = useState<string | null>(null);
+
+  const normalizedEmail = formData.email.trim().toLowerCase();
+  const isEmailVerified = Boolean(verifiedEmail && verifiedEmail === normalizedEmail);
+
+  function handleEmailChange(val: string) {
+    setFormData(p => ({ ...p, email: val }));
+    setOtp("");
+    setOtpError(null);
+    setOtpMessage(null);
+    if (val.trim().toLowerCase() !== verifiedEmail) {
+      setVerifiedEmail("");
+    }
+  }
+
+  async function sendOtp() {
+    setOtpError(null);
+    setOtpMessage(null);
+    setSendingOtp(true);
+
+    try {
+      const res = await fetch("/api/auth/email-otp/send", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: formData.email })
+      });
+      const json = (await res.json()) as { ok: boolean; error?: string; verified?: boolean };
+
+      if (!json.ok) {
+        setOtpError(json.error || "Could not send OTP.");
+        return;
+      }
+
+      if (json.verified) {
+        setVerifiedEmail(normalizedEmail);
+        setOtpMessage("Email already verified. You can submit the form.");
+        return;
+      }
+
+      setOtpSent(true);
+      setOtpMessage("OTP sent. Check your email and enter the 6 digit code.");
+    } catch {
+      setOtpError("Network error. Please try again.");
+    } finally {
+      setSendingOtp(false);
+    }
+  }
+
+  async function verifyOtp() {
+    setOtpError(null);
+    setOtpMessage(null);
+    setVerifyingOtp(true);
+
+    try {
+      const res = await fetch("/api/auth/email-otp/verify", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: formData.email, otp })
+      });
+      const json = (await res.json()) as { ok: boolean; error?: string; verified?: boolean };
+
+      if (!json.ok || !json.verified) {
+        setOtpError(json.error || "Could not verify OTP.");
+        return;
+      }
+
+      setVerifiedEmail(normalizedEmail);
+      setOtpMessage("Email verified successfully!");
+    } catch {
+      setOtpError("Network error. Please try again.");
+    } finally {
+      setVerifyingOtp(false);
+    }
+  }
+
   useEffect(() => {
     const draft = loadDraft<typeof formData>("draft:for-agencies");
     if (Object.keys(draft).length) {
@@ -32,6 +114,9 @@ export default function ForAgenciesPage() {
         contactPerson: prev.contactPerson || u.name || prev.contactPerson,
         email: prev.email || u.email || prev.email
       }));
+      if (u.email) {
+        setVerifiedEmail(u.email.trim().toLowerCase());
+      }
     })();
   }, []);
 
@@ -41,6 +126,10 @@ export default function ForAgenciesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isEmailVerified) {
+      setError("Please verify your email address using the OTP first.");
+      return;
+    }
     setLoading(true);
     setSuccess(null);
     setError(null);
@@ -344,21 +433,94 @@ export default function ForAgenciesPage() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "20px" }}>
             <div>
               <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "#334155", marginBottom: "6px" }}>Business Email Address *</label>
-              <input
-                type="email"
-                required
-                value={formData.email}
-                onChange={(e) => setFormData(p => ({ ...p, email: e.target.value }))}
-                placeholder="e.g. info@agencydomain.com"
-                style={{
-                  width: "100%",
-                  padding: "12px",
-                  borderRadius: "8px",
-                  border: "1px solid #CBD5E1",
-                  fontSize: "15px",
-                  outline: "none"
-                }}
-              />
+              <div style={{ display: "flex", gap: "8px" }}>
+                <input
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={(e) => handleEmailChange(e.target.value)}
+                  placeholder="e.g. info@agencydomain.com"
+                  disabled={loading}
+                  style={{
+                    flex: 1,
+                    padding: "12px",
+                    borderRadius: "8px",
+                    border: "1px solid #CBD5E1",
+                    fontSize: "15px",
+                    outline: "none",
+                    background: isEmailVerified ? "#F1F5F9" : "#FFFFFF"
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={sendOtp}
+                  disabled={sendingOtp || !normalizedEmail || isEmailVerified}
+                  style={{
+                    padding: "0 16px",
+                    borderRadius: "8px",
+                    border: "none",
+                    background: isEmailVerified ? "#10B981" : "#2563EB",
+                    color: "#ffffff",
+                    fontWeight: "600",
+                    fontSize: "14px",
+                    cursor: (sendingOtp || !normalizedEmail || isEmailVerified) ? "not-allowed" : "pointer",
+                    whiteSpace: "nowrap",
+                    transition: "background 0.2s"
+                  }}
+                >
+                  {isEmailVerified ? "Verified ✓" : sendingOtp ? "Sending..." : "Send OTP"}
+                </button>
+              </div>
+              {otpError && (
+                <p style={{ color: "#EF4444", fontSize: "13px", marginTop: "6px", marginBottom: 0 }}>
+                  ⚠️ {otpError}
+                </p>
+              )}
+              {otpMessage && (
+                <p style={{ color: isEmailVerified ? "#10B981" : "#2563EB", fontSize: "13px", marginTop: "6px", marginBottom: 0 }}>
+                  {isEmailVerified ? "✓" : "ℹ️"} {otpMessage}
+                </p>
+              )}
+              {!isEmailVerified && otpSent && (
+                <div style={{ marginTop: "12px", background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "8px", padding: "12px" }}>
+                  <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "#475569", marginBottom: "6px" }}>Enter 6-Digit Email OTP *</label>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <input
+                      type="text"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                      placeholder="6 digit code"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      style={{
+                        flex: 1,
+                        padding: "10px",
+                        borderRadius: "8px",
+                        border: "1px solid #CBD5E1",
+                        fontSize: "14px",
+                        outline: "none"
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={verifyOtp}
+                      disabled={verifyingOtp || otp.length !== 6}
+                      style={{
+                        padding: "0 20px",
+                        borderRadius: "8px",
+                        border: "none",
+                        background: "#0F172A",
+                        color: "#ffffff",
+                        fontWeight: "600",
+                        fontSize: "14px",
+                        cursor: (verifyingOtp || otp.length !== 6) ? "not-allowed" : "pointer"
+                      }}
+                    >
+                      {verifyingOtp ? "Verifying..." : "Verify"}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
             <div>
               <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "#334155", marginBottom: "6px" }}>Phone / Whatsapp Number *</label>
@@ -463,17 +625,17 @@ export default function ForAgenciesPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !isEmailVerified}
             style={{
               width: "100%",
-              background: "#2563EB",
+              background: (!isEmailVerified || loading) ? "#94A3B8" : "#2563EB",
               color: "#ffffff",
               border: "none",
               borderRadius: "8px",
               padding: "14px",
               fontWeight: "700",
               fontSize: "16px",
-              cursor: loading ? "not-allowed" : "pointer",
+              cursor: (loading || !isEmailVerified) ? "not-allowed" : "pointer",
               transition: "background 0.2s",
               display: "flex",
               alignItems: "center",
@@ -482,10 +644,10 @@ export default function ForAgenciesPage() {
               marginTop: "10px"
             }}
             onMouseEnter={(e) => {
-              if (!loading) e.currentTarget.style.background = "#1D4ED8";
+              if (!loading && isEmailVerified) e.currentTarget.style.background = "#1D4ED8";
             }}
             onMouseLeave={(e) => {
-              if (!loading) e.currentTarget.style.background = "#2563EB";
+              if (!loading && isEmailVerified) e.currentTarget.style.background = "#2563EB";
             }}
           >
             {loading ? "Registering..." : "Submit Agency Registration Request"}

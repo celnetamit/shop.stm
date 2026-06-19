@@ -26,7 +26,7 @@ type Proforma = {
   createdAt: string;
   updatedAt?: string;
   items: ProformaItem[];
-  createdBy: { id: string; email: string } | null;
+  createdBy: { id: string; email: string; role: string } | null;
 };
 
 function proformaPdfFilename(piNumber: string) {
@@ -78,7 +78,24 @@ function amountInWords(val: number, currency: "INR" | "USD") {
 function getFinancialRows(pi: Proforma) {
   const currency = pi.currency || "INR";
   const couponPct = pi.couponPercent || 0;
-  const isGstExemptSubscriber = pi.subscriberCategory === "COLLEGE" || pi.subscriberCategory === "EXISTING_PI";
+  
+  let isGstExempt = true;
+  if (pi.createdBy) {
+    if (pi.createdBy.role === "LIBRARIAN" || pi.createdBy.role === "USER") {
+      isGstExempt = true;
+    } else if (
+      pi.createdBy.role === "AGENCY" ||
+      pi.createdBy.role === "STUDENT" ||
+      pi.createdBy.role === "SCHOLAR"
+    ) {
+      isGstExempt = false;
+    } else {
+      isGstExempt = false;
+    }
+  } else {
+    isGstExempt = pi.subscriberCategory === "COLLEGE" || pi.subscriberCategory === "EXISTING_PI";
+  }
+
   let subtotal = 0;
   let discount = 0;
   let gst = 0;
@@ -88,7 +105,7 @@ function getFinancialRows(pi: Proforma) {
     const itemDiscount = (unitPrice * couponPct) / 100;
     const taxable = unitPrice - itemDiscount;
     const isDigital = it.selectedPlan === "ONLINE" || it.selectedPlan === "PRINT_ONLINE";
-    const gstRate = currency === "INR" && isDigital && !isGstExemptSubscriber ? 18 : 0;
+    const gstRate = currency === "INR" && isDigital && !isGstExempt ? 18 : 0;
     const itemGst = taxable * (gstRate / 100);
     subtotal += unitPrice;
     discount += itemDiscount;
@@ -210,7 +227,7 @@ function AdminPiPdfTemplate({ pi }: { pi: Proforma }) {
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 100px", gap: "4px", padding: "10px", fontSize: "11.5px" }}>
                   <span style={{ textAlign: "right", color: "#64748b" }}>Subtotal:</span><span style={{ textAlign: "right", fontWeight: "600" }}>{financials.subtotal.toFixed(2)}</span>
                   {financials.discount > 0 ? <><span style={{ textAlign: "right", color: "#64748b" }}>Discount:</span><span style={{ textAlign: "right", color: "#ef4444" }}>-{financials.discount.toFixed(2)}</span></> : null}
-                  {currency === "INR" ? <><span style={{ textAlign: "right", color: "#64748b" }}>CGST (9%):</span><span style={{ textAlign: "right" }}>{financials.cgst.toFixed(2)}</span><span style={{ textAlign: "right", color: "#64748b" }}>SGST (9%):</span><span style={{ textAlign: "right" }}>{financials.sgst.toFixed(2)}</span></> : null}
+                  {currency === "INR" && (financials.cgst > 0 || financials.sgst > 0) ? <><span style={{ textAlign: "right", color: "#64748b" }}>CGST (9%):</span><span style={{ textAlign: "right" }}>{financials.cgst.toFixed(2)}</span><span style={{ textAlign: "right", color: "#64748b" }}>SGST (9%):</span><span style={{ textAlign: "right" }}>{financials.sgst.toFixed(2)}</span></> : null}
                   <span style={{ textAlign: "right", fontWeight: "800", color: "#0f172a", borderTop: "1.5px solid #334155", paddingTop: "6px", marginTop: "4px", fontSize: "13px" }}>Total ({currency}):</span>
                   <span style={{ textAlign: "right", fontWeight: "800", color: "#0f172a", borderTop: "1.5px solid #334155", paddingTop: "6px", marginTop: "4px", fontSize: "13px" }}>{financials.total.toFixed(2)}</span>
                 </div>

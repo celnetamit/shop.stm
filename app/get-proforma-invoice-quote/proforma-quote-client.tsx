@@ -115,6 +115,21 @@ function getIssueCountFromFrequency(frequency: string | null): number {
   return 2;
 }
 
+function getIssueWiseUnitPrice(
+  annualPrice: number,
+  totalIssues: number,
+  issue: string | null | undefined
+): number {
+  if (!issue || issue === "All(Jan-Dec)" || issue === "all") return annualPrice;
+  if (totalIssues === 3) {
+    return Math.max(1, Math.round((annualPrice / 3) * (7 / 6)));
+  }
+  if (totalIssues === 2) {
+    return Math.max(1, Math.round((annualPrice / 2) * (79 / 70)));
+  }
+  return Math.max(1, Math.round(annualPrice / Math.max(1, totalIssues)));
+}
+
 function isJournalsPubPublisher(publisher: string | null | undefined): boolean {
   const normalized = (publisher || "").toLowerCase().replace(/[^a-z0-9]/g, "");
   return normalized === "journalspub";
@@ -173,6 +188,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
   const [subscriptionType, setSubscriptionType] = useState<"STM" | "PUB">("STM");
   const [subscriberCategory, setSubscriberCategory] = useState<SubscriberCategory>("COLLEGE");
   const [userRole, setUserRole] = useState<UserRole>("USER");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [existingPiQuery, setExistingPiQuery] = useState("");
   const [showPiSuggestions, setShowPiSuggestions] = useState(false);
   const [existingPiResults, setExistingPiResults] = useState<Array<{
@@ -293,11 +309,14 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
 
     (async () => {
       const u = await fetchPrefillUser();
-      if (!u) return;
+      if (!u) {
+        setIsLoggedIn(false);
+        return;
+      }
+      setIsLoggedIn(true);
       if (u.role) setUserRole(u.role);
       if (u.name) setContactName(u.name);
       if (u.email) setEmail(u.email);
-
     })();
   }, []);
 
@@ -516,12 +535,31 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
         const plan = c.plan;
         const annualPrice = getPrice(row, plan);
         const selectedCount = c.type === "ANNUAL" ? totalIssues : c.selectedIssues.length;
-        const unitPrice = (annualPrice / totalIssues) * selectedCount;
+        const unitPrice = c.type === "ANNUAL"
+          ? annualPrice
+          : getIssueWiseUnitPrice(annualPrice, totalIssues, "individual") * selectedCount;
 
         const itemDiscount = (unitPrice * appliedDiscountPercent) / 100;
         const itemTaxable = unitPrice - itemDiscount;
         const isDigital = plan === "ONLINE" || plan === "PRINT_ONLINE";
-        const gstRate = currency === "INR" && isDigital && subscriberCategory !== "COLLEGE" && subscriberCategory !== "EXISTING_PI" ? 18 : 0;
+        let isGstExempt = true;
+        if (isLoggedIn) {
+          if (userRole === "LIBRARIAN" || userRole === "USER") {
+            isGstExempt = true;
+          } else if (
+            userRole === "AGENCY" ||
+            userRole === "STUDENT" ||
+            userRole === "SCHOLAR"
+          ) {
+            isGstExempt = false;
+          } else {
+            isGstExempt = false;
+          }
+        } else {
+          isGstExempt = true;
+        }
+
+        const gstRate = currency === "INR" && isDigital && !isGstExempt ? 18 : 0;
         const itemGst = itemTaxable * (gstRate / 100);
         const netAmount = itemTaxable + itemGst;
         let periodStart = c.year * 12;
@@ -560,7 +598,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
     });
 
     return list;
-  }, [selectedRows, subscriptionConfigs, currency, appliedDiscountPercent, subscriberCategory]);
+  }, [selectedRows, subscriptionConfigs, currency, appliedDiscountPercent, subscriberCategory, isLoggedIn, userRole]);
 
   const mergedItemizedTotals = useMemo(() => {
     if (!itemizedTotals.length) return [];
@@ -1297,7 +1335,10 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
                           configs.reduce((sum, config) => {
                             const annualPrice = getPrice(j, config.plan);
                             const selectedCount = config.type === "ANNUAL" ? totalIssues : config.selectedIssues.length;
-                            return sum + (annualPrice / totalIssues) * selectedCount;
+                            const unitPrice = config.type === "ANNUAL"
+                              ? annualPrice
+                              : getIssueWiseUnitPrice(annualPrice, totalIssues, "individual") * selectedCount;
+                            return sum + unitPrice;
                           }, 0)
                         )}
                       </div>
@@ -1573,7 +1614,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
                             </>
                           )}
 
-                          {currency === "INR" && (
+                          {currency === "INR" && (activeCgst > 0 || activeSgst > 0) && (
                             <>
                               <span style={{ textAlign: "right", color: "#64748b" }}>CGST (9%):</span>
                               <span style={{ textAlign: "right" }}>{Number(activeCgst).toFixed(2)}</span>

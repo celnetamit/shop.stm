@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/app/components/cart-store";
+import { getIssueWiseUnitPrice } from "@/lib/journal-cart";
 
 type FocusScopeItem = {
   title: string;
@@ -92,7 +93,7 @@ export default function ProductDetailClient({ journal, domains, description, abo
     if (plan === "ONLINE") base = journal.onlineInr;
     
     if (selectedIssue !== "All(Jan-Dec)") {
-      return Math.round(base / issueCount);
+      return getIssueWiseUnitPrice(base, issueCount, selectedIssue);
     }
     return base;
   }, [plan, journal, selectedIssue, issueCount]);

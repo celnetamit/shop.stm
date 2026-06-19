@@ -4,7 +4,7 @@ import { formatPiNumber } from "@/lib/pi-number";
 export async function prepareProformaEmailPayload(quoteId: string) {
   const quote = await prisma.proformaQuote.findUnique({
     where: { id: quoteId },
-    include: { items: true }
+    include: { items: true, createdBy: true }
   });
 
   if (!quote) return null;
@@ -34,8 +34,25 @@ export async function prepareProformaEmailPayload(quoteId: string) {
 
     const isDigital = it.selectedPlan === "ONLINE" || it.selectedPlan === "PRINT_ONLINE";
     const isINR = currency === "INR";
-    const isGstExemptSubscriber = quote.subscriberCategory === "COLLEGE" || quote.subscriberCategory === "EXISTING_PI";
-    const itemGstRate = isINR && isDigital && !isGstExemptSubscriber ? 18 : 0;
+    
+    let isGstExempt = true;
+    if (quote.createdBy) {
+      if (quote.createdBy.role === "LIBRARIAN" || quote.createdBy.role === "USER") {
+        isGstExempt = true;
+      } else if (
+        quote.createdBy.role === "AGENCY" ||
+        quote.createdBy.role === "STUDENT" ||
+        quote.createdBy.role === "SCHOLAR"
+      ) {
+        isGstExempt = false;
+      } else {
+        isGstExempt = false;
+      }
+    } else {
+      isGstExempt = quote.subscriberCategory === "COLLEGE" || quote.subscriberCategory === "EXISTING_PI";
+    }
+
+    const itemGstRate = isINR && isDigital && !isGstExempt ? 18 : 0;
 
     const itemGst = itemTaxable * (itemGstRate / 100);
     const itemCgst = itemGst / 2;
@@ -106,7 +123,7 @@ export async function prepareProformaEmailPayload(quoteId: string) {
     `;
   }
 
-  if (currency === "INR") {
+  if (currency === "INR" && (cgst > 0 || sgst > 0)) {
     financialsHtml += `
         <tr>
           <td style="text-align:right; color:#64748b;">CGST (9%):</td>

@@ -8,7 +8,7 @@ import { formatPiNumber } from "@/lib/pi-number";
 async function findProformaQuote(idOrPiNumber: string) {
   const direct = await prisma.proformaQuote.findUnique({
     where: { id: idOrPiNumber },
-    include: { items: true }
+    include: { items: true, createdBy: true }
   });
   if (direct) return direct;
 
@@ -24,7 +24,7 @@ async function findProformaQuote(idOrPiNumber: string) {
 
   return prisma.proformaQuote.findUnique({
     where: { id: match.id },
-    include: { items: true }
+    include: { items: true, createdBy: true }
   });
 }
 
@@ -74,8 +74,26 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
       const isDigital = it.selectedPlan === "ONLINE" || it.selectedPlan === "PRINT_ONLINE";
       const isINR = quote.currency === "INR";
-      const isGstExemptSubscriber = quote.subscriberCategory === "COLLEGE" || quote.subscriberCategory === "EXISTING_PI";
-      const itemGstRate = isINR && isDigital && !isGstExemptSubscriber ? 18 : 0;
+      
+      let isGstExempt = true;
+      const activeRole = session?.role || quote.createdBy?.role;
+      if (activeRole) {
+        if (activeRole === "LIBRARIAN" || activeRole === "USER") {
+          isGstExempt = true;
+        } else if (
+          activeRole === "AGENCY" ||
+          activeRole === "STUDENT" ||
+          activeRole === "SCHOLAR"
+        ) {
+          isGstExempt = false;
+        } else {
+          isGstExempt = false;
+        }
+      } else {
+        isGstExempt = quote.subscriberCategory === "COLLEGE" || quote.subscriberCategory === "EXISTING_PI";
+      }
+
+      const itemGstRate = isINR && isDigital && !isGstExempt ? 18 : 0;
 
       const itemGst = itemTaxable * (itemGstRate / 100);
       const itemCgst = itemGst / 2;

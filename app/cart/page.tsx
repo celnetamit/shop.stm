@@ -37,8 +37,8 @@ export default function CartPage() {
   const subtotal = useMemo(() => items.reduce((s, it) => s + it.unitPrice * it.qty, 0), [items]);
   const discount = Math.round((subtotal * discountPercent) / 100);
   const taxable = subtotal - discount;
-  const gst = Math.round(taxable * 0.18);
-  const total = taxable + gst;
+  const gst = 0;
+  const total = taxable;
 
   async function applyCoupon() {
     setMsg("");
@@ -115,7 +115,7 @@ export default function CartPage() {
           {isInternationalUser ? <p style={{ fontSize: "12px", color: "#2563eb", marginTop: 0 }}>USD enforced outside India</p> : null}
           <p><span>Subtotal</span><strong>{money(subtotal)}</strong></p>
           <p><span>Discount {couponCode ? `(${couponCode})` : ""}</span><strong>-{money(discount)}</strong></p>
-          <p><span>GST (18%)</span><strong>{money(gst)}</strong></p>
+          {gst > 0 && <p><span>GST (18%)</span><strong>{money(gst)}</strong></p>}
           <p className="cart-total"><span>Total</span><strong>{money(total)}</strong></p>
           <Link href="/checkout" className="cart-checkout-btn">Proceed to checkout</Link>
         </aside>

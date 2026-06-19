@@ -36,6 +36,9 @@ export default function CheckoutClient() {
   const [quoteData, setQuoteData] = useState<any>(null);
   const [isLoadingQuote, setIsLoadingQuote] = useState(!!queryQuoteId);
 
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
+
   useEffect(() => {
     const draft = loadDraft<{ name: string; email: string; organization: string; address: string; state: string; pincode: string; gst: string }>("draft:checkout");
     if (draft.name) setName(draft.name);
@@ -47,7 +50,13 @@ export default function CheckoutClient() {
     if (draft.gst) setGst(draft.gst);
     (async () => {
       const u = await fetchPrefillUser();
-      if (!u) return;
+      if (!u) {
+        setIsLoggedIn(false);
+        setCurrentUserRole(null);
+        return;
+      }
+      setIsLoggedIn(true);
+      if (u.role) setCurrentUserRole(u.role);
       if (!draft.name && u.name) setName(u.name);
       if (!draft.email && u.email) setEmail(u.email);
     })();
@@ -112,6 +121,25 @@ export default function CheckoutClient() {
     let calcCgst = 0;
     let calcSgst = 0;
 
+    let isGstExempt = true;
+    if (quoteData) {
+      isGstExempt = quoteData.subscriberCategory === "COLLEGE" || quoteData.subscriberCategory === "EXISTING_PI";
+    } else if (isLoggedIn) {
+      if (currentUserRole === "LIBRARIAN" || currentUserRole === "USER") {
+        isGstExempt = true;
+      } else if (
+        currentUserRole === "AGENCY" ||
+        currentUserRole === "STUDENT" ||
+        currentUserRole === "SCHOLAR"
+      ) {
+        isGstExempt = false;
+      } else {
+        isGstExempt = false;
+      }
+    } else {
+      isGstExempt = true; // Not logged in -> GST is 0
+    }
+
     sourceItems.forEach((it: any) => {
       const unitPrice = Number(it.unitPrice || 0);
       const qty = Number(it.qty || 1);
@@ -124,8 +152,7 @@ export default function CheckoutClient() {
       const isDigital = rawPlan === "ONLINE" || rawPlan === "PRINT_ONLINE";
       // Direct checkout natively triggers Razorpay (INR)
       const isINR = quoteData ? (quoteData.currency === "INR") : true;
-      const isGstExemptSubscriber = quoteData?.subscriberCategory === "COLLEGE" || quoteData?.subscriberCategory === "EXISTING_PI";
-      const itemGstRate = (isINR && isDigital && !isGstExemptSubscriber) ? 18 : 0;
+      const itemGstRate = (isINR && isDigital && !isGstExempt) ? 18 : 0;
 
       const itemGst = itemTaxable * (itemGstRate / 100);
       const itemCgst = itemGst / 2;
@@ -140,8 +167,8 @@ export default function CheckoutClient() {
 
     // Guard fallback for direct query parameters
     if (!quoteData && items.length === 0 && queryTotal > 0) {
-      const fallbackCgst = Math.round(queryTotal * 0.09 * 10) / 10;
-      const fallbackSgst = Math.round(queryTotal * 0.09 * 10) / 10;
+      const fallbackCgst = isGstExempt ? 0 : Math.round(queryTotal * 0.09 * 10) / 10;
+      const fallbackSgst = isGstExempt ? 0 : Math.round(queryTotal * 0.09 * 10) / 10;
       return {
         subtotal: queryTotal,
         discount: 0,
@@ -160,7 +187,7 @@ export default function CheckoutClient() {
       sgst: Math.round(calcSgst * 100) / 100,
       total: Math.round((calcTaxable + calcCgst + calcSgst) * 100) / 100
     };
-  }, [quoteData, items, discountPercent, queryTotal]);
+  }, [quoteData, items, discountPercent, queryTotal, isLoggedIn, currentUserRole]);
 
   const { subtotal, discount, taxable, cgst, sgst, total } = calculatedFinances;
 
@@ -333,6 +360,16 @@ export default function CheckoutClient() {
         <section className="checkout-card">
           <h1>Billing Details</h1>
           <p style={{ marginBottom: "20px", color: "#64748b", fontSize: "14px" }}>Confirm or update your final distribution specifics below.</p>
+          {!isLoggedIn ? (
+            <div style={{ padding: "12px 16px", borderRadius: "8px", background: "#f8fafc", border: "1px solid #cbd5e1", marginBottom: "20px", fontSize: "13.5px", color: "#475569", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+              <span>💡 GST is calculated based on user role. Not logged in?</span>
+              <Link href="/login?redirect=/checkout" style={{ color: "#2563eb", fontWeight: "bold", textDecoration: "underline" }}>Login / Register</Link>
+            </div>
+          ) : (
+            <div style={{ padding: "12px 16px", borderRadius: "8px", background: "#f0fdf4", border: "1px solid #bbf7d0", marginBottom: "20px", fontSize: "13.5px", color: "#166534" }}>
+              <span>✓ Logged in as <strong>{email}</strong> ({currentUserRole === "LIBRARIAN" || currentUserRole === "USER" ? "College/Institution/Librarian - 0% GST Exempt" : `Role: ${currentUserRole} - 18% GST Applicable`}).</span>
+            </div>
+          )}
           <div className="checkout-fields">
             <div><label>FULL NAME *</label><input value={name} onChange={(e) => setName(e.target.value)} placeholder="E.g. Dr. Rajesh Singh" /></div>
             <div><label>EMAIL ADDRESS *</label><input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="user@institution.com" /></div>
@@ -383,8 +420,8 @@ export default function CheckoutClient() {
           <div className="summary-ledger">
             <p><span>Subtotal</span><strong>{money(subtotal)}</strong></p>
             {discount > 0 && <p><span>Discount {couponCode ? `(${couponCode})` : ""}</span><strong style={{ color: "#ef4444" }}>-{money(discount)}</strong></p>}
-            <p><span>CGST (9%)</span><strong>{money(cgst)}</strong></p>
-            <p><span>SGST (9%)</span><strong>{money(sgst)}</strong></p>
+            {cgst > 0 && <p><span>CGST (9%)</span><strong>{money(cgst)}</strong></p>}
+            {sgst > 0 && <p><span>SGST (9%)</span><strong>{money(sgst)}</strong></p>}
             <div style={{ margin: "15px 0", borderTop: "1px dashed #cbd5e1" }}></div>
             <p className="checkout-total"><span>Grand Total</span><strong>{money(total)}</strong></p>
           </div>

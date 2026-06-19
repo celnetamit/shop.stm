@@ -203,8 +203,8 @@ export default async function OrderInvoicePrintPage({ params }: { params: Promis
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 100px", gap: "4px", padding: "10px", fontSize: "11.5px" }}>
                     <span style={{ textAlign: "right", color: "#64748b" }}>Subtotal:</span><span style={{ textAlign: "right", fontWeight: 600 }}>{subtotal.toFixed(2)}</span>
                     <span style={{ textAlign: "right", color: "#64748b" }}>Discount:</span><span style={{ textAlign: "right", color: "#ef4444" }}>{discount.toFixed(2)}</span>
-                    <span style={{ textAlign: "right", color: "#64748b" }}>CGST (9%):</span><span style={{ textAlign: "right" }}>{cgst.toFixed(2)}</span>
-                    <span style={{ textAlign: "right", color: "#64748b" }}>SGST (9%):</span><span style={{ textAlign: "right" }}>{sgst.toFixed(2)}</span>
+                    {cgst > 0 && <><span style={{ textAlign: "right", color: "#64748b" }}>CGST (9%):</span><span style={{ textAlign: "right" }}>{cgst.toFixed(2)}</span></>}
+                    {sgst > 0 && <><span style={{ textAlign: "right", color: "#64748b" }}>SGST (9%):</span><span style={{ textAlign: "right" }}>{sgst.toFixed(2)}</span></>}
                     <span style={{ textAlign: "right", fontWeight: 800, borderTop: "1.5px solid #334155", paddingTop: "6px", marginTop: "4px" }}>Total (INR):</span>
                     <span style={{ textAlign: "right", fontWeight: 800, borderTop: "1.5px solid #334155", paddingTop: "6px", marginTop: "4px" }}>{grandTotal.toFixed(2)}</span>
                   </div>

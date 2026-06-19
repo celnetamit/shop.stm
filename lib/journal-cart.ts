@@ -74,5 +74,11 @@ export function getIssueWiseUnitPrice(
   issue: string | null | undefined
 ): number {
   if (!issue || issue === "All(Jan-Dec)") return annualPrice;
+  if (totalIssues === 3) {
+    return Math.max(1, Math.round((annualPrice / 3) * (7 / 6)));
+  }
+  if (totalIssues === 2) {
+    return Math.max(1, Math.round((annualPrice / 2) * (79 / 70)));
+  }
   return Math.max(1, Math.round(annualPrice / Math.max(1, totalIssues)));
 }

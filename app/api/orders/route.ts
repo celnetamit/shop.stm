@@ -91,15 +91,35 @@ export async function POST(req: NextRequest) {
     }
     const discountAmt = Math.max(0, Math.round(body.discount || 0));
     const taxable = calcSubtotal - discountAmt;
-    const cgstRate = body.currency === "USD" ? 0 : 9;
-    const sgstRate = body.currency === "USD" ? 0 : 9;
+
+    const session = await getCurrentSession();
+    const quoteForReceiver = body.quoteId ? await prisma.proformaQuote.findUnique({ where: { id: body.quoteId } }).catch(() => null) : null;
+
+    let isGstExempt = true;
+    if (quoteForReceiver) {
+      isGstExempt = quoteForReceiver.subscriberCategory === "COLLEGE" || quoteForReceiver.subscriberCategory === "EXISTING_PI";
+    } else if (session) {
+      if (session.role === "LIBRARIAN" || session.role === "USER") {
+        isGstExempt = true;
+      } else if (
+        session.role === "AGENCY" ||
+        session.role === "STUDENT" ||
+        session.role === "SCHOLAR"
+      ) {
+        isGstExempt = false;
+      } else {
+        isGstExempt = false;
+      }
+    } else {
+      isGstExempt = true;
+    }
+
+    const isINR = body.currency !== "USD";
+    const cgstRate = (isINR && !isGstExempt) ? 9 : 0;
+    const sgstRate = (isINR && !isGstExempt) ? 9 : 0;
     const calcCgst = (taxable * cgstRate) / 100;
     const calcSgst = (taxable * sgstRate) / 100;
     const calcTotal = taxable + calcCgst + calcSgst;
-
-    const session = await getCurrentSession();
-
-    const quoteForReceiver = body.quoteId ? await prisma.proformaQuote.findUnique({ where: { id: body.quoteId } }).catch(() => null) : null;
 
     const order = await prisma.$transaction(async (tx) => {
       const created = await tx.order.create({
