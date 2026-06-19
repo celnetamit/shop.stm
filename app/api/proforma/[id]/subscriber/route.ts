@@ -41,9 +41,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
 
     const session = await getCurrentSession();
-    if (!session) {
-      return NextResponse.json({ ok: false, error: "Authentication required." }, { status: 401 });
-    }
 
     if (id.startsWith("draft-")) {
       return NextResponse.json({ ok: true, quoteId: id, warning: "Draft mode: DB table missing" });
@@ -51,7 +48,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     try {
       const existingQuote = await prisma.proformaQuote.findUnique({ where: { id } });
-      if (existingQuote && existingQuote.createdByUserId && existingQuote.createdByUserId !== session.sub) {
+      if (existingQuote && existingQuote.createdByUserId && (!session || (existingQuote.createdByUserId !== session.sub && session.role !== "ADMIN"))) {
         return NextResponse.json({ ok: false, error: "Unauthorized: you do not own this quote." }, { status: 403 });
       }
 

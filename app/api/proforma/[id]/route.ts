@@ -36,9 +36,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     }
 
     const session = await getCurrentSession();
-    if (!session) {
-      return NextResponse.json({ ok: false, error: "Authentication required." }, { status: 401 });
-    }
 
     const quote = await findProformaQuote(id);
 
@@ -46,7 +43,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.json({ ok: false, error: "Requested document missing." }, { status: 404 });
     }
 
-    if (quote.createdByUserId && quote.createdByUserId !== session.sub && session.role !== "ADMIN") {
+    if (quote.createdByUserId && (!session || (quote.createdByUserId !== session.sub && session.role !== "ADMIN"))) {
       return NextResponse.json({ ok: false, error: "Unauthorized: you do not own this quote." }, { status: 403 });
     }
 
@@ -171,9 +168,6 @@ function isMissingTableError(error: unknown): boolean {
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getCurrentSession();
-    if (!session) {
-      return NextResponse.json({ ok: false, error: "Authentication required." }, { status: 401 });
-    }
 
     const { id } = await params;
     const body = (await req.json()) as {
@@ -201,7 +195,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
 
     const existingQuote = await prisma.proformaQuote.findUnique({ where: { id } });
-    if (existingQuote && existingQuote.createdByUserId && existingQuote.createdByUserId !== session.sub) {
+    if (existingQuote && existingQuote.createdByUserId && (!session || (existingQuote.createdByUserId !== session.sub && session.role !== "ADMIN"))) {
       return NextResponse.json({ ok: false, error: "Unauthorized: you do not own this quote." }, { status: 403 });
     }
 

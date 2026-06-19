@@ -29,7 +29,10 @@ export default function ForAgenciesPage() {
   const [otpError, setOtpError] = useState<string | null>(null);
 
   const normalizedEmail = formData.email.trim().toLowerCase();
-  const isEmailVerified = Boolean(verifiedEmail && verifiedEmail === normalizedEmail);
+  const isEmailVerified = Boolean(
+    (verifiedEmail && verifiedEmail === normalizedEmail) ||
+    (typeof window !== "undefined" && window.localStorage.getItem("otp_verified_email") === normalizedEmail)
+  );
 
   function handleEmailChange(val: string) {
     setFormData(p => ({ ...p, email: val }));
@@ -62,6 +65,9 @@ export default function ForAgenciesPage() {
       if (json.verified) {
         setVerifiedEmail(normalizedEmail);
         setOtpMessage("Email already verified. You can submit the form.");
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem("otp_verified_email", normalizedEmail);
+        }
         return;
       }
 
@@ -94,6 +100,9 @@ export default function ForAgenciesPage() {
 
       setVerifiedEmail(normalizedEmail);
       setOtpMessage("Email verified successfully!");
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("otp_verified_email", normalizedEmail);
+      }
     } catch {
       setOtpError("Network error. Please try again.");
     } finally {

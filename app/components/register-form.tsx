@@ -24,7 +24,10 @@ export default function RegisterForm() {
   const [verifyingOtp, setVerifyingOtp] = useState(false);
 
   const normalizedEmail = email.trim().toLowerCase();
-  const isEmailVerified = Boolean(verifiedEmail && verifiedEmail === normalizedEmail);
+  const isEmailVerified = Boolean(
+    (verifiedEmail && verifiedEmail === normalizedEmail) ||
+    (typeof window !== "undefined" && window.localStorage.getItem("otp_verified_email") === normalizedEmail)
+  );
 
   function onEmailChange(value: string) {
     setEmail(value);
@@ -57,6 +60,9 @@ export default function RegisterForm() {
       if (json.verified) {
         setVerifiedEmail(normalizedEmail);
         setSuccess("Email already verified. You can create your account.");
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem("otp_verified_email", normalizedEmail);
+        }
         return;
       }
 
@@ -88,6 +94,9 @@ export default function RegisterForm() {
 
       setVerifiedEmail(normalizedEmail);
       setSuccess("Email verified. Complete the details below.");
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("otp_verified_email", normalizedEmail);
+      }
     } catch {
       setError("Network error. Please try again.");
     } finally {

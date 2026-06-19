@@ -189,6 +189,99 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
   const [subscriberCategory, setSubscriberCategory] = useState<SubscriberCategory>("COLLEGE");
   const [userRole, setUserRole] = useState<UserRole>("USER");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Email verification state variables for guest/logged-out users
+  const [verifiedEmail, setVerifiedEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [otpMessage, setOtpMessage] = useState<string | null>(null);
+  const [otpError, setOtpError] = useState<string | null>(null);
+
+  const normalizedEmail = email.trim().toLowerCase();
+  const isEmailVerified = Boolean(
+    isLoggedIn ||
+    (verifiedEmail && verifiedEmail === normalizedEmail) ||
+    (typeof window !== "undefined" && window.localStorage.getItem("otp_verified_email") === normalizedEmail)
+  );
+
+  function handleEmailChange(val: string) {
+    setEmail(val);
+    setOtp("");
+    setOtpError(null);
+    setOtpMessage(null);
+    if (val.trim().toLowerCase() !== verifiedEmail) {
+      setVerifiedEmail("");
+    }
+  }
+
+  async function sendOtp() {
+    setOtpError(null);
+    setOtpMessage(null);
+    setSendingOtp(true);
+
+    try {
+      const res = await fetch("/api/auth/email-otp/send", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email })
+      });
+      const json = (await res.json()) as { ok: boolean; error?: string; verified?: boolean };
+
+      if (!json.ok) {
+        setOtpError(json.error || "Could not send OTP.");
+        return;
+      }
+
+      if (json.verified) {
+        setVerifiedEmail(normalizedEmail);
+        setOtpMessage("Email already verified.");
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem("otp_verified_email", normalizedEmail);
+        }
+        return;
+      }
+
+      setOtpSent(true);
+      setOtpMessage("OTP sent to your email.");
+    } catch {
+      setOtpError("Network error. Please try again.");
+    } finally {
+      setSendingOtp(false);
+    }
+  }
+
+  async function verifyOtp() {
+    setOtpError(null);
+    setOtpMessage(null);
+    setVerifyingOtp(true);
+
+    try {
+      const res = await fetch("/api/auth/email-otp/verify", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, otp })
+      });
+      const json = (await res.json()) as { ok: boolean; error?: string; verified?: boolean };
+
+      if (!json.ok || !json.verified) {
+        setOtpError(json.error || "Could not verify OTP.");
+        return;
+      }
+
+      setVerifiedEmail(normalizedEmail);
+      setOtpMessage("Email verified successfully!");
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("otp_verified_email", normalizedEmail);
+      }
+    } catch {
+      setOtpError("Network error. Please try again.");
+    } finally {
+      setVerifyingOtp(false);
+    }
+  }
+
   const [existingPiQuery, setExistingPiQuery] = useState("");
   const [showPiSuggestions, setShowPiSuggestions] = useState(false);
   const [existingPiResults, setExistingPiResults] = useState<Array<{
@@ -340,12 +433,15 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
   }, []);
 
   const allowedSubscriberCategories = useMemo<SubscriberCategory[]>(() => {
+    if (!isLoggedIn) {
+      return ["COLLEGE", "AGENCY", "SCHOLAR"];
+    }
     if (userRole === "AGENCY") return ["AGENCY", "EXISTING_PI"];
     if (userRole === "LIBRARIAN" || userRole === "STUDENT" || userRole === "SCHOLAR" || userRole === "USER") {
       return ["COLLEGE", "SCHOLAR", "EXISTING_PI"];
     }
     return ["COLLEGE", "AGENCY", "SCHOLAR", "EXISTING_PI"];
-  }, [userRole]);
+  }, [userRole, isLoggedIn]);
 
   useEffect(() => {
     if (!allowedSubscriberCategories.includes(subscriberCategory)) {
@@ -692,6 +788,12 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
   async function onSaveStepOne(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+
+    if (!isLoggedIn && !isEmailVerified) {
+      setError("Please verify your email address using the OTP first.");
+      return;
+    }
+
     setSaving(true);
 
     const endpoint = quoteId && !quoteId.startsWith("draft-") ? `/api/proforma/${quoteId}/subscriber` : "/api/proforma";
@@ -909,7 +1011,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
     return () => window.clearTimeout(timer);
   }, [sendEmailAfterPreview, step, sendingEmail]);
 
-  const requireAuth = !isAuthenticated;
+  const requireAuth = false;
 
   return (
     <>
@@ -1102,7 +1204,77 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
 
             <h3 className="proforma-section-title proforma-full">Billing Details</h3>
             <input value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder="Contact Name *" required />
-            <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email *" type="email" required />
+            {!isLoggedIn ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <input
+                    value={email}
+                    onChange={(e) => handleEmailChange(e.target.value)}
+                    type="email"
+                    placeholder="Email *"
+                    required
+                    style={{ flex: 1, minWidth: 0 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={sendOtp}
+                    disabled={sendingOtp || !normalizedEmail || isEmailVerified}
+                    style={{
+                      padding: "0 12px",
+                      borderRadius: "10px",
+                      border: "1px solid #bed0ea",
+                      background: isEmailVerified ? "#10b981" : "#eff6ff",
+                      color: isEmailVerified ? "#fff" : "#163f86",
+                      cursor: (sendingOtp || !normalizedEmail || isEmailVerified) ? "not-allowed" : "pointer",
+                      fontWeight: "700",
+                      fontSize: "12px",
+                      whiteSpace: "nowrap"
+                    }}
+                  >
+                    {isEmailVerified ? "Verified ✓" : sendingOtp ? "Sending..." : "Send OTP"}
+                  </button>
+                </div>
+                
+                {otpSent && !isEmailVerified && (
+                  <div style={{
+                    display: "flex",
+                    gap: "8px",
+                    background: "#f8fbff",
+                    border: "1px solid #dce7f6",
+                    borderRadius: "10px",
+                    padding: "8px"
+                  }}>
+                    <input
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                      placeholder="Enter 6-digit OTP"
+                      style={{ flex: 1, padding: "6px 8px", fontSize: "12px" }}
+                    />
+                    <button
+                      type="button"
+                      onClick={verifyOtp}
+                      disabled={verifyingOtp || otp.length !== 6}
+                      style={{
+                        padding: "0 12px",
+                        borderRadius: "8px",
+                        border: "none",
+                        background: "#0f172a",
+                        color: "#fff",
+                        fontWeight: "750",
+                        fontSize: "12px",
+                        cursor: (verifyingOtp || otp.length !== 6) ? "not-allowed" : "pointer"
+                      }}
+                    >
+                      {verifyingOtp ? "Checking..." : "Verify"}
+                    </button>
+                  </div>
+                )}
+                {otpError && <div style={{ color: "#ef4444", fontSize: "11px", fontWeight: "600" }}>{otpError}</div>}
+                {otpMessage && <div style={{ color: isEmailVerified ? "#10b981" : "#2563eb", fontSize: "11px", fontWeight: "600" }}>{otpMessage}</div>}
+              </div>
+            ) : (
+              <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email *" type="email" required />
+            )}
             <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone *" required />
             <input value={institutionName} onChange={(e) => setInstitutionName(e.target.value)} placeholder={subscriberCategory === "AGENCY" ? "Agency Name *" : "Institution Name *"} required />
             <input value={designation} onChange={(e) => setDesignation(e.target.value)} placeholder="Designation" />
@@ -1182,7 +1354,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
             ) : null}
 
             <div className="proforma-actions-row proforma-full">
-              <button className="proforma-cta" type="submit" disabled={saving}>{saving ? "Saving..." : "Continue to Journal Cart →"}</button>
+              <button className="proforma-cta" type="submit" disabled={saving || (!isLoggedIn && !isEmailVerified)}>{saving ? "Saving..." : "Continue to Journal Cart →"}</button>
             </div>
           </form>
         </section>
