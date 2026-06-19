@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { useCart } from "@/app/components/cart-store";
 import { getIssueWiseUnitPrice } from "@/lib/journal-cart";
