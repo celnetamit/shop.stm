@@ -36,21 +36,22 @@ type Props = {
 export default function CataloguesClient({ journals, initialCurrency = "INR" }: Props) {
   const { addItem, items, removeItem, setQty } = useCart();
   const [keyword, setKeyword] = useState("");
-  const [domain, setDomain] = useState("All Domains");
+  const [selectedDomains, setSelectedDomains] = useState<string[]>([]);
+  const [isDomainDropdownOpen, setIsDomainDropdownOpen] = useState(false);
   const [currency, setCurrency] = useState<"INR" | "USD">(initialCurrency);
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [rowConfigById, setRowConfigById] = useState<Record<number, { year: string; issue: string; plan: "PRINT" | "ONLINE" | "PRINT_ONLINE" }>>({});
   const years = getCurrentSubscriptionYears();
 
-  const domains = useMemo(() => {
+  const subjectOptions = useMemo(() => {
     const set = new Set(journals.map((j) => j.subject).filter(Boolean));
-    return ["All Domains", ...Array.from(set).sort((a, b) => a.localeCompare(b))];
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
   }, [journals]);
 
   const filtered = useMemo(() => {
     const q = keyword.trim().toLowerCase();
     return journals.filter((item) => {
-      const byDomain = domain === "All Domains" || item.subject === domain;
+      const byDomain = selectedDomains.length === 0 || selectedDomains.includes(item.subject);
       if (!byDomain) return false;
       if (!q) return true;
       const haystack = [
@@ -66,7 +67,7 @@ export default function CataloguesClient({ journals, initialCurrency = "INR" }: 
         .toLowerCase();
       return haystack.includes(q);
     });
-  }, [journals, keyword, domain]);
+  }, [journals, keyword, selectedDomains]);
 
   function getRowConfig(serialNo: number) {
     return rowConfigById[serialNo] || { year: String(years[0]), issue: "All(Jan-Dec)", plan: "ONLINE" as const };
@@ -135,7 +136,8 @@ export default function CataloguesClient({ journals, initialCurrency = "INR" }: 
       // Subtitle parameters
       doc.setFontSize(9);
       doc.setTextColor(100, 116, 139);
-      const subtitle = `Domain: ${domain} | Keyword: ${keyword || "All"} | Currency: ${currency}`;
+      const domainsLabel = selectedDomains.length === 0 ? "All Domains" : selectedDomains.join(", ");
+      const subtitle = `Domain: ${domainsLabel} | Keyword: ${keyword || "All"} | Currency: ${currency}`;
       doc.text(subtitle, textX, 23);
       
       autoTable(doc, {
@@ -349,14 +351,149 @@ export default function CataloguesClient({ journals, initialCurrency = "INR" }: 
           </span>
         </div>
 
-        <div style={{ width: "100%" }}>
-          <select value={domain} onChange={(e) => setDomain(e.target.value)} className="catalogues-domain">
-            {domains.map((d) => (
-              <option key={d} value={d}>
-                {d}
-              </option>
-            ))}
-          </select>
+        <div style={{ width: "100%", position: "relative" }}>
+          {isDomainDropdownOpen && (
+            <div
+              onClick={() => setIsDomainDropdownOpen(false)}
+              style={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                zIndex: 40,
+                background: "transparent",
+              }}
+            />
+          )}
+          
+          <button
+            type="button"
+            onClick={() => setIsDomainDropdownOpen(!isDomainDropdownOpen)}
+            className="catalogues-domain"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              textAlign: "left",
+              cursor: "pointer",
+              background: "var(--surface)",
+              color: "var(--text)",
+              borderColor: "var(--line)",
+              position: "relative",
+              zIndex: 45
+            }}
+          >
+            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginRight: "8px" }}>
+              {selectedDomains.length === 0
+                ? "All Domains"
+                : selectedDomains.length === subjectOptions.length
+                ? "All Domains"
+                : selectedDomains.length === 1
+                ? selectedDomains[0]
+                : `${selectedDomains.length} Domains Selected`}
+            </span>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              style={{
+                width: 14,
+                height: 14,
+                flexShrink: 0,
+                transform: isDomainDropdownOpen ? "rotate(180deg)" : "none",
+                transition: "transform 0.2s ease"
+              }}
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+
+          {isDomainDropdownOpen && (
+            <div
+              style={{
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                right: 0,
+                marginTop: "4px",
+                background: "var(--surface)",
+                border: "1px solid var(--line)",
+                borderRadius: "10px",
+                boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+                zIndex: 50,
+                maxHeight: "280px",
+                overflowY: "auto",
+                padding: "8px"
+              }}
+            >
+              {/* Select All Option */}
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  padding: "8px 12px",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontWeight: "600",
+                  borderBottom: "1px solid var(--line)",
+                  marginBottom: "6px"
+                }}
+                className="domain-option-hover"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedDomains.length === subjectOptions.length}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedDomains([...subjectOptions]);
+                    } else {
+                      setSelectedDomains([]);
+                    }
+                  }}
+                  style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                />
+                <span>Select All</span>
+              </label>
+
+              {/* Options list */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                {subjectOptions.map((subj) => {
+                  const isChecked = selectedDomains.includes(subj);
+                  return (
+                    <label
+                      key={subj}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        padding: "6px 12px",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                      }}
+                      className="domain-option-hover"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => {
+                          if (isChecked) {
+                            setSelectedDomains(selectedDomains.filter((d) => d !== subj));
+                          } else {
+                            setSelectedDomains([...selectedDomains, subj]);
+                          }
+                        }}
+                        style={{ cursor: "pointer", width: "15px", height: "15px" }}
+                      />
+                      <span style={{ fontSize: "14px" }}>{subj}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="catalogues-currency">

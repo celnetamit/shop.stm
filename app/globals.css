@@ -5530,3 +5530,15 @@ input:hover, select:hover, textarea:hover {
     margin-left: auto !important;
   }
 }
+
+.domain-option-hover {
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.domain-option-hover:hover {
+  background-color: #f1f5f9;
+}
+
+.dark .domain-option-hover:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
