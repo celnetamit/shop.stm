@@ -1530,7 +1530,9 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
             <aside className="proforma-summary">
               <h3>Quote Summary</h3>
               <p><span>Subtotal</span><strong>{fmt(subtotal)}</strong></p>
-              <p><span>Discount</span><strong>{fmt(discount)}</strong></p>
+              {appliedDiscountPercent > 0 && (
+                <p><span>Discount</span><strong>{fmt(discount)}</strong></p>
+              )}
               <p><span>GST</span><strong>{fmt(gst)}</strong></p>
               <p className="grand"><span>{fmt(grandTotal)}</span></p>
               <p className="selected-count">{selectedRows.length} Selected</p>
@@ -1737,7 +1739,9 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
                       <th style={{ width: "6%", borderRight: "1px solid #94a3b8", textAlign: "center" }}>Qty</th>
                       <th style={{ width: "11%", borderRight: "1px solid #94a3b8", textAlign: "right" }}>Unit Price</th>
                       <th style={{ width: "11%", borderRight: "1px solid #94a3b8", textAlign: "right" }}>Amount</th>
-                      <th style={{ width: "10%", borderRight: "1px solid #94a3b8", textAlign: "right" }}>Discount</th>
+                      {appliedDiscountPercent > 0 && (
+                        <th style={{ width: "10%", borderRight: "1px solid #94a3b8", textAlign: "right" }}>Discount</th>
+                      )}
                       <th style={{ width: "12%", borderRight: "1px solid #94a3b8", textAlign: "right" }}>Taxable Value</th>
                       <th style={{ width: "10%", borderRight: "1px solid #94a3b8", textAlign: "right" }}>GST Rate (%)</th>
                       <th style={{ width: "12%", textAlign: "right" }}>Net Amount</th>
@@ -1759,7 +1763,9 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
                           <td style={{ borderRight: "1px solid #94a3b8", textAlign: "center" }}>1</td>
                           <td style={{ borderRight: "1px solid #94a3b8", textAlign: "right" }}>{Number(it.unitPrice).toFixed(2)}</td>
                           <td style={{ borderRight: "1px solid #94a3b8", textAlign: "right" }}>{Number(it.unitPrice).toFixed(2)}</td>
-                          <td style={{ borderRight: "1px solid #94a3b8", textAlign: "right" }}>{Number(it.itemDiscount).toFixed(2)}</td>
+                          {appliedDiscountPercent > 0 && (
+                            <td style={{ borderRight: "1px solid #94a3b8", textAlign: "right" }}>{Number(it.itemDiscount).toFixed(2)}</td>
+                          )}
                           <td style={{ borderRight: "1px solid #94a3b8", textAlign: "right", fontWeight: "600" }}>{Number(it.itemTaxable).toFixed(2)}</td>
                           <td style={{ borderRight: "1px solid #94a3b8", textAlign: "right" }}>{Number(it.gstRate).toFixed(2)}</td>
                           <td style={{ textAlign: "right", fontWeight: "700", color: "#0f172a" }}>{Number(it.netAmount).toFixed(2)}</td>
@@ -1769,7 +1775,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
 
                     {/* Financial Ledger Summary Overlay Row */}
                     <tr>
-                      <td colSpan={6} style={{ borderRight: "1px solid #94a3b8", borderTop: "1px solid #94a3b8", verticalAlign: "top", padding: "12px" }}>
+                      <td colSpan={appliedDiscountPercent > 0 ? 6 : 5} style={{ borderRight: "1px solid #94a3b8", borderTop: "1px solid #94a3b8", verticalAlign: "top", padding: "12px" }}>
                         <div style={{ fontSize: "11px", color: "#334155" }}>
                           <strong style={{ color: "#0f172a" }}>In Words:</strong> {amountInWords(grandTotal)}
                         </div>
@@ -1779,7 +1785,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
                           <span style={{ textAlign: "right", color: "#64748b" }}>Subtotal:</span>
                           <span style={{ textAlign: "right", fontWeight: "600" }}>{Number(subtotal).toFixed(2)}</span>
                           
-                          {discount > 0 && (
+                          {appliedDiscountPercent > 0 && discount > 0 && (
                             <>
                               <span style={{ textAlign: "right", color: "#64748b" }}>Discount:</span>
                               <span style={{ textAlign: "right", color: "#ef4444" }}>-{Number(discount).toFixed(2)}</span>

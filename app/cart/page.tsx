@@ -114,7 +114,9 @@ export default function CartPage() {
           <h2>Cart Totals</h2>
           {isInternationalUser ? <p style={{ fontSize: "12px", color: "#2563eb", marginTop: 0 }}>USD enforced outside India</p> : null}
           <p><span>Subtotal</span><strong>{money(subtotal)}</strong></p>
-          <p><span>Discount {couponCode ? `(${couponCode})` : ""}</span><strong>-{money(discount)}</strong></p>
+          {discount > 0 && (
+            <p><span>Discount {couponCode ? `(${couponCode})` : ""}</span><strong>-{money(discount)}</strong></p>
+          )}
           {gst > 0 && <p><span>GST (18%)</span><strong>{money(gst)}</strong></p>}
           <p className="cart-total"><span>Total</span><strong>{money(total)}</strong></p>
           <Link href="/checkout" className="cart-checkout-btn">Proceed to checkout</Link>
