@@ -168,7 +168,7 @@ export default function ForAgenciesPage() {
     {
       icon: "📚",
       title: "High-Quality Peer-Reviewed Content",
-      desc: "Offer your clients access to over 457 leading journals across scientific, engineering, biomedical, and multidisciplinary streams."
+      desc: "Offer your clients access to over 274 leading journals across scientific, engineering, biomedical, and multidisciplinary streams."
     },
     {
       icon: "🌍",
@@ -208,8 +208,8 @@ export default function ForAgenciesPage() {
       {/* Hero Section */}
       <div style={{ textAlign: "center", marginBottom: "45px" }}>
         <span style={{
-          background: "rgba(59, 130, 246, 0.1)",
-          color: "#2563EB",
+          background: "var(--accent-glow)",
+          color: "var(--brand)",
           fontSize: "12px",
           fontWeight: "700",
           textTransform: "uppercase",
@@ -224,14 +224,14 @@ export default function ForAgenciesPage() {
         <h1 style={{
           fontFamily: "'Playfair Display', serif",
           fontSize: "38px",
-          color: "#0F172A",
+          color: "var(--text)",
           marginBottom: "12px"
         }}>
           Partner with STM Journals
         </h1>
         <p style={{
           fontSize: "16px",
-          color: "#475569",
+          color: "var(--muted)",
           lineHeight: "1.7",
           maxWidth: "650px",
           margin: "0 auto"
@@ -245,7 +245,7 @@ export default function ForAgenciesPage() {
         <h2 style={{ 
           fontSize: "22px", 
           fontFamily: "'Playfair Display', serif", 
-          color: "#0F172A", 
+          color: "var(--text)", 
           textAlign: "center", 
           marginBottom: "28px",
           fontWeight: "700"
@@ -259,8 +259,8 @@ export default function ForAgenciesPage() {
         }}>
           {partnerBenefits.map((item, i) => (
             <div key={i} style={{
-              background: "#FFFFFF",
-              border: "1px solid #E2E8F0",
+              background: "var(--surface)",
+              border: "1px solid var(--line)",
               borderRadius: "10px",
               padding: "24px",
               transition: "box-shadow 0.2s ease",
@@ -269,8 +269,8 @@ export default function ForAgenciesPage() {
               gap: "8px"
             }}>
               <span style={{ fontSize: "28px" }}>{item.icon}</span>
-              <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#0F172A", margin: 0 }}>{item.title}</h3>
-              <p style={{ fontSize: "14px", color: "#64748B", lineHeight: "1.5", margin: 0 }}>{item.desc}</p>
+              <h3 style={{ fontSize: "16px", fontWeight: "700", color: "var(--text)", margin: 0 }}>{item.title}</h3>
+              <p style={{ fontSize: "14px", color: "var(--muted)", lineHeight: "1.5", margin: 0 }}>{item.desc}</p>
             </div>
           ))}
         </div>
@@ -278,8 +278,8 @@ export default function ForAgenciesPage() {
 
       {/* Section 2: The Onboarding Workflow */}
       <section style={{
-        background: "#F8FAFC",
-        border: "1px solid #E2E8F0",
+        background: "var(--surface-soft)",
+        border: "1px solid var(--line)",
         borderRadius: "12px",
         padding: "32px 24px",
         marginBottom: "50px"
@@ -287,7 +287,7 @@ export default function ForAgenciesPage() {
         <h2 style={{ 
           fontSize: "22px", 
           fontFamily: "'Playfair Display', serif", 
-          color: "#0F172A", 
+          color: "var(--text)", 
           textAlign: "center", 
           marginBottom: "30px",
           fontWeight: "700" 
@@ -311,7 +311,7 @@ export default function ForAgenciesPage() {
                 width: "45px",
                 height: "45px",
                 borderRadius: "50%",
-                background: "#2563EB",
+                background: "var(--brand)",
                 color: "#FFFFFF",
                 fontWeight: "700",
                 fontSize: "18px",
@@ -322,8 +322,8 @@ export default function ForAgenciesPage() {
               }}>
                 {s.step}
               </div>
-              <h4 style={{ fontSize: "16px", color: "#0F172A", fontWeight: "700", margin: "0 0 6px 0" }}>{s.title}</h4>
-              <p style={{ fontSize: "13px", color: "#64748B", lineHeight: "1.5", margin: 0 }}>{s.desc}</p>
+              <h4 style={{ fontSize: "16px", color: "var(--text)", fontWeight: "700", margin: "0 0 6px 0" }}>{s.title}</h4>
+              <p style={{ fontSize: "13px", color: "var(--muted)", lineHeight: "1.5", margin: 0 }}>{s.desc}</p>
             </div>
           ))}
         </div>
@@ -331,41 +331,41 @@ export default function ForAgenciesPage() {
 
       {/* Section 3: Territory Availability */}
       <section style={{
-        border: "1px solid #E2E8F0",
+        border: "1px solid var(--line)",
         borderRadius: "10px",
         padding: "24px",
         marginBottom: "50px",
         display: "flex",
         flexDirection: "column",
         gap: "12px",
-        background: "#FFFFFF"
+        background: "var(--surface)"
       }}>
-        <h3 style={{ fontSize: "18px", color: "#0F172A", fontWeight: "700", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+        <h3 style={{ fontSize: "18px", color: "var(--text)", fontWeight: "700", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
           🗺️ Worldwide Opportunities
         </h3>
-        <p style={{ fontSize: "15px", color: "#475569", lineHeight: 1.6, margin: 0 }}>
+        <p style={{ fontSize: "15px", color: "var(--muted)", lineHeight: 1.6, margin: 0 }}>
           We currently support and welcome distribution inquiries across all major global markets, including **North America**, **Europe**, **Asia**, **Latin America**, **Africa**, and **Oceania**. Our physical distributions comply with standard ISO workflows, while our digital deliverables support modern authentication schemes.
         </p>
       </section>
 
       {/* Section 4: Registration Form Card */}
       <section style={{
-        background: "#ffffff",
-        border: "1px solid #E2E8F0",
+        background: "var(--surface)",
+        border: "1px solid var(--line)",
         borderRadius: "12px",
-        boxShadow: "0 8px 24px rgba(15, 23, 42, 0.04)",
+        boxShadow: "var(--shadow-md)",
         padding: "35px"
       }} id="agency-form">
         <h2 style={{
           fontFamily: "'Playfair Display', serif",
           fontSize: "24px",
           fontWeight: "700",
-          color: "#0F172A",
+          color: "var(--text)",
           marginBottom: "8px"
         }}>
           Agency Registration & Inquiry
         </h2>
-        <p style={{ color: "#64748B", fontSize: "15px", marginBottom: "28px" }}>
+        <p style={{ color: "var(--muted)", fontSize: "15px", marginBottom: "28px" }}>
           Provide your firm specifics below, and our distributor support queue will reach out within 48 hours.
         </p>
 
@@ -402,7 +402,7 @@ export default function ForAgenciesPage() {
         <form onSubmit={handleSubmit} style={{ display: "grid", gap: "20px" }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "20px" }}>
             <div>
-              <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "#334155", marginBottom: "6px" }}>Agency / Company Name *</label>
+              <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "var(--text)", marginBottom: "6px" }}>Agency / Company Name *</label>
               <input
                 type="text"
                 required
@@ -413,14 +413,16 @@ export default function ForAgenciesPage() {
                   width: "100%",
                   padding: "12px",
                   borderRadius: "8px",
-                  border: "1px solid #CBD5E1",
+                  border: "1px solid var(--line)",
+                  background: "var(--surface)",
+                  color: "var(--text)",
                   fontSize: "15px",
                   outline: "none"
                 }}
               />
             </div>
             <div>
-              <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "#334155", marginBottom: "6px" }}>Primary Contact Person *</label>
+              <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "var(--text)", marginBottom: "6px" }}>Primary Contact Person *</label>
               <input
                 type="text"
                 required
@@ -431,7 +433,9 @@ export default function ForAgenciesPage() {
                   width: "100%",
                   padding: "12px",
                   borderRadius: "8px",
-                  border: "1px solid #CBD5E1",
+                  border: "1px solid var(--line)",
+                  background: "var(--surface)",
+                  color: "var(--text)",
                   fontSize: "15px",
                   outline: "none"
                 }}
@@ -441,7 +445,7 @@ export default function ForAgenciesPage() {
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "20px" }}>
             <div>
-              <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "#334155", marginBottom: "6px" }}>Business Email Address *</label>
+              <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "var(--text)", marginBottom: "6px" }}>Business Email Address *</label>
               <div style={{ display: "flex", gap: "8px" }}>
                 <input
                   type="email"
@@ -454,10 +458,11 @@ export default function ForAgenciesPage() {
                     flex: 1,
                     padding: "12px",
                     borderRadius: "8px",
-                    border: "1px solid #CBD5E1",
+                    border: "1px solid var(--line)",
                     fontSize: "15px",
                     outline: "none",
-                    background: isEmailVerified ? "#F1F5F9" : "#FFFFFF"
+                    background: isEmailVerified ? "var(--surface-soft)" : "var(--surface)",
+                    color: "var(--text)"
                   }}
                 />
                 <button
@@ -468,7 +473,7 @@ export default function ForAgenciesPage() {
                     padding: "0 16px",
                     borderRadius: "8px",
                     border: "none",
-                    background: isEmailVerified ? "#10B981" : "#2563EB",
+                    background: isEmailVerified ? "#10B981" : "var(--brand)",
                     color: "#ffffff",
                     fontWeight: "600",
                     fontSize: "14px",
@@ -486,13 +491,13 @@ export default function ForAgenciesPage() {
                 </p>
               )}
               {otpMessage && (
-                <p style={{ color: isEmailVerified ? "#10B981" : "#2563EB", fontSize: "13px", marginTop: "6px", marginBottom: 0 }}>
+                <p style={{ color: isEmailVerified ? "#10B981" : "var(--brand)", fontSize: "13px", marginTop: "6px", marginBottom: 0 }}>
                   {isEmailVerified ? "✓" : "ℹ️"} {otpMessage}
                 </p>
               )}
               {!isEmailVerified && otpSent && (
-                <div style={{ marginTop: "12px", background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "8px", padding: "12px" }}>
-                  <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "#475569", marginBottom: "6px" }}>Enter 6-Digit Email OTP *</label>
+                <div style={{ marginTop: "12px", background: "var(--surface-soft)", border: "1px solid var(--line)", borderRadius: "8px", padding: "12px" }}>
+                  <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "var(--muted)", marginBottom: "6px" }}>Enter 6-Digit Email OTP *</label>
                   <div style={{ display: "flex", gap: "8px" }}>
                     <input
                       type="text"
@@ -505,7 +510,9 @@ export default function ForAgenciesPage() {
                         flex: 1,
                         padding: "10px",
                         borderRadius: "8px",
-                        border: "1px solid #CBD5E1",
+                        border: "1px solid var(--line)",
+                        background: "var(--surface)",
+                        color: "var(--text)",
                         fontSize: "14px",
                         outline: "none"
                       }}
@@ -518,8 +525,8 @@ export default function ForAgenciesPage() {
                         padding: "0 20px",
                         borderRadius: "8px",
                         border: "none",
-                        background: "#0F172A",
-                        color: "#ffffff",
+                        background: "var(--text)",
+                        color: "var(--surface)",
                         fontWeight: "600",
                         fontSize: "14px",
                         cursor: (verifyingOtp || otp.length !== 6) ? "not-allowed" : "pointer"
@@ -532,7 +539,7 @@ export default function ForAgenciesPage() {
               )}
             </div>
             <div>
-              <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "#334155", marginBottom: "6px" }}>Phone / Whatsapp Number *</label>
+              <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "var(--text)", marginBottom: "6px" }}>Phone / Whatsapp Number *</label>
               <input
                 type="tel"
                 required
@@ -543,7 +550,9 @@ export default function ForAgenciesPage() {
                   width: "100%",
                   padding: "12px",
                   borderRadius: "8px",
-                  border: "1px solid #CBD5E1",
+                  border: "1px solid var(--line)",
+                  background: "var(--surface)",
+                  color: "var(--text)",
                   fontSize: "15px",
                   outline: "none"
                 }}
@@ -553,7 +562,7 @@ export default function ForAgenciesPage() {
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "20px" }}>
             <div>
-              <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "#334155", marginBottom: "6px" }}>Country / Region *</label>
+              <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "var(--text)", marginBottom: "6px" }}>Country / Region *</label>
               <input
                 type="text"
                 required
@@ -564,14 +573,16 @@ export default function ForAgenciesPage() {
                   width: "100%",
                   padding: "12px",
                   borderRadius: "8px",
-                  border: "1px solid #CBD5E1",
+                  border: "1px solid var(--line)",
+                  background: "var(--surface)",
+                  color: "var(--text)",
                   fontSize: "15px",
                   outline: "none"
                 }}
               />
             </div>
             <div>
-              <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "#334155", marginBottom: "6px" }}>Website / Tax Registry URL</label>
+              <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "var(--text)", marginBottom: "6px" }}>Website / Tax Registry URL</label>
               <input
                 type="url"
                 value={formData.website}
@@ -581,7 +592,9 @@ export default function ForAgenciesPage() {
                   width: "100%",
                   padding: "12px",
                   borderRadius: "8px",
-                  border: "1px solid #CBD5E1",
+                  border: "1px solid var(--line)",
+                  background: "var(--surface)",
+                  color: "var(--text)",
                   fontSize: "15px",
                   outline: "none"
                 }}
@@ -590,7 +603,7 @@ export default function ForAgenciesPage() {
           </div>
 
           <div>
-            <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "#334155", marginBottom: "6px" }}>Primary Acquisition Focus *</label>
+            <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "var(--text)", marginBottom: "6px" }}>Primary Acquisition Focus *</label>
             <select
               value={formData.specialization}
               onChange={(e) => setFormData(p => ({ ...p, specialization: e.target.value }))}
@@ -598,9 +611,10 @@ export default function ForAgenciesPage() {
                 width: "100%",
                 padding: "12px",
                 borderRadius: "8px",
-                border: "1px solid #CBD5E1",
+                border: "1px solid var(--line)",
                 fontSize: "15px",
-                background: "#ffffff",
+                background: "var(--surface)",
+                color: "var(--text)",
                 outline: "none",
                 cursor: "pointer"
               }}
@@ -613,7 +627,7 @@ export default function ForAgenciesPage() {
           </div>
 
           <div>
-            <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "#334155", marginBottom: "6px" }}>Message / Territory Notes</label>
+            <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "var(--text)", marginBottom: "6px" }}>Message / Territory Notes</label>
             <textarea
               value={formData.message}
               onChange={(e) => setFormData(p => ({ ...p, message: e.target.value }))}
@@ -623,7 +637,9 @@ export default function ForAgenciesPage() {
                 width: "100%",
                 padding: "12px",
                 borderRadius: "8px",
-                border: "1px solid #CBD5E1",
+                border: "1px solid var(--line)",
+                background: "var(--surface)",
+                color: "var(--text)",
                 fontSize: "15px",
                 outline: "none",
                 resize: "vertical",
@@ -637,7 +653,7 @@ export default function ForAgenciesPage() {
             disabled={loading || !isEmailVerified}
             style={{
               width: "100%",
-              background: (!isEmailVerified || loading) ? "#94A3B8" : "#2563EB",
+              background: (!isEmailVerified || loading) ? "var(--muted)" : "var(--brand)",
               color: "#ffffff",
               border: "none",
               borderRadius: "8px",
@@ -653,10 +669,10 @@ export default function ForAgenciesPage() {
               marginTop: "10px"
             }}
             onMouseEnter={(e) => {
-              if (!loading && isEmailVerified) e.currentTarget.style.background = "#1D4ED8";
+              if (!loading && isEmailVerified) e.currentTarget.style.background = "var(--brand-dark)";
             }}
             onMouseLeave={(e) => {
-              if (!loading && isEmailVerified) e.currentTarget.style.background = "#2563EB";
+              if (!loading && isEmailVerified) e.currentTarget.style.background = "var(--brand)";
             }}
           >
             {loading ? "Registering..." : "Submit Agency Registration Request"}

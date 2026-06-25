@@ -195,6 +195,7 @@ export async function getDomainCountsFromCsv(): Promise<Array<{ domain: string; 
   const map = new Map<string, number>();
   const excludedDomains = new Set(["engineering"]);
   for (const r of rows) {
+    if (r["Current Status"] !== "Active") continue;
     const domain = (r["Domain"] || "").trim();
     if (!domain) continue;
     if (excludedDomains.has(domain.toLowerCase())) continue;

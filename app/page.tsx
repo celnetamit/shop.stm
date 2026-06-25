@@ -80,7 +80,7 @@ export default async function HomePage() {
           <p className="home-v3-kicker" style={{ color: "#F59E0B", fontFamily: "Outfit, sans-serif", fontSize: "14px", letterSpacing: "0.12em", marginBottom: "12px", textTransform: "uppercase", fontWeight: "700" }}>Scholarly Publishing Marketplace</p>
           <h1 className="hero-glowing-title" style={{ fontFamily: "'Playfair Display', serif", fontWeight: "800", fontSize: "clamp(34px, 5.5vw, 56px)", lineHeight: "1.12", letterSpacing: "-0.01em" }}>Discover World-Class Research & Innovation</h1>
           <p style={{ color: "rgba(226, 232, 240, 0.85)", fontSize: "17.5px", lineHeight: "1.65", fontFamily: "Outfit, sans-serif", margin: "16px 0 32px", maxWidth: "700px" }}>
-            Access 457 peer-reviewed journals. Stay ahead with the latest developments in Science, Technology, and Medicine. Request fast institutional proforma support in one modern workflow.
+            Access {allJournals.length} peer-reviewed journals. Stay ahead with the latest developments in Science, Technology, and Medicine. Request fast institutional proforma support in one modern workflow.
           </p>
           <div className="home-v3-hero-actions" style={{ justifyContent: "center", gap: "16px" }}>
             <a href="/catalogues-list" className="btn-shimmer" style={{ background: "#F59E0B", color: "#0F172A", borderColor: "#F59E0B", padding: "12px 28px", fontSize: "14.5px", display: "inline-flex", alignItems: "center", gap: "6px" }}>Explore Catalogues</a>
@@ -137,7 +137,7 @@ export default async function HomePage() {
                 </svg>
               </div>
               <div>
-                <h4 style={{ margin: "0", fontSize: "14px", fontWeight: "700", color: "var(--text)", fontFamily: "Outfit, sans-serif" }}>457 Journals</h4>
+                <h4 style={{ margin: "0", fontSize: "14px", fontWeight: "700", color: "var(--text)", fontFamily: "Outfit, sans-serif" }}>{allJournals.length} Journals</h4>
                 <p style={{ margin: "0", fontSize: "12px", color: "var(--muted)", fontFamily: "Outfit, sans-serif" }}>Curated academic collection</p>
               </div>
             </div>
