@@ -75,20 +75,21 @@ export default function CataloguesClient({ journals, initialCurrency = "INR" }: 
 
   function addJournalToCart(item: JournalItem) {
     const config = getRowConfig(item.serialNo);
+    const issueVal = (config.plan === "ONLINE" || config.plan === "PRINT_ONLINE") ? "All(Jan-Dec)" : config.issue;
     const totalIssues = getIssueCountFromFrequency(item.frequency);
     const priceBase =
       config.plan === "ONLINE" ? item.onlineInr : config.plan === "PRINT_ONLINE" ? item.combinedInr : item.printInr;
-    const unitPrice = getIssueWiseUnitPrice(priceBase, totalIssues, config.issue);
-    const cartItemId = buildJournalCartItemId(String(item.serialNo), config.plan, config.year, config.issue);
+    const unitPrice = getIssueWiseUnitPrice(priceBase, totalIssues, issueVal);
+    const cartItemId = buildJournalCartItemId(String(item.serialNo), config.plan, config.year, issueVal);
 
     addItem({
       id: cartItemId,
-      journalName: `${item.journalName}${config.issue === "All(Jan-Dec)" ? "" : ` (${config.issue})`}`,
+      journalName: `${item.journalName}${issueVal === "All(Jan-Dec)" ? "" : ` (${issueVal})`}`,
       subject: item.subject,
       issn: item.issn,
       image: "/stmlogo.png",
       year: config.year,
-      issue: config.issue,
+      issue: issueVal,
       plan: config.plan,
       unitPrice
     });
@@ -526,9 +527,10 @@ export default function CataloguesClient({ journals, initialCurrency = "INR" }: 
             const fmt = (v: number) =>
               currency === "INR" ? `₹${v.toLocaleString("en-IN")}` : `$${v.toLocaleString("en-US")}`;
             const config = getRowConfig(item.serialNo);
+            const issueVal = (config.plan === "ONLINE" || config.plan === "PRINT_ONLINE") ? "All(Jan-Dec)" : config.issue;
             const totalIssues = getIssueCountFromFrequency(item.frequency);
             const issueLabels = getIssueLabels(totalIssues);
-            const cartItemId = buildJournalCartItemId(String(item.serialNo), config.plan, config.year, config.issue);
+            const cartItemId = buildJournalCartItemId(String(item.serialNo), config.plan, config.year, issueVal);
             const qty = items.filter((it) => it.id === cartItemId).reduce((sum, it) => sum + it.qty, 0);
 
             return (
@@ -571,12 +573,13 @@ export default function CataloguesClient({ journals, initialCurrency = "INR" }: 
                       ))}
                     </select>
                     <select
-                      value={config.issue}
+                      value={issueVal}
+                      disabled={config.plan === "ONLINE" || config.plan === "PRINT_ONLINE"}
                       onChange={(e) => setRowConfigById((prev) => ({ ...prev, [item.serialNo]: { ...config, issue: e.target.value } }))}
                       style={{ border: "1px solid #cfd5df", borderRadius: "8px", padding: "8px", background: "#fff", fontSize: "13px" }}
                     >
                       <option value="All(Jan-Dec)">All issues</option>
-                      {issueLabels.map((label) => (
+                      {!(config.plan === "ONLINE" || config.plan === "PRINT_ONLINE") && issueLabels.map((label) => (
                         <option key={label} value={label}>
                           {label}
                         </option>
@@ -655,9 +658,10 @@ export default function CataloguesClient({ journals, initialCurrency = "INR" }: 
                 const fmt = (v: number) =>
                   currency === "INR" ? `₹${v.toLocaleString("en-IN")}` : `$${v.toLocaleString("en-US")}`;
                 const config = getRowConfig(item.serialNo);
+                const issueVal = (config.plan === "ONLINE" || config.plan === "PRINT_ONLINE") ? "All(Jan-Dec)" : config.issue;
                 const totalIssues = getIssueCountFromFrequency(item.frequency);
                 const issueLabels = getIssueLabels(totalIssues);
-                const cartItemId = buildJournalCartItemId(String(item.serialNo), config.plan, config.year, config.issue);
+                const cartItemId = buildJournalCartItemId(String(item.serialNo), config.plan, config.year, issueVal);
                 const qty = items.filter((it) => it.id === cartItemId).reduce((sum, it) => sum + it.qty, 0);
 
                 return (
@@ -696,7 +700,8 @@ export default function CataloguesClient({ journals, initialCurrency = "INR" }: 
                           <label className="catalogues-inline-field">
                             <span>Issue</span>
                             <select
-                              value={config.issue}
+                              value={issueVal}
+                              disabled={config.plan === "ONLINE" || config.plan === "PRINT_ONLINE"}
                               onChange={(e) =>
                                 setRowConfigById((prev) => ({
                                   ...prev,
@@ -705,7 +710,7 @@ export default function CataloguesClient({ journals, initialCurrency = "INR" }: 
                               }
                             >
                               <option value="All(Jan-Dec)">All issues</option>
-                              {issueLabels.map((label) => (
+                              {!(config.plan === "ONLINE" || config.plan === "PRINT_ONLINE") && issueLabels.map((label) => (
                                 <option key={label} value={label}>
                                   {label}
                                 </option>

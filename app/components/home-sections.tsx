@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useCart } from "@/app/components/cart-store";
+import { buildJournalCartItemId } from "@/lib/journal-cart";
 
 type DomainLink = { domain: string; count: number };
 type HomeJournal = {
@@ -18,8 +19,9 @@ type HomeJournal = {
 };
 
 export default function HomeSections({ domains, journals }: { domains: DomainLink[]; journals: HomeJournal[] }) {
-  const { addItem } = useCart();
+  const { addItem, items, removeItem, setQty } = useCart();
   const [planById, setPlanById] = useState<Record<string, "PRINT" | "ONLINE" | "PRINT_ONLINE">>({});
+
 
 
 
@@ -212,7 +214,7 @@ export default function HomeSections({ domains, journals }: { domains: DomainLin
           <p style={{ fontFamily: "Outfit, sans-serif", fontSize: "13.5px", color: "var(--muted)", margin: 0 }}>
             Looking for other academic fields?{" "}
             <a 
-              href="/catalogues-list" 
+              href="/disciplines" 
               style={{ color: "var(--brand)", fontWeight: "700", textDecoration: "none" }}
               onMouseEnter={(e) => e.currentTarget.style.textDecoration = "underline"}
               onMouseLeave={(e) => e.currentTarget.style.textDecoration = "none"}
@@ -249,6 +251,8 @@ export default function HomeSections({ domains, journals }: { domains: DomainLin
           {journals.map((j) => {
             const plan = planById[j.id] || "PRINT";
             const price = priceFor(j, plan);
+            const cartItemId = buildJournalCartItemId(j.id, plan, "2026", "All(Jan-Dec)");
+            const qty = items.filter((it) => it.id === cartItemId).reduce((sum, it) => sum + it.qty, 0);
 
             return (
               <article
@@ -346,48 +350,139 @@ export default function HomeSections({ domains, journals }: { domains: DomainLin
                   <strong style={{ fontSize: "15px", color: "var(--brand)", fontWeight: "800", whiteSpace: "nowrap" }}>₹{price.toLocaleString("en-IN")}</strong>
                 </div>
 
-                {/* Solid Blue Add To Cart Button */}
-                <button
-                  type="button"
-                  className="transition-smooth"
-                  onClick={() =>
-                    addItem({
-                      id: `${j.id}-${plan}`,
-                      journalName: j.journalName,
-                      subject: j.subject,
-                      issn: j.issn,
-                      image: j.imageUrl || "https://dummyimage.com/360x460/eaf0ff/17366f.png&text=STM+Journal",
-                      year: "2026",
-                      plan,
-                      unitPrice: price
-                    })
-                  }
-                  style={{
-                    width: "100%",
-                    background: "var(--brand)",
-                    border: "none",
-                    color: "#ffffff",
-                    borderRadius: "8px",
-                    padding: "10px",
-                    fontWeight: "700",
-                    fontSize: "13px",
-                    cursor: "pointer",
-                    boxShadow: "0 2px 6px rgba(37, 99, 235, 0.15)",
-                    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "var(--brand-dark)";
-                    e.currentTarget.style.boxShadow = "0 4px 12px var(--accent-glow)";
-                    e.currentTarget.style.transform = "translateY(-1px)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "var(--brand)";
-                    e.currentTarget.style.boxShadow = "0 2px 6px rgba(37, 99, 235, 0.15)";
-                    e.currentTarget.style.transform = "translateY(0)";
-                  }}
-                >
-                  Add to Cart
-                </button>
+                {/* Cart Action Controls */}
+                {qty > 0 ? (
+                  <div style={{ display: "flex", gap: "6px", width: "100%" }}>
+                    <button
+                      type="button"
+                      onClick={() => setQty(cartItemId, qty - 1)}
+                      style={{
+                        width: "36px",
+                        height: "36px",
+                        background: "var(--surface-soft)",
+                        border: "1px solid var(--line)",
+                        color: "var(--text)",
+                        borderRadius: "8px",
+                        fontWeight: "700",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "15px"
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = "var(--line)"}
+                      onMouseLeave={(e) => e.currentTarget.style.background = "var(--surface-soft)"}
+                    >
+                      -
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        addItem({
+                          id: cartItemId,
+                          journalName: j.journalName,
+                          subject: j.subject,
+                          issn: j.issn,
+                          image: j.imageUrl || "https://dummyimage.com/360x460/eaf0ff/17366f.png&text=STM+Journal",
+                          year: "2026",
+                          issue: "All(Jan-Dec)",
+                          plan,
+                          unitPrice: price
+                        })
+                      }
+                      style={{
+                        flex: 1,
+                        height: "36px",
+                        background: "var(--brand)",
+                        border: "none",
+                        color: "#ffffff",
+                        borderRadius: "8px",
+                        fontWeight: "700",
+                        fontSize: "12px",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        boxShadow: "0 2px 4px rgba(37, 99, 235, 0.1)"
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = "var(--brand-dark)"}
+                      onMouseLeave={(e) => e.currentTarget.style.background = "var(--brand)"}
+                    >
+                      In Cart: {qty}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeItem(cartItemId)}
+                      style={{
+                        padding: "0 8px",
+                        height: "36px",
+                        background: "var(--surface-soft)",
+                        border: "1px solid var(--line)",
+                        color: "#ef4444",
+                        borderRadius: "8px",
+                        fontWeight: "600",
+                        fontSize: "11px",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center"
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "#fef2f2";
+                        e.currentTarget.style.borderColor = "#fee2e2";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "var(--surface-soft)";
+                        e.currentTarget.style.borderColor = "var(--line)";
+                      }}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="transition-smooth"
+                    onClick={() =>
+                      addItem({
+                        id: cartItemId,
+                        journalName: j.journalName,
+                        subject: j.subject,
+                        issn: j.issn,
+                        image: j.imageUrl || "https://dummyimage.com/360x460/eaf0ff/17366f.png&text=STM+Journal",
+                        year: "2026",
+                        issue: "All(Jan-Dec)",
+                        plan,
+                        unitPrice: price
+                      })
+                    }
+                    style={{
+                      width: "100%",
+                      background: "var(--brand)",
+                      border: "none",
+                      color: "#ffffff",
+                      borderRadius: "8px",
+                      padding: "10px",
+                      fontWeight: "700",
+                      fontSize: "13px",
+                      cursor: "pointer",
+                      boxShadow: "0 2px 6px rgba(37, 99, 235, 0.15)",
+                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "var(--brand-dark)";
+                      e.currentTarget.style.boxShadow = "0 4px 12px var(--accent-glow)";
+                      e.currentTarget.style.transform = "translateY(-1px)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "var(--brand)";
+                      e.currentTarget.style.boxShadow = "0 2px 6px rgba(37, 99, 235, 0.15)";
+                      e.currentTarget.style.transform = "translateY(0)";
+                    }}
+                  >
+                    Add to Cart
+                  </button>
+                )}
               </article>
             );
           })}

@@ -63,6 +63,9 @@ export default function ProductDetailClient({ journal, domains, description, abo
   }, [journal.frequency]);
 
   const issueOptions = useMemo(() => {
+    if (plan === "ONLINE" || plan === "PRINT_ONLINE") {
+      return ["All(Jan-Dec)"];
+    }
     if (issueCount === 2) {
       return ["1(Jan-June)", "2(July-Dec)", "All(Jan-Dec)"];
     }
@@ -79,7 +82,7 @@ export default function ProductDetailClient({ journal, domains, description, abo
       return ["1(Jan)", "2(Feb)", "3(Mar)", "4(Apr)", "5(May)", "6(June)", "7(July)", "8(Aug)", "9(Sep)", "10(Oct)", "11(Nov)", "12(Dec)", "All(Jan-Dec)"];
     }
     return Array.from({ length: issueCount }, (_, i) => `Issue ${i + 1}`).concat("All(Jan-Dec)");
-  }, [issueCount]);
+  }, [issueCount, plan]);
 
   useEffect(() => {
     if (!issueOptions.includes(selectedIssue)) {
@@ -221,7 +224,11 @@ export default function ProductDetailClient({ journal, domains, description, abo
 
                 <div>
                   <label>Issue</label>
-                  <select value={selectedIssue} onChange={(e) => setSelectedIssue(e.target.value)}>
+                  <select 
+                    value={selectedIssue} 
+                    onChange={(e) => setSelectedIssue(e.target.value)}
+                    disabled={plan === "ONLINE" || plan === "PRINT_ONLINE"}
+                  >
                     {issueOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                   </select>
                 </div>

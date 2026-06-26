@@ -371,7 +371,10 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
       [serialNo]: current.map(c => {
         if (c.id !== configId) return c;
         const newC = { ...c, ...updated };
-        if (updated.type === "ANNUAL") {
+        if (newC.plan === "ONLINE" || newC.plan === "PRINT_ONLINE") {
+          newC.type = "ANNUAL";
+        }
+        if (newC.type === "ANNUAL") {
           const totalIssues = getIssueCountFromFrequency(frequency);
           newC.selectedIssues = Array.from({ length: totalIssues }, (_, i) => i + 1);
         }
@@ -1434,13 +1437,16 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
                               )}
                               
                               <div className="proforma-config-card-header">
-                                <select 
-                                  value={config.type} 
-                                  onChange={(e) => updateConfigForJournal(j.serialNo, config.id, { type: e.target.value as "ANNUAL" | "ISSUE_WISE" }, j.frequency)}
-                                >
-                                  <option value="ANNUAL">Annual</option>
-                                  <option value="ISSUE_WISE">Issue Wise</option>
-                                </select>
+                                 <select 
+                                   value={config.type} 
+                                   disabled={config.plan === "ONLINE" || config.plan === "PRINT_ONLINE"}
+                                   onChange={(e) => updateConfigForJournal(j.serialNo, config.id, { type: e.target.value as "ANNUAL" | "ISSUE_WISE" }, j.frequency)}
+                                 >
+                                   <option value="ANNUAL">Annual</option>
+                                   {!(config.plan === "ONLINE" || config.plan === "PRINT_ONLINE") && (
+                                     <option value="ISSUE_WISE">Issue Wise</option>
+                                   )}
+                                 </select>
                                 
                                 <select 
                                   value={config.year} 

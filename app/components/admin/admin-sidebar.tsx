@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 const links = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/journals", label: "Journals & Pricing" },
+  { href: "/admin/department-catalogue", label: "Department Catalogues" },
   { href: "/admin/orders", label: "Orders" },
   { href: "/admin/proforma", label: "Proforma Quotes" },
   { href: "/admin/pi-users", label: "PI Users" },

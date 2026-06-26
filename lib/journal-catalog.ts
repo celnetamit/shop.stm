@@ -193,7 +193,7 @@ function stemWord(name: string): string {
 export async function getDomainCountsFromCsv(): Promise<Array<{ domain: string; count: number }>> {
   const rows = await loadCsvRows();
   const map = new Map<string, number>();
-  const excludedDomains = new Set(["engineering"]);
+  const excludedDomains = new Set(["engineering", "social sciences", "social science"]);
   for (const r of rows) {
     if (r["Current Status"] !== "Active") continue;
     const domain = (r["Domain"] || "").trim();

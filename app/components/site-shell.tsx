@@ -16,7 +16,7 @@ type DomainCount = { domain: string; count: number };
 
 export default function SiteShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { items } = useCart();
+  const { items, setQty, removeItem, couponCode, discountPercent, setCoupon } = useCart();
   const [user, setUser] = useState<SessionUser | null>(null);
   const [domains, setDomains] = useState<DomainCount[]>([]);
   const [totalJournals, setTotalJournals] = useState<number>(0);
@@ -24,6 +24,68 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
   const count = items.reduce((s, i) => s + i.qty, 0);
 
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
+  const [isInternationalUser, setIsInternationalUser] = useState(false);
+  const USD_RATE = 83;
+  const [drawerCoupon, setDrawerCoupon] = useState("");
+  const [drawerCouponMsg, setDrawerCouponMsg] = useState("");
+
+  const prevCountRef = useRef(count);
+  useEffect(() => {
+    if (count > prevCountRef.current) {
+      setIsCartDrawerOpen(true);
+    }
+    prevCountRef.current = count;
+  }, [count]);
+
+  useEffect(() => {
+    setDrawerCoupon(couponCode);
+  }, [couponCode]);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/geo", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((json: { ok: boolean; isInternational?: boolean }) => {
+        if (!active) return;
+        setIsInternationalUser(!!json.ok && !!json.isInternational);
+      })
+      .catch(() => {
+        if (!active) return;
+        setIsInternationalUser(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  function money(valueInInr: number) {
+    if (isInternationalUser) return `$${(valueInInr / USD_RATE).toFixed(2)}`;
+    return `₹${valueInInr.toLocaleString("en-IN")}`;
+  }
+
+  const subtotal = items.reduce((s, it) => s + it.unitPrice * it.qty, 0);
+  const discount = Math.round((subtotal * discountPercent) / 100);
+  const total = subtotal - discount;
+
+  async function applyDrawerCoupon() {
+    setDrawerCouponMsg("");
+    const code = drawerCoupon.trim().toUpperCase();
+    if (!code) {
+      setCoupon("", 0);
+      return;
+    }
+    const res = await fetch(`/api/coupons/validate?code=${encodeURIComponent(code)}&subtotal=${subtotal}`);
+    const json = (await res.json()) as { ok: boolean; error?: string; coupon?: { code: string; discount: number } };
+    if (!json.ok || !json.coupon) {
+      setCoupon("", 0);
+      setDrawerCouponMsg(json.error || "Invalid coupon");
+      return;
+    }
+    setCoupon(json.coupon.code, json.coupon.discount);
+    setDrawerCouponMsg(`Applied ${json.coupon.code} (${json.coupon.discount}% off)`);
+  }
+
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("stm-theme") as "light" | "dark" | null;
@@ -308,29 +370,33 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
                   </Link>
                 </div>
               )}
-              <Link href="/cart" style={{
-                background: "var(--brand)",
-                color: "#ffffff",
-                padding: "10px 20px",
-                borderRadius: "9999px",
-                fontSize: "14px",
-                fontWeight: "600",
-                textDecoration: "none",
-                fontFamily: "Outfit, sans-serif",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                boxShadow: "0 4px 6px -1px rgba(15, 23, 42, 0.2)",
-                transition: "all 0.2s"
-              }}
-              onMouseOver={e => e.currentTarget.style.transform = "translateY(-1px)"}
-              onMouseOut={e => e.currentTarget.style.transform = "none"}
+              <button 
+                onClick={() => setIsCartDrawerOpen(true)}
+                style={{
+                  background: "var(--brand)",
+                  color: "#ffffff",
+                  padding: "10px 20px",
+                  borderRadius: "9999px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  border: "none",
+                  cursor: "pointer",
+                  outline: "none",
+                  fontFamily: "Outfit, sans-serif",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  boxShadow: "0 4px 6px -1px rgba(15, 23, 42, 0.2)",
+                  transition: "all 0.2s"
+                }}
+                onMouseOver={e => e.currentTarget.style.transform = "translateY(-1px)"}
+                onMouseOut={e => e.currentTarget.style.transform = "none"}
               >
                 <svg style={{ width: "16px", height: "16px" }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
                 Cart {count > 0 && <span style={{ background: "var(--accent)", color: "white", borderRadius: "50%", width: "20px", height: "20px", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "11px", marginLeft: "4px" }}>{count}</span>}
-              </Link>
+              </button>
             </div>
           </div>
           
@@ -465,6 +531,292 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
           </div>
         </footer>
       ) : null}
+
+      {/* Semi-transparent Overlay */}
+      {isCartDrawerOpen && (
+        <div 
+          onClick={() => setIsCartDrawerOpen(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0, 0, 0, 0.4)",
+            backdropFilter: "blur(4px)",
+            zIndex: 999,
+            transition: "opacity 0.3s ease"
+          }}
+        />
+      )}
+
+      {/* Cart Drawer Panel */}
+      <div 
+        style={{
+          position: "fixed",
+          top: 0,
+          right: 0,
+          height: "100vh",
+          width: "min(400px, 100vw)",
+          background: "var(--surface)",
+          borderLeft: "1px solid var(--line)",
+          boxShadow: "-10px 0 30px rgba(0, 0, 0, 0.15)",
+          zIndex: 1000,
+          transform: isCartDrawerOpen ? "translateX(0)" : "translateX(100%)",
+          transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          display: "flex",
+          flexDirection: "column",
+          fontFamily: "Outfit, sans-serif"
+        }}
+      >
+        {/* Drawer Header */}
+        <div style={{ padding: "20px", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <h2 style={{ margin: 0, fontSize: "18px", fontWeight: "700", color: "var(--text)", display: "flex", alignItems: "center", gap: "8px" }}>
+            🛒 Cart ({count})
+          </h2>
+          <button 
+            onClick={() => setIsCartDrawerOpen(false)}
+            style={{
+              background: "none",
+              border: "none",
+              color: "var(--muted)",
+              fontSize: "24px",
+              cursor: "pointer",
+              padding: "4px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              lineHeight: 1
+            }}
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Drawer Body (Scrollable List) */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "20px", display: "flex", flexDirection: "column", gap: "16px" }}>
+          {items.length === 0 ? (
+            <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "12px", textAlign: "center", color: "var(--muted)" }}>
+              <span style={{ fontSize: "40px" }}>🛍️</span>
+              <p style={{ margin: 0, fontSize: "14px" }}>Your cart is empty.</p>
+              <button 
+                onClick={() => setIsCartDrawerOpen(false)}
+                style={{
+                  background: "var(--brand)",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "20px",
+                  padding: "8px 16px",
+                  fontSize: "12px",
+                  fontWeight: "700",
+                  cursor: "pointer"
+                }}
+              >
+                Start Shopping
+              </button>
+            </div>
+          ) : (
+            items.map((it) => {
+              const lowerName = (it.journalName || "").toLowerCase();
+              const lowerSubject = (it.subject || "").toLowerCase();
+              const isBook =
+                lowerSubject.includes("book") ||
+                lowerSubject.includes("monograph") ||
+                lowerSubject.includes("nstc") ||
+                lowerName.includes("book") ||
+                lowerName.includes("monograph") ||
+                lowerName.includes("handbook") ||
+                lowerName.includes("textbook");
+              const itemHsn = it.plan === "ONLINE" ? "998431" : isBook ? "4901" : "4902";
+
+              return (
+                <div key={it.id} style={{ display: "flex", gap: "12px", borderBottom: "1px solid var(--line)", paddingBottom: "16px" }}>
+                  <img 
+                    src={it.image} 
+                    alt={it.journalName} 
+                    style={{ width: "60px", height: "76px", objectFit: "contain", borderRadius: "4px", border: "1px solid var(--line)", background: "var(--surface-soft)" }} 
+                  />
+                  <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                    <div>
+                      <h4 style={{ margin: "0 0 4px 0", fontSize: "13px", fontWeight: "700", color: "var(--text)", lineHeight: "1.4", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                        {it.journalName}
+                      </h4>
+                      <p style={{ margin: 0, fontSize: "11px", color: "var(--muted)" }}>
+                        {it.plan.replace("_", " + ")} | Year {it.year}{it.issue ? ` | Issue ${it.issue}` : ""}
+                      </p>
+                      <p style={{ margin: "2px 0 0 0", fontSize: "12px", color: "var(--brand)", fontWeight: "700" }}>
+                        {money(it.unitPrice)} <span style={{ fontSize: "10px", color: "var(--muted)", fontWeight: "normal", marginLeft: "6px" }}>HSN: {itemHsn}</span>
+                      </p>
+                    </div>
+                    
+                    {/* Qty controls */}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "8px" }}>
+                      <div style={{ display: "flex", alignItems: "center", border: "1px solid var(--line)", borderRadius: "6px", background: "var(--surface-soft)", overflow: "hidden" }}>
+                        <button 
+                          onClick={() => setQty(it.id, it.qty - 1)}
+                          style={{ border: "none", background: "none", width: "24px", height: "24px", cursor: "pointer", color: "var(--text)", fontWeight: "bold" }}
+                        >
+                          -
+                        </button>
+                        <span style={{ fontSize: "12px", minWidth: "20px", textAlign: "center", fontWeight: "700", color: "var(--text)" }}>{it.qty}</span>
+                        <button 
+                          onClick={() => setQty(it.id, it.qty + 1)}
+                          style={{ border: "none", background: "none", width: "24px", height: "24px", cursor: "pointer", color: "var(--text)", fontWeight: "bold" }}
+                        >
+                          +
+                        </button>
+                      </div>
+                      <button 
+                        onClick={() => removeItem(it.id)}
+                        style={{ background: "none", border: "none", color: "#ef4444", fontSize: "11px", fontWeight: "600", cursor: "pointer" }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Drawer Footer */}
+        {items.length > 0 && (
+          <div style={{ padding: "20px", borderTop: "1px solid var(--line)", background: "var(--surface-soft)" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", color: "var(--muted)" }}>
+                <span>Subtotal:</span>
+                <strong style={{ color: "var(--text)" }}>{money(subtotal)}</strong>
+              </div>
+              
+              {/* Coupon Field */}
+              <div style={{ display: "flex", gap: "8px", margin: "4px 0" }}>
+                <input 
+                  value={drawerCoupon} 
+                  onChange={(e) => setDrawerCoupon(e.target.value)} 
+                  placeholder="Promo code" 
+                  style={{ flex: 1, padding: "6px 10px", borderRadius: "6px", border: "1px solid var(--line)", fontSize: "12px", outline: "none", background: "var(--surface)", color: "var(--text)" }} 
+                />
+                <button 
+                  onClick={applyDrawerCoupon}
+                  style={{ background: "var(--brand)", color: "#ffffff", border: "none", borderRadius: "6px", padding: "6px 12px", fontSize: "12px", fontWeight: "600", cursor: "pointer" }}
+                >
+                  Apply
+                </button>
+              </div>
+              {drawerCouponMsg && (
+                <p style={{ margin: "2px 0 0 0", fontSize: "11px", color: drawerCouponMsg.includes("Applied") ? "#16a34a" : "#ef4444", fontWeight: "600" }}>
+                  {drawerCouponMsg}
+                </p>
+              )}
+
+              {discount > 0 && (
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", color: "#16a34a", fontWeight: "600" }}>
+                  <span>Discount {couponCode ? `(${couponCode})` : ""}:</span>
+                  <span>-{money(discount)}</span>
+                </div>
+              )}
+              
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "15px", fontWeight: "700", borderTop: "1px dashed var(--line)", paddingTop: "10px", marginTop: "4px" }}>
+                <span style={{ color: "var(--text)" }}>Total:</span>
+                <strong style={{ color: "var(--brand)", fontSize: "16px" }}>{money(total)}</strong>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <Link 
+                href="/checkout" 
+                onClick={() => setIsCartDrawerOpen(false)}
+                style={{
+                  width: "100%",
+                  background: "var(--brand)",
+                  color: "#ffffff",
+                  textAlign: "center",
+                  padding: "12px",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  fontWeight: "700",
+                  textDecoration: "none",
+                  boxShadow: "0 4px 12px var(--accent-glow)"
+                }}
+              >
+                Proceed to Checkout
+              </Link>
+              <Link 
+                href="/cart" 
+                onClick={() => setIsCartDrawerOpen(false)}
+                style={{
+                  width: "100%",
+                  background: "var(--surface)",
+                  border: "1px solid var(--line)",
+                  color: "var(--text)",
+                  textAlign: "center",
+                  padding: "10px",
+                  borderRadius: "8px",
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  textDecoration: "none"
+                }}
+              >
+                View Full Cart
+              </Link>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Floating Sticky Cart Button */}
+      {!hideChrome && !isCartDrawerOpen && count > 0 && (
+        <button
+          onClick={() => setIsCartDrawerOpen(true)}
+          style={{
+            position: "fixed",
+            right: "20px",
+            bottom: "92px",
+            zIndex: 998,
+            background: "var(--brand)",
+            color: "#ffffff",
+            width: "56px",
+            height: "56px",
+            borderRadius: "50%",
+            border: "none",
+            cursor: "pointer",
+            boxShadow: "0 8px 24px rgba(15, 23, 42, 0.3)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            outline: "none"
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "scale(1.1) translateY(-2px)";
+            e.currentTarget.style.boxShadow = "0 12px 28px rgba(15, 23, 42, 0.4)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "none";
+            e.currentTarget.style.boxShadow = "0 8px 24px rgba(15, 23, 42, 0.3)";
+          }}
+        >
+          <svg style={{ width: "24px", height: "24px" }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+          <span style={{
+            position: "absolute",
+            top: "-4px",
+            right: "-4px",
+            background: "var(--accent)",
+            color: "white",
+            borderRadius: "50%",
+            width: "22px",
+            height: "22px",
+            fontSize: "11px",
+            fontWeight: "700",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.2)"
+          }}>
+            {count}
+          </span>
+        </button>
+      )}
     </>
   );
 }

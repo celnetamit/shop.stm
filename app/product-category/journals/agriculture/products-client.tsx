@@ -142,10 +142,11 @@ export default function AgricultureCatalogClient({ journals }: { journals: Journ
         {filtered.map((j) => {
           const plan = planById[j.id] || "PRINT";
           const rowConfig = getRowConfig(j.id);
+          const issueVal = (plan === "ONLINE" || plan === "PRINT_ONLINE") ? "All(Jan-Dec)" : rowConfig.issue;
           const totalIssues = getIssueCountFromFrequency(j.frequency);
           const issueLabels = getIssueLabels(totalIssues);
-          const price = getIssueWiseUnitPrice(getPrice(j, plan), totalIssues, rowConfig.issue);
-          const cartItemId = buildJournalCartItemId(j.id, plan, rowConfig.year, rowConfig.issue);
+          const price = getIssueWiseUnitPrice(getPrice(j, plan), totalIssues, issueVal);
+          const cartItemId = buildJournalCartItemId(j.id, plan, rowConfig.year, issueVal);
           const qty = items.filter((it) => it.id === cartItemId).reduce((sum, it) => sum + it.qty, 0);
 
           const isBook =
@@ -191,11 +192,12 @@ export default function AgricultureCatalogClient({ journals }: { journals: Journ
                     ))}
                   </select>
                   <select
-                    value={rowConfig.issue}
+                    value={issueVal}
+                    disabled={plan === "ONLINE" || plan === "PRINT_ONLINE"}
                     onChange={(e) => setRowConfigById((prev) => ({ ...prev, [j.id]: { ...rowConfig, issue: e.target.value } }))}
                   >
                     <option value="All(Jan-Dec)">All issues</option>
-                    {issueLabels.map((label) => (
+                    {!(plan === "ONLINE" || plan === "PRINT_ONLINE") && issueLabels.map((label) => (
                       <option key={label} value={label}>
                         {label}
                       </option>
@@ -211,12 +213,12 @@ export default function AgricultureCatalogClient({ journals }: { journals: Journ
                       onClick={() =>
                         addItem({
                           id: cartItemId,
-                          journalName: `${j.journalName}${rowConfig.issue === "All(Jan-Dec)" ? "" : ` (${rowConfig.issue})`}`,
+                          journalName: `${j.journalName}${issueVal === "All(Jan-Dec)" ? "" : ` (${issueVal})`}`,
                           subject: j.subject,
                           issn: j.issn,
                           image: j.imageUrl || "https://dummyimage.com/360x460/eaf0ff/17366f.png&text=STM+Journal",
                           year: rowConfig.year,
-                          issue: rowConfig.issue,
+                          issue: issueVal,
                           plan,
                           unitPrice: price
                         })
@@ -232,12 +234,12 @@ export default function AgricultureCatalogClient({ journals }: { journals: Journ
                     onClick={() =>
                       addItem({
                         id: cartItemId,
-                        journalName: `${j.journalName}${rowConfig.issue === "All(Jan-Dec)" ? "" : ` (${rowConfig.issue})`}`,
+                        journalName: `${j.journalName}${issueVal === "All(Jan-Dec)" ? "" : ` (${issueVal})`}`,
                         subject: j.subject,
                         issn: j.issn,
                         image: j.imageUrl || "https://dummyimage.com/360x460/eaf0ff/17366f.png&text=STM+Journal",
                         year: rowConfig.year,
-                        issue: rowConfig.issue,
+                        issue: issueVal,
                         plan,
                         unitPrice: price
                       })

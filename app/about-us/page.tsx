@@ -104,12 +104,12 @@ export default function AboutUsPage() {
             color: "#475569",
             marginBottom: "20px"
           }}>
-            We publish over 300+ peer-reviewed journals covering diverse disciplines including Engineering, Biotechnology, Computer Science, Medical Sciences, and Management. Our journals are indexed in major databases and are trusted by leading universities and research institutions globally.
+            We publish 274 peer-reviewed journals covering diverse disciplines including Engineering, Biotechnology, Computer Science, Medical Sciences, and Management. Our journals are indexed in major databases and are trusted by leading universities and research institutions globally.
           </p>
           
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
             <div style={{ borderLeft: "3px solid #F59E0B", paddingLeft: "12px" }}>
-              <div style={{ fontSize: "20px", fontWeight: "800", color: "#0F172A" }}>300+</div>
+              <div style={{ fontSize: "20px", fontWeight: "800", color: "#0F172A" }}>274</div>
               <div style={{ fontSize: "12px", color: "#64748b" }}>Peer-Reviewed Journals</div>
             </div>
             <div style={{ borderLeft: "3px solid #0F172A", paddingLeft: "12px" }}>
@@ -164,8 +164,9 @@ export default function AboutUsPage() {
         </p>
 
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "16px" }}>
-          <strong style={{ display: "block", color: "#F59E0B", fontSize: "15px", fontWeight: "600" }}>Managing Director</strong>
-          <span style={{ fontSize: "13px", color: "#94A3B8" }}>Consortium eLearning Network Pvt. Ltd.</span>
+          <strong style={{ display: "block", color: "#F59E0B", fontSize: "16px", fontWeight: "700" }}>Puneet Manhotra</strong>
+          <span style={{ display: "block", fontSize: "13px", color: "#94A3B8" }}>Managing Director</span>
+          <span style={{ fontSize: "13px", color: "#64748B" }}>Consortium eLearning Network Pvt. Ltd.</span>
         </div>
       </div>
 
