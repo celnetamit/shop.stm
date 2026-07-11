@@ -76,8 +76,10 @@ export async function buildProformaPdfAttachment(quoteId: string) {
         `${quote.currency} ${Number(it.unitPrice || 0).toFixed(2)}`
       ];
     }),
-    styles: { fontSize: 8.5, cellPadding: 2, overflow: "linebreak" },
+    styles: { fontSize: 8.5, cellPadding: 2, overflow: "linebreak", valign: "middle" },
     headStyles: { fillColor: [15, 42, 87], textColor: [255, 255, 255] },
+    rowPageBreak: "avoid",
+    pageBreak: "auto",
     columnStyles: {
       0: { cellWidth: 10 },
       1: { cellWidth: 90 },
@@ -85,8 +87,11 @@ export async function buildProformaPdfAttachment(quoteId: string) {
       3: { cellWidth: 22 },
       4: { cellWidth: 30, halign: "right" }
     },
-    margin: { left: 14, right: 14 },
+    margin: { top: 18, left: 14, right: 14, bottom: 24 },
     didDrawPage: () => {
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      pdf.setDrawColor(148, 163, 184);
+      pdf.rect(10, 10, pageWidth - 20, pageHeight - 20);
       pdf.setFontSize(9);
       pdf.setTextColor(100, 116, 139);
       pdf.text(`Proforma ${piNo}`, pageWidth - 14, 10, { align: "right" });

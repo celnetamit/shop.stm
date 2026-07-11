@@ -1,12 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
 import { useRouter } from "next/navigation";
 import { fetchPrefillUser, saveDraft } from "@/lib/client/form-prefill";
 import { formatPiNumber } from "@/lib/pi-number";
-import { addCanvasToPdfPages } from "@/lib/pdf-paging";
 import AuthRequiredOverlay from "@/app/components/auth-required-overlay";
 
 type Journal = {
@@ -753,29 +750,15 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
   }
 
   async function buildGeneratedInvoicePdf() {
-    const input = document.getElementById("invoice-capture-area");
-    if (!input) return null;
+    if (!quoteId || quoteId.startsWith("draft-")) return null;
 
-    const html2canvas = (await import("html2canvas")).default;
-    const canvas = await html2canvas(input, {
-      scale: 1.5,
-      useCORS: true,
-      logging: false,
-      backgroundColor: "#ffffff"
-    });
+    const response = await fetch(`/api/proforma/${quoteId}/pdf`, { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error("Failed to generate proforma PDF.");
+    }
 
-    const pdf = new jsPDF("p", "mm", "a4");
-    addCanvasToPdfPages(pdf, canvas);
-    return pdf;
-  }
-
-  function arrayBufferToBase64(buffer: ArrayBuffer) {
-    const bytes = new Uint8Array(buffer);
-    let binary = "";
-    bytes.forEach((b) => {
-      binary += String.fromCharCode(b);
-    });
-    return btoa(binary);
+    const blob = await response.blob();
+    return blob;
   }
 
   async function onSaveStepOne(e: React.FormEvent) {
@@ -951,12 +934,17 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
 
   async function onDownloadInvoicePdf() {
     try {
-      const pdf = await buildGeneratedInvoicePdf();
-      if (!pdf) return;
+      const blob = await buildGeneratedInvoicePdf();
+      if (!blob) return;
       const piNumber = formatPiNumber({ id: quoteId || "draft", createdAt: quoteCreatedAt || new Date().toISOString() });
-      pdf.save(proformaPdfFilename(piNumber || "draft"));
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = proformaPdfFilename(piNumber || "draft");
+      anchor.click();
+      URL.revokeObjectURL(url);
     } catch (err) {
-      console.error("Encountered html2canvas conversion error", err);
+      console.error("Encountered proforma PDF generation error", err);
       window.print();
     }
   }
@@ -968,17 +956,10 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
     setError("");
 
     try {
-      const pdf = await buildGeneratedInvoicePdf();
-      if (!pdf) {
-        setError("Could not generate proforma PDF for email.");
-        return;
-      }
-
-      const attachmentBase64 = arrayBufferToBase64(pdf.output("arraybuffer"));
       const response = await fetch(`/api/proforma/${quoteId}/notify`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ attachmentBase64 })
+        body: JSON.stringify({})
       });
       const result = await response.json();
       if (result.ok) {

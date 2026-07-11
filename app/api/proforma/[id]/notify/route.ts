@@ -15,7 +15,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   try {
-    const payload = (await req.json().catch(() => ({}))) as { attachmentBase64?: string };
+    await req.json().catch(() => ({}));
     const { id } = await params;
     if (!id || id.startsWith("draft-")) {
       return NextResponse.json({ ok: false, error: "Cannot notify on a draft quote." }, { status: 400 });
@@ -36,17 +36,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ ok: false, error: "Quote failed refinement." }, { status: 404 });
     }
 
-    if (!payload.attachmentBase64) {
+    const { buildProformaPdfAttachment } = await import("@/lib/email-attachments");
+    const attachment = await buildProformaPdfAttachment(id);
+    if (!attachment) {
       return NextResponse.json({ ok: false, error: "Generated proforma PDF attachment is required." }, { status: 400 });
     }
 
-    const pdfBuffer = Buffer.from(payload.attachmentBase64, "base64");
-    if (!pdfBuffer.length || pdfBuffer.subarray(0, 4).toString("utf8") !== "%PDF") {
-      return NextResponse.json({ ok: false, error: "Invalid generated proforma PDF attachment." }, { status: 400 });
-    }
-
     const attachmentsJson = JSON.stringify([
-      { filename: proformaPdfFilename(d.quoteId), contentType: "application/pdf", base64: payload.attachmentBase64 }
+      { filename: attachment.filename || proformaPdfFilename(d.quoteId), contentType: attachment.contentType, base64: attachment.data.toString("base64") }
     ]);
 
     const { sendTemplatedEmail, sendAdminNotification } = await import("@/lib/email");
