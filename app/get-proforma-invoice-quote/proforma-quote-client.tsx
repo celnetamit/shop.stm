@@ -2,12 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { jsPDF } from "jspdf";
 import { fetchPrefillUser, saveDraft } from "@/lib/client/form-prefill";
 import { formatPiNumber } from "@/lib/pi-number";
 import AuthRequiredOverlay from "@/app/components/auth-required-overlay";
 import SignatureBlock from "@/app/components/invoice/signature-block";
-import { addCanvasToPdfPages } from "@/lib/pdf-paging";
 
 type Journal = {
   serialNo: number;
@@ -921,23 +919,19 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
 
   async function onDownloadInvoicePdf() {
     try {
-      const input = document.getElementById("invoice-capture-area");
-      if (!input) return;
-      const html2canvas = (await import("html2canvas")).default;
-      const canvas = await html2canvas(input, {
-        scale: 1.5,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff"
-      });
-      const pdf = new jsPDF("p", "mm", "a4");
-      addCanvasToPdfPages(pdf, canvas);
-      const blob = pdf.output("blob");
-      const url = URL.createObjectURL(blob);
-      const opened = window.open(url, "_blank", "noopener,noreferrer");
-      if (!opened) {
-        window.location.href = url;
+      if (!quoteId || quoteId.startsWith("draft-")) return;
+      const response = await fetch(`/api/proforma/${quoteId}/pdf`, { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error("Failed to generate proforma PDF.");
       }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const piNumber = formatPiNumber({ id: quoteId, createdAt: quoteCreatedAt || new Date().toISOString() });
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `proforma-${piNumber.replace(/[^\w.-]+/g, "_")}.pdf`;
+      anchor.click();
       window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
     } catch (err) {
       console.error("Encountered proforma PDF generation error", err);
