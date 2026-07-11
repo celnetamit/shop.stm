@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { createSimplePdf } from "@/lib/simple-pdf";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import { formatPiNumber } from "@/lib/pi-number";
 
 export async function buildProformaPdfAttachment(quoteId: string) {
@@ -11,7 +12,8 @@ export async function buildProformaPdfAttachment(quoteId: string) {
 
   const piNo = formatPiNumber({ id: quote.id, createdAt: quote.createdAt });
   const subtotal = quote.items.reduce((s, i) => s + Number(i.unitPrice || 0), 0);
-  const discount = Math.round((subtotal * (quote.couponPercent || 0)) / 100);
+  const discountPct = quote.couponPercent || 0;
+  const discount = Math.round((subtotal * discountPct) / 100);
   const taxable = subtotal - discount;
 
   let isGstExempt = true;
@@ -32,39 +34,88 @@ export async function buildProformaPdfAttachment(quoteId: string) {
   }
 
   const hasDigital = quote.items.some((it) => it.selectedPlan === "ONLINE" || it.selectedPlan === "PRINT_ONLINE");
-  const gst = (quote.currency === "INR" && hasDigital && !isGstExempt) ? Math.round(taxable * 0.18) : 0;
+  const gst = quote.currency === "INR" && hasDigital && !isGstExempt ? Math.round(taxable * 0.18) : 0;
   const total = taxable + gst;
 
-  const lines: string[] = [
-    `PROFORMA INVOICE - ${piNo}`,
-    `Date: ${new Date(quote.createdAt).toLocaleDateString("en-IN")}`,
-    `Status: ${quote.status}`,
-    `Customer: ${quote.contactName}`,
-    `Institution: ${quote.organization}`,
-    `Email: ${quote.email}`,
-    `Address: ${quote.address || "N/A"}`,
-    `Receiver: ${quote.sameAsBilling ? quote.contactName : (quote.receiverName || quote.contactName)}`,
-    `Receiver Address: ${quote.sameAsBilling ? (quote.address || "N/A") : (quote.receiverAddress || quote.address || "N/A")}`,
-    "",
-    "Items:"
-  ];
+  const pdf = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
+  const pageWidth = pdf.internal.pageSize.getWidth();
 
-  quote.items.forEach((it, idx) => {
-    lines.push(`${idx + 1}. ${it.journalName} | ${it.selectedPlan} | ${quote.currency} ${Number(it.unitPrice || 0).toFixed(2)}`);
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(18);
+  pdf.text(`PROFORMA INVOICE - ${piNo}`, 14, 16);
+  pdf.setFontSize(10);
+  pdf.setFont("helvetica", "normal");
+  pdf.text(`Date: ${new Date(quote.createdAt).toLocaleDateString("en-IN")}`, 14, 23);
+  pdf.text(`Status: ${quote.status}`, 14, 28);
+  pdf.text(`Customer: ${quote.contactName}`, 14, 33);
+  pdf.text(`Institution: ${quote.organization || "N/A"}`, 14, 38);
+  pdf.text(`Email: ${quote.email}`, 14, 43);
+  pdf.text(`Address: ${quote.address || "N/A"}`, 14, 48);
+  pdf.text(
+    `Receiver: ${quote.sameAsBilling ? quote.contactName : (quote.receiverName || quote.contactName)}`,
+    14,
+    53
+  );
+  pdf.text(
+    `Receiver Address: ${quote.sameAsBilling ? (quote.address || "N/A") : (quote.receiverAddress || quote.address || "N/A")}`,
+    14,
+    58
+  );
+
+  autoTable(pdf, {
+    startY: 66,
+    head: [["#", "Journal Name", "Plan", "HSN", "Unit Price"]],
+    body: quote.items.map((it, idx) => {
+      const isBook = isBookProduct(it.journalName, it.subject);
+      const hsn = it.selectedPlan === "ONLINE" ? "998431" : isBook ? "4901" : "4902";
+      return [
+        String(idx + 1),
+        it.journalName,
+        it.selectedPlan,
+        hsn,
+        `${quote.currency} ${Number(it.unitPrice || 0).toFixed(2)}`
+      ];
+    }),
+    styles: { fontSize: 8.5, cellPadding: 2, overflow: "linebreak" },
+    headStyles: { fillColor: [15, 42, 87], textColor: [255, 255, 255] },
+    columnStyles: {
+      0: { cellWidth: 10 },
+      1: { cellWidth: 90 },
+      2: { cellWidth: 28 },
+      3: { cellWidth: 22 },
+      4: { cellWidth: 30, halign: "right" }
+    },
+    margin: { left: 14, right: 14 },
+    didDrawPage: () => {
+      pdf.setFontSize(9);
+      pdf.setTextColor(100, 116, 139);
+      pdf.text(`Proforma ${piNo}`, pageWidth - 14, 10, { align: "right" });
+    }
   });
 
-  lines.push("");
-  lines.push(`Subtotal: ${quote.currency} ${subtotal.toFixed(2)}`);
-  lines.push(`Discount: ${quote.currency} ${discount.toFixed(2)}`);
-  if (gst > 0) {
-    lines.push(`GST: ${quote.currency} ${gst.toFixed(2)}`);
+  const finalY = (pdf as any).lastAutoTable?.finalY || 74;
+  let summaryY = finalY + 10;
+  if (summaryY > 250) {
+    pdf.addPage();
+    summaryY = 20;
   }
-  lines.push(`Total: ${quote.currency} ${total.toFixed(2)}`);
+
+  pdf.setDrawColor(226, 232, 240);
+  pdf.line(14, summaryY - 4, pageWidth - 14, summaryY - 4);
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(10.5);
+  pdf.text(`Subtotal: ${quote.currency} ${subtotal.toFixed(2)}`, 14, summaryY);
+  pdf.text(`Discount: ${quote.currency} ${discount.toFixed(2)}`, 14, summaryY + 5);
+  if (gst > 0) {
+    pdf.text(`GST: ${quote.currency} ${gst.toFixed(2)}`, 14, summaryY + 10);
+  }
+  pdf.setFontSize(12);
+  pdf.text(`Total: ${quote.currency} ${total.toFixed(2)}`, 14, summaryY + (gst > 0 ? 17 : 12));
 
   return {
     filename: `proforma-${piNo}.pdf`,
     contentType: "application/pdf",
-    data: createSimplePdf(`PROFORMA ${piNo}`, lines)
+    data: Buffer.from(pdf.output("arraybuffer"))
   };
 }
 
