@@ -183,7 +183,7 @@ export default function AdminDashboardTabs({ contacts, agencies, proformas, orde
                       </td>
                       <td style={{ padding: "18px 24px" }}>
                         <Link
-                          href={`/account/proforma/${q.id}`}
+                          href={`/admin/proforma?printId=${q.id}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           style={{

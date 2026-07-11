@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { formatPiNumber } from "@/lib/pi-number";
 import SignatureBlock from "@/app/components/invoice/signature-block";
 
@@ -30,12 +31,15 @@ type Proforma = {
 };
 
 export default function AdminProformaPage() {
+  const searchParams = useSearchParams();
+  const requestedPrintId = searchParams.get("printId") || "";
   const [rows, setRows] = useState<Proforma[]>([]);
   const [error, setError] = useState("");
   const [editingRemarks, setEditingRemarks] = useState<Record<string, string>>({});
   const [activePi, setActivePi] = useState<Proforma | null>(null);
   const [downloadingId, setDownloadingId] = useState("");
   const [printTargetId, setPrintTargetId] = useState("");
+  const [autoPrintConsumed, setAutoPrintConsumed] = useState(false);
 
   async function load() {
     const res = await fetch("/api/admin/proforma", { cache: "no-store" });
@@ -62,6 +66,15 @@ export default function AdminProformaPage() {
     setActivePi(pi);
     setPrintTargetId(pi.id);
   }
+
+  useEffect(() => {
+    if (!requestedPrintId || !rows.length || printTargetId || autoPrintConsumed) return;
+    const target = rows.find((row) => row.id === requestedPrintId);
+    if (target) {
+      setAutoPrintConsumed(true);
+      schedulePrintPi(target);
+    }
+  }, [requestedPrintId, rows, printTargetId, autoPrintConsumed]);
 
   async function downloadGeneratedPiPdf(pi: Proforma) {
     setDownloadingId(pi.id);
@@ -138,6 +151,25 @@ export default function AdminProformaPage() {
 
           body {
             margin: 0 !important;
+          }
+
+          .admin-layout {
+            display: block !important;
+            background: #fff !important;
+            min-height: auto !important;
+            grid-template-columns: 1fr !important;
+          }
+
+          .admin-sidebar {
+            display: none !important;
+          }
+
+          .admin-content {
+            display: block !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
           }
 
           .admin-page-shell {
