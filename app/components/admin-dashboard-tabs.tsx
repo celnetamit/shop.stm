@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { formatPiNumber } from "@/lib/pi-number";
 
@@ -157,11 +158,12 @@ export default function AdminDashboardTabs({ contacts, agencies, proformas, orde
                   <th style={{ padding: "16px 24px", fontSize: "12px", textTransform: "uppercase", fontWeight: "700", color: "#475569" }}>Contact Detail</th>
                   <th style={{ padding: "16px 24px", fontSize: "12px", textTransform: "uppercase", fontWeight: "700", color: "#475569" }}>Verification</th>
                   <th style={{ padding: "16px 24px", fontSize: "12px", textTransform: "uppercase", fontWeight: "700", color: "#475569" }}>Created</th>
+                  <th style={{ padding: "16px 24px", fontSize: "12px", textTransform: "uppercase", fontWeight: "700", color: "#475569" }}>Action</th>
                 </tr>
               </thead>
               <tbody>
                 {proformas.length === 0 ? (
-                  <tr><td colSpan={4} style={{ padding: "48px", textAlign: "center", color: "#94A3B8" }}>No proforma queries issued yet.</td></tr>
+                  <tr><td colSpan={5} style={{ padding: "48px", textAlign: "center", color: "#94A3B8" }}>No proforma queries issued yet.</td></tr>
                 ) : (
                   proformas.map((q, i) => (
                     <tr key={q.id} style={{ borderBottom: "1px solid #F1F5F9", background: i % 2 === 0 ? "transparent" : "#FCFDFE" }}>
@@ -178,6 +180,26 @@ export default function AdminDashboardTabs({ contacts, agencies, proformas, orde
                       </td>
                       <td style={{ padding: "18px 24px", color: "#64748B", fontSize: "13px" }} suppressHydrationWarning={true}>
                         {new Date(q.createdAt).toLocaleString()}
+                      </td>
+                      <td style={{ padding: "18px 24px" }}>
+                        <Link
+                          href={`/account/proforma/${q.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            padding: "8px 14px",
+                            background: "#3B82F6",
+                            color: "white",
+                            borderRadius: "6px",
+                            textDecoration: "none",
+                            fontSize: "13px",
+                            fontWeight: "600",
+                            display: "inline-block",
+                            transition: "background 0.2s"
+                          }}
+                        >
+                          View & Download
+                        </Link>
                       </td>
                     </tr>
                   ))

@@ -79,9 +79,13 @@ export default function AdminProformaPage() {
     if (!printTargetId || !activePi || activePi.id !== printTargetId) return;
 
     const timer = window.setTimeout(() => {
-      window.focus();
-      window.print();
-    }, 250);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          window.focus();
+          window.print();
+        });
+      });
+    }, 100);
 
     return () => window.clearTimeout(timer);
   }, [activePi, printTargetId]);
@@ -137,6 +141,12 @@ export default function AdminProformaPage() {
           }
 
           .admin-page-shell {
+            display: block !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+
+          .admin-page-shell > :not(.admin-proforma-print) {
             display: none !important;
           }
 
