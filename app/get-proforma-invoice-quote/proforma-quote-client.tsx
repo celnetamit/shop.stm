@@ -6,6 +6,7 @@ import autoTable from "jspdf-autotable";
 import { useRouter } from "next/navigation";
 import { fetchPrefillUser, saveDraft } from "@/lib/client/form-prefill";
 import { formatPiNumber } from "@/lib/pi-number";
+import { addCanvasToPdfPages } from "@/lib/pdf-paging";
 import AuthRequiredOverlay from "@/app/components/auth-required-overlay";
 
 type Journal = {
@@ -763,19 +764,8 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
       backgroundColor: "#ffffff"
     });
 
-    const imgData = canvas.toDataURL("image/jpeg", 0.82);
     const pdf = new jsPDF("p", "mm", "a4");
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-    const imgWidth = canvas.width;
-    const imgHeight = canvas.height;
-    const scale = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight) * 0.95;
-    const finalWidth = imgWidth * scale;
-    const finalHeight = imgHeight * scale;
-    const marginX = (pdfWidth - finalWidth) / 2;
-    const marginY = (pdfHeight - finalHeight) / 2;
-
-    pdf.addImage(imgData, "JPEG", marginX, marginY, finalWidth, finalHeight);
+    addCanvasToPdfPages(pdf, canvas);
     return pdf;
   }
 

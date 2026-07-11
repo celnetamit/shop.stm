@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { jsPDF } from "jspdf";
 import { formatPiNumber } from "@/lib/pi-number";
+import { addCanvasToPdfPages } from "@/lib/pdf-paging";
 
 type ProformaItem = { id: string; journalName: string; subject?: string; selectedPlan: "PRINT" | "ONLINE" | "PRINT_ONLINE"; unitPrice: number };
 type Proforma = {
@@ -307,16 +308,8 @@ export default function AdminProformaPage() {
           logging: false,
           backgroundColor: "#ffffff"
         });
-        const imgData = canvas.toDataURL("image/jpeg", 0.82);
         const pdf = new jsPDF("p", "mm", "a4");
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
-        const scale = Math.min(pdfWidth / canvas.width, pdfHeight / canvas.height) * 0.95;
-        const finalWidth = canvas.width * scale;
-        const finalHeight = canvas.height * scale;
-        const marginX = (pdfWidth - finalWidth) / 2;
-        const marginY = (pdfHeight - finalHeight) / 2;
-        pdf.addImage(imgData, "JPEG", marginX, marginY, finalWidth, finalHeight);
+        addCanvasToPdfPages(pdf, canvas);
         const piNumber = formatPiNumber({ id: pi.id, createdAt: pi.createdAt });
         pdf.save(proformaPdfFilename(piNumber));
       } catch (err) {
