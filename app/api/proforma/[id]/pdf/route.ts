@@ -33,7 +33,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
     status: 200,
     headers: {
       "content-type": attachment.contentType,
-      "content-disposition": `attachment; filename="${attachment.filename}"`
+      "content-disposition": `inline; filename="${attachment.filename}"`
     }
   });
 }

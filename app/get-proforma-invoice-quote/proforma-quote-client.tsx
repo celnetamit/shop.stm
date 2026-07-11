@@ -99,10 +99,6 @@ function isBookProduct(journalName: string, subject: string): boolean {
   );
 }
 
-function proformaPdfFilename(piNumber: string) {
-  return `proforma-${piNumber.replace(/[^\w.-]+/g, "_")}.pdf`;
-}
-
 function getIssueCountFromFrequency(frequency: string | null): number {
   if (!frequency) return 2;
   const cleaned = frequency.trim().toLowerCase();
@@ -750,18 +746,6 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
     return currency === "INR" ? `₹${fixed}` : `$${fixed}`;
   }
 
-  async function buildGeneratedInvoicePdf() {
-    if (!quoteId || quoteId.startsWith("draft-")) return null;
-
-    const response = await fetch(`/api/proforma/${quoteId}/pdf`, { cache: "no-store" });
-    if (!response.ok) {
-      throw new Error("Failed to generate proforma PDF.");
-    }
-
-    const blob = await response.blob();
-    return blob;
-  }
-
   async function onSaveStepOne(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -935,15 +919,12 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
 
   async function onDownloadInvoicePdf() {
     try {
-      const blob = await buildGeneratedInvoicePdf();
-      if (!blob) return;
-      const piNumber = formatPiNumber({ id: quoteId || "draft", createdAt: quoteCreatedAt || new Date().toISOString() });
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
-      anchor.href = url;
-      anchor.download = proformaPdfFilename(piNumber || "draft");
-      anchor.click();
-      URL.revokeObjectURL(url);
+      if (!quoteId || quoteId.startsWith("draft-")) return;
+      const previewUrl = `/api/proforma/${quoteId}/pdf`;
+      const opened = window.open(previewUrl, "_blank", "noopener,noreferrer");
+      if (!opened) {
+        window.location.href = previewUrl;
+      }
     } catch (err) {
       console.error("Encountered proforma PDF generation error", err);
       window.print();
@@ -1842,7 +1823,7 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
               <button className="catalogues-ghost" onClick={() => setStep(2)}>← Back to Selection</button>
               <button className="catalogues-primary" style={{ background: "#2563eb" }} onClick={onDownloadInvoicePdf}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: "6px" }}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                PRINT / SAVE AS PDF
+                PREVIEW / SAVE AS PDF
               </button>
               <button 
                 className="catalogues-ghost" 
