@@ -1,4 +1,5 @@
 import PrintButton from "@/app/components/print-button";
+import SignatureBlock from "@/app/components/invoice/signature-block";
 import { ReactNode } from "react";
 
 type TotalsRow = {
@@ -195,6 +196,10 @@ export default function SharedInvoiceLayout(props: Props) {
 
           <div className="invoice-summary-block" style={{ padding: "12px 14px", borderTop: "1px solid #94A3B8", color: "#64748B", fontSize: "11px", textAlign: "center" }}>
             <p style={{ margin: 0 }}>{footerNote}</p>
+          </div>
+
+          <div className="invoice-summary-block" style={{ borderTop: "1px solid #94A3B8", padding: "14px 16px" }}>
+            <SignatureBlock brandTitle={companyName} />
           </div>
         </div>
       </div>

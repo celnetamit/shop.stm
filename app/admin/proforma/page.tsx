@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { jsPDF } from "jspdf";
 import { formatPiNumber } from "@/lib/pi-number";
 import { addCanvasToPdfPages } from "@/lib/pdf-paging";
+import SignatureBlock from "@/app/components/invoice/signature-block";
 
 type ProformaItem = { id: string; journalName: string; subject?: string; selectedPlan: "PRINT" | "ONLINE" | "PRINT_ONLINE"; unitPrice: number };
 type Proforma = {
@@ -249,12 +250,7 @@ function AdminPiPdfTemplate({ pi }: { pi: Proforma }) {
               <li>Invoice subject to realization of demand draft/cheque.</li>
             </ol>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", textAlign: "center" }}>
-            <strong style={{ color: "#0f172a", fontSize: "11px", marginBottom: "8px" }}>For, STM JOURNALS</strong>
-            <img src="/authorized-signature.png" alt="Authorised Signature" style={{ width: "130px", height: "auto", objectFit: "contain", marginBottom: "6px" }} />
-            <div style={{ width: "180px", borderBottom: "1px solid #64748b" }} />
-            <span style={{ fontSize: "9px", fontWeight: "800", textTransform: "uppercase", marginTop: "5px", letterSpacing: "0.05em", color: "#334155" }}>AUTHORISED SIGNATORY</span>
-          </div>
+          <SignatureBlock brandTitle="STM JOURNALS" />
         </div>
       </div>
       <div style={{ textAlign: "center", borderTop: "1px dashed #cbd5e1", marginTop: "12px", paddingTop: "8px", fontSize: "10px", color: "#64748b" }}>

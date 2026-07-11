@@ -3,6 +3,7 @@ import { getCurrentSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { getJournalCatalog } from "@/lib/journal-catalog";
 import PrintButton from "@/app/components/print-button";
+import SignatureBlock from "@/app/components/invoice/signature-block";
 
 export const dynamic = "force-dynamic";
 
@@ -227,12 +228,7 @@ export default async function OrderInvoicePrintPage({ params }: { params: Promis
                 <li>Invoice subject to realization of demand draft/cheque.</li>
               </ol>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", textAlign: "center" }}>
-              <strong style={{ color: "#0f172a", fontSize: "11px", marginBottom: "8px" }}>For, {brand.title}</strong>
-              <img src="/authorized-signature.png" alt="Authorised Signature" style={{ width: "130px", height: "auto", objectFit: "contain", marginBottom: "6px" }} />
-              <div style={{ width: "180px", borderBottom: "1px solid #64748b" }}></div>
-              <span style={{ fontSize: "9px", fontWeight: 800, textTransform: "uppercase", marginTop: "5px" }}>AUTHORISED SIGNATORY</span>
-            </div>
+            <SignatureBlock brandTitle={brand.title} />
           </div>
         </div>
 
