@@ -71,6 +71,16 @@ export default function SharedInvoiceLayout(props: Props) {
           vertical-align: top;
           word-break: break-word;
         }
+        .invoice-grid-table thead {
+          display: table-header-group;
+        }
+        .invoice-grid-table tbody {
+          display: table-row-group;
+        }
+        .invoice-grid-table tr {
+          break-inside: avoid;
+          page-break-inside: avoid;
+        }
         .invoice-grid-table th:last-child,
         .invoice-grid-table td:last-child {
           border-right: none;
@@ -91,6 +101,10 @@ export default function SharedInvoiceLayout(props: Props) {
         }
         .invoice-grid-table tbody tr:last-child td {
           border-bottom: none;
+        }
+        .invoice-summary-block {
+          break-inside: avoid;
+          page-break-inside: avoid;
         }
 
         @media print {
@@ -159,7 +173,7 @@ export default function SharedInvoiceLayout(props: Props) {
             <tbody>{tableBody}</tbody>
           </table>
 
-          <div style={{ display: "flex", justifyContent: "flex-end", borderTop: "1px solid #94A3B8", padding: "10px 12px" }}>
+          <div className="invoice-summary-block" style={{ display: "flex", justifyContent: "flex-end", borderTop: "1px solid #94A3B8", padding: "10px 12px" }}>
             <div style={{ width: "360px" }}>
               {totals.map((row, idx) => (
                 <div key={`${row.label}-${idx}`} style={{
@@ -179,7 +193,7 @@ export default function SharedInvoiceLayout(props: Props) {
             </div>
           </div>
 
-          <div style={{ padding: "12px 14px", borderTop: "1px solid #94A3B8", color: "#64748B", fontSize: "11px", textAlign: "center" }}>
+          <div className="invoice-summary-block" style={{ padding: "12px 14px", borderTop: "1px solid #94A3B8", color: "#64748B", fontSize: "11px", textAlign: "center" }}>
             <p style={{ margin: 0 }}>{footerNote}</p>
           </div>
         </div>

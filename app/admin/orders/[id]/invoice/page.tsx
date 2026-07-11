@@ -154,7 +154,7 @@ export default async function OrderInvoicePrintPage({ params }: { params: Promis
             </div>
           </div>
 
-          <table style={{ width: "100%", borderCollapse: "collapse", borderBottom: "1px solid #94a3b8" }} cellPadding={6}>
+          <table style={{ width: "100%", borderCollapse: "collapse", borderBottom: "1px solid #94a3b8", tableLayout: "fixed" }} cellPadding={6}>
             <thead>
               <tr style={{ borderBottom: "1px solid #94a3b8", background: "#f8fafc", fontSize: "10.5px", fontWeight: 800 }}>
                 <th style={th(5)}>Sr.No</th>
@@ -180,7 +180,7 @@ export default async function OrderInvoicePrintPage({ params }: { params: Promis
                 const gstRate = taxable > 0 ? (itemGst / taxable) * 100 : 0;
 
                 return (
-                  <tr key={item.id} style={{ borderBottom: "1px solid #e2e8f0", fontSize: "11.5px" }}>
+                  <tr key={item.id} style={{ borderBottom: "1px solid #e2e8f0", fontSize: "11.5px", breakInside: "avoid", pageBreakInside: "avoid" }}>
                     <td style={td()}>{idx + 1}</td>
                     <td style={td("left")}>{item.journalName}<div style={{ fontSize: "9px", color: "#64748b", marginTop: "2px" }}>Year: {item.year} | {item.selectedPlan}</div></td>
                     <td style={td()}>{getHsnCode(item.journalName, item.subject || "", item.selectedPlan)}</td>
@@ -217,7 +217,7 @@ export default async function OrderInvoicePrintPage({ params }: { params: Promis
             The sum of INR {Math.round(grandTotal)}/- is payment on account of subscription by NEFT/RTGS.
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "3fr 2fr", padding: "15px" }}>
+          <div className="invoice-summary-block" style={{ breakInside: "avoid", pageBreakInside: "avoid", display: "grid", gridTemplateColumns: "3fr 2fr", padding: "15px" }}>
             <div>
               <strong style={{ fontSize: "10px", textDecoration: "underline", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>TERMS & CONDITIONS:</strong>
               <ol style={{ margin: 0, paddingLeft: "16px", fontSize: "10.5px", color: "#475569", lineHeight: 1.6 }}>
