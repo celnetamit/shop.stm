@@ -59,10 +59,10 @@ function drawSignatureFooter(
   pdf.setFontSize(10.5);
   pdf.setTextColor(15, 23, 42);
   pdf.text(`For, ${brandTitle.toUpperCase()}`, pageWidth - 14, footerTop, { align: "right" });
-  pdf.addImage(`data:image/png;base64,${invoiceStampData}`, "PNG", pageWidth - 106, footerTop + 5, 34, 34);
-  pdf.addImage(`data:image/png;base64,${signatureData}`, "PNG", pageWidth - 62, footerTop + 18, 46, 18);
+  pdf.addImage(`data:image/png;base64,${invoiceStampData}`, "PNG", pageWidth - 104, footerTop + 5, 36, 36);
+  pdf.addImage(`data:image/png;base64,${signatureData}`, "PNG", pageWidth - 60, footerTop + 19, 46, 18);
   pdf.setDrawColor(100, 116, 139);
-  pdf.line(pageWidth - 58, footerTop + 40, pageWidth - 14, footerTop + 40);
+  pdf.line(pageWidth - 56, footerTop + 41, pageWidth - 14, footerTop + 41);
   pdf.setFontSize(8.5);
   pdf.text(signatureLabel, pageWidth - 14, footerTop + 43, { align: "right" });
 }
