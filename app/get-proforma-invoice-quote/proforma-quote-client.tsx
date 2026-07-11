@@ -918,25 +918,14 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
   }
 
   async function onDownloadInvoicePdf() {
-    try {
-      if (!quoteId || quoteId.startsWith("draft-")) return;
-      const response = await fetch(`/api/proforma/${quoteId}/pdf`, { cache: "no-store" });
-      if (!response.ok) {
-        throw new Error("Failed to generate proforma PDF.");
-      }
+    if (!quoteId || quoteId.startsWith("draft-")) return;
 
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const piNumber = formatPiNumber({ id: quoteId, createdAt: quoteCreatedAt || new Date().toISOString() });
-      const anchor = document.createElement("a");
-      anchor.href = url;
-      anchor.download = `proforma-${piNumber.replace(/[^\w.-]+/g, "_")}.pdf`;
-      anchor.click();
-      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    } catch (err) {
-      console.error("Encountered proforma PDF generation error", err);
-      window.print();
-    }
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.focus();
+        window.print();
+      });
+    });
   }
 
   async function onSendEmailNotification() {
@@ -981,6 +970,76 @@ export default function ProformaQuoteClient({ journals, canUsePubSubscription, i
     <>
     <div style={{ filter: requireAuth ? "blur(6px)" : "none", pointerEvents: requireAuth ? "none" : "auto", userSelect: requireAuth ? "none" : "auto" }}>
     <main className="proforma-page">
+      <style dangerouslySetInnerHTML={{ __html: `
+        @page {
+          size: auto;
+          margin: 12mm 10mm 16mm 10mm;
+        }
+
+        @media print {
+          html, body {
+            background: #fff !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+
+          body {
+            margin: 0 !important;
+          }
+
+          .proforma-preview-wrap {
+            background: #fff !important;
+            padding: 0 !important;
+            align-items: stretch !important;
+          }
+
+          .proforma-invoice {
+            max-width: none !important;
+            width: 100% !important;
+            padding: 0 !important;
+            box-shadow: none !important;
+            border: none !important;
+            break-inside: auto;
+            page-break-inside: auto;
+          }
+
+          .proforma-preview-actions {
+            display: none !important;
+          }
+
+          .proforma-invoice table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            break-inside: auto;
+            page-break-inside: auto;
+          }
+
+          .proforma-invoice thead {
+            display: table-header-group !important;
+          }
+
+          .proforma-invoice tbody {
+            display: table-row-group !important;
+          }
+
+          .proforma-invoice tr {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+            -webkit-region-break-inside: avoid !important;
+          }
+
+          .proforma-invoice td,
+          .proforma-invoice th {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+
+          .proforma-invoice .print-no-break {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+        }
+      ` }} />
       <h1 className="proforma-title">Institutional Proforma System</h1>
       <p className="proforma-subtitle">Generate GST-compliant institutional quotations.</p>
 
