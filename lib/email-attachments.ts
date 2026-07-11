@@ -1,10 +1,16 @@
+import { createElement } from "react";
 import { readFileSync } from "fs";
-import { join } from "path";
+import { join, resolve } from "path";
+import { mkdtempSync, rmSync, writeFileSync, existsSync } from "fs";
+import { spawnSync } from "child_process";
+import { tmpdir } from "os";
+import { pathToFileURL } from "url";
 import { prisma } from "@/lib/prisma";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { formatPiNumber } from "@/lib/pi-number";
 import { getJournalCatalog } from "@/lib/journal-catalog";
+import ProformaEmailDocument from "@/lib/proforma-email-document";
 
 const invoiceStampData = readFileSync(join(process.cwd(), "public", "invoice-stamp.png")).toString("base64");
 const signatureData = readFileSync(join(process.cwd(), "public", "authorized-signature.png")).toString("base64");
@@ -101,7 +107,141 @@ function amountInWords(value: number, currency: "INR" | "USD") {
   return `${currency === "USD" ? "US Dollars" : "Indian Rupees"} ${parts.length ? parts.join(" ") : "Zero"} Only`;
 }
 
+function printHtmlToPdfBuffer(html: string) {
+  const tempDir = mkdtempSync(join(tmpdir(), "proforma-pdf-"));
+  const htmlPath = resolve(tempDir, "proforma.html");
+  const pdfPath = resolve(tempDir, "proforma.pdf");
+
+  try {
+    writeFileSync(htmlPath, html, "utf8");
+    const result = spawnSync(
+      "google-chrome",
+      [
+        "--headless",
+        "--disable-gpu",
+        "--no-sandbox",
+        "--disable-dev-shm-usage",
+        "--allow-file-access-from-files",
+        "--print-to-pdf-no-header",
+        "--run-all-compositor-stages-before-draw",
+        "--virtual-time-budget=4000",
+        "--window-size=1240,1754",
+        `--print-to-pdf=${pdfPath}`,
+        pathToFileURL(htmlPath).href
+      ],
+      { encoding: "utf8" }
+    );
+
+    if (result.status !== 0 || !existsSync(pdfPath)) {
+      console.error("Headless Chrome PDF generation failed", result.stderr || result.stdout);
+      return null;
+    }
+
+    return readFileSync(pdfPath);
+  } finally {
+    rmSync(tempDir, { recursive: true, force: true });
+  }
+}
+
+async function buildProformaHtmlAttachment(quoteId: string) {
+  const quote = await prisma.proformaQuote.findUnique({
+    where: { id: quoteId },
+    include: { items: true, createdBy: true }
+  });
+  if (!quote) return null;
+
+  const piNo = formatPiNumber({ id: quote.id, createdAt: quote.createdAt });
+  const subtotal = quote.items.reduce((s, i) => s + Number(i.unitPrice || 0), 0);
+  const discountPct = quote.couponPercent || 0;
+  const discount = Math.round((subtotal * discountPct) / 100);
+  const taxable = subtotal - discount;
+
+  let isGstExempt = true;
+  if (quote.createdBy) {
+    if (quote.createdBy.role === "LIBRARIAN" || quote.createdBy.role === "USER") {
+      isGstExempt = true;
+    } else if (
+      quote.createdBy.role === "AGENCY" ||
+      quote.createdBy.role === "STUDENT" ||
+      quote.createdBy.role === "SCHOLAR"
+    ) {
+      isGstExempt = false;
+    } else {
+      isGstExempt = false;
+    }
+  } else {
+    isGstExempt = quote.subscriberCategory === "COLLEGE" || quote.subscriberCategory === "EXISTING_PI";
+  }
+
+  const hasDigital = quote.items.some((it) => it.selectedPlan === "ONLINE" || it.selectedPlan === "PRINT_ONLINE");
+  const gst = quote.currency === "INR" && hasDigital && !isGstExempt ? Math.round(taxable * 0.18) : 0;
+  const total = taxable + gst;
+
+  const catalog = await getJournalCatalog();
+  const isJournalsPub = quote.items.some((item) => {
+    const cleanItemName = item.journalName.toLowerCase();
+    const match = catalog.find((cat) => cleanItemName.includes(cat.journalName.toLowerCase()) || cat.journalName.toLowerCase().includes(cleanItemName));
+    return !!(match && match.publisher && match.publisher.toLowerCase().replace(/[^a-z0-9]/g, "") === "journalspub");
+  });
+  const companyName = isJournalsPub ? "Journals Pub" : "STM Journals";
+  const companyLines = isJournalsPub
+    ? ["A Division of Dhruv Infosystems Private Limited", "A-118, 2nd Floor, A-Block, Sector-63, Noida - 201301", "Info@journalspub.com"]
+    : ["A Division of Consortium e-Learning Network Pvt. Ltd.", "A-118, 1st Floor, A-Block, Sector-63, Noida - 201301", "info@stmjournals.in"];
+
+  const items = quote.items.map((item) => ({
+    journalName: item.journalName,
+    subject: item.subject || "",
+    selectedPlan: item.selectedPlan,
+    unitPrice: Number(item.unitPrice || 0),
+    hsn: getHsnCode(item.journalName, item.subject || "", item.selectedPlan)
+  }));
+
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const html = `<!doctype html>
+  <html>
+    <head>
+      <meta charset="utf-8" />
+      <style>
+        @page { size: A4; margin: 0; }
+        html, body { margin: 0; padding: 0; background: #fff; }
+      </style>
+    </head>
+    <body>${renderToStaticMarkup(createElement(ProformaEmailDocument, {
+      piNo,
+      createdAt: quote.createdAt.toISOString(),
+      status: quote.status,
+      companyName,
+      companyLines,
+      customerName: quote.contactName,
+      organization: quote.organization || "N/A",
+      email: quote.email,
+      address: quote.address || "N/A",
+      receiverName: quote.sameAsBilling ? quote.contactName : (quote.receiverName || quote.contactName),
+      receiverAddress: quote.sameAsBilling ? (quote.address || "N/A") : (quote.receiverAddress || quote.address || "N/A"),
+      currency: quote.currency,
+      items,
+      subtotal,
+      discount,
+      gst,
+      total,
+      footerNote: `This is a computer generated proforma invoice. Please quote PI Number (${piNo}) while making payment.`
+    }))}</body>
+  </html>`;
+
+  const pdfBuffer = printHtmlToPdfBuffer(html);
+  if (!pdfBuffer) return null;
+
+  return {
+    filename: `proforma-${piNo}.pdf`,
+    contentType: "application/pdf",
+    data: pdfBuffer
+  };
+}
+
 export async function buildProformaPdfAttachment(quoteId: string) {
+  const browserAttachment = await buildProformaHtmlAttachment(quoteId);
+  if (browserAttachment) return browserAttachment;
+
   const quote = await prisma.proformaQuote.findUnique({
     where: { id: quoteId },
     include: { items: true, createdBy: true }
