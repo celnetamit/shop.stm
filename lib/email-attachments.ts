@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { createSimplePdf } from "@/lib/simple-pdf";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { formatPiNumber } from "@/lib/pi-number";
@@ -39,6 +40,14 @@ export async function buildProformaPdfAttachment(quoteId: string) {
 
   const pdf = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
   const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const frameMargin = 10;
+
+  const drawFrame = () => {
+    pdf.setDrawColor(148, 163, 184);
+    pdf.setLineWidth(0.35);
+    pdf.rect(frameMargin, frameMargin, pageWidth - frameMargin * 2, pageHeight - frameMargin * 2);
+  };
 
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(18);
@@ -89,9 +98,7 @@ export async function buildProformaPdfAttachment(quoteId: string) {
     },
     margin: { top: 18, left: 14, right: 14, bottom: 24 },
     didDrawPage: () => {
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      pdf.setDrawColor(148, 163, 184);
-      pdf.rect(10, 10, pageWidth - 20, pageHeight - 20);
+      drawFrame();
       pdf.setFontSize(9);
       pdf.setTextColor(100, 116, 139);
       pdf.text(`Proforma ${piNo}`, pageWidth - 14, 10, { align: "right" });
@@ -99,9 +106,14 @@ export async function buildProformaPdfAttachment(quoteId: string) {
   });
 
   const finalY = (pdf as any).lastAutoTable?.finalY || 74;
+  const summaryBlockHeight = gst > 0 ? 28 : 23;
+  const summaryFooterHeight = 10;
+  const reservedBottom = 24;
+  const availableSpace = pageHeight - reservedBottom - finalY;
   let summaryY = finalY + 10;
-  if (summaryY > 250) {
+  if (availableSpace < summaryBlockHeight + summaryFooterHeight) {
     pdf.addPage();
+    drawFrame();
     summaryY = 20;
   }
 
