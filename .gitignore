@@ -3,3 +3,9 @@ node_modules
 .env
 .DS_Store
 prisma/dev.db
+
+# Local extra files (not part of the project)
+scratch/
+Journalpub.jpg
+rishabh.webp
+Reimbursement - Vivek Verma - June 2026.pdf
