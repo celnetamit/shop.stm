@@ -4,6 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentSession } from "@/lib/auth/session";
 import { formatPiNumber } from "@/lib/pi-number";
+import { computeTotals } from "@/lib/proforma-totals";
+import { buildExternalId, captureLead, leadSourceUrl } from "@/lib/leadhub";
 
 async function findProformaQuote(idOrPiNumber: string) {
   const direct = await prisma.proformaQuote.findUnique({
@@ -225,10 +227,51 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           }
         })
       ]);
-      
     } catch (dbError) {
       if (!isMissingTableError(dbError)) throw dbError;
       return NextResponse.json({ ok: true, warning: "Draft mode: DB table missing" });
+    }
+
+    // The quote is now SUBMITTED with its journals — re-send the lead under the
+    // same external_id so LeadHub enriches it with the journal list and value.
+    // Kept out of the transaction's try block: the submit already succeeded, so
+    // nothing here may turn this response into a failure.
+    try {
+      const submitted = await prisma.proformaQuote.findUnique({
+        where: { id },
+        include: { items: true, createdBy: { select: { role: true } } }
+      });
+
+      if (submitted) {
+        const totals = computeTotals(
+          submitted.items.map((it) => ({ unitPrice: it.unitPrice, qty: 1, selectedPlan: it.selectedPlan })),
+          {
+            currency: submitted.currency,
+            discountPercent: submitted.couponPercent || 0,
+            role: session?.role || submitted.createdBy?.role,
+            subscriberCategory: submitted.subscriberCategory
+          }
+        );
+
+        captureLead({
+          eventType: "proforma_request",
+          externalId: buildExternalId("proforma_request", submitted.id),
+          createdAt: submitted.createdAt,
+          name: submitted.contactName,
+          email: submitted.email,
+          phone: submitted.phone,
+          institution: submitted.institutionName || submitted.organization,
+          country: submitted.country,
+          designation: submitted.designation,
+          message: `Proforma invoice request ${formatPiNumber({ id: submitted.id, createdAt: submitted.createdAt })} — ${submitted.items.length} journal(s).`,
+          journals: submitted.items.map((it) => ({ title: it.journalName, issn: it.issn, qty: 1 })),
+          currency: submitted.currency,
+          valueEstimate: totals.total,
+          sourceUrl: leadSourceUrl(req.headers, "/get-proforma-invoice-quote")
+        });
+      }
+    } catch (leadError) {
+      console.error("[leadhub] proforma submit lead capture failed", leadError);
     }
 
     return NextResponse.json({ ok: true });

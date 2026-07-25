@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { buildExternalId, captureLead, leadSourceUrl } from "@/lib/leadhub";
 
 export async function POST(req: NextRequest) {
   try {
@@ -30,6 +31,17 @@ export async function POST(req: NextRequest) {
         subject: body.subject.trim(),
         message: body.message.trim()
       }
+    });
+
+    captureLead({
+      eventType: "contact_enquiry",
+      externalId: buildExternalId("contact_enquiry", entry.id),
+      createdAt: entry.createdAt,
+      name: entry.name,
+      email: entry.email,
+      phone: entry.phone,
+      message: entry.subject ? `${entry.subject}\n\n${entry.message}` : entry.message,
+      sourceUrl: leadSourceUrl(req.headers, "/contact-us")
     });
 
     try {

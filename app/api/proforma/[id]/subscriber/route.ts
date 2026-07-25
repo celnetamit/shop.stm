@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentSession } from "@/lib/auth/session";
+import { buildExternalId, captureLead, leadSourceUrl } from "@/lib/leadhub";
 
 function isMissingTableError(error: unknown): boolean {
   if (!(error instanceof Error)) return false;
@@ -78,6 +79,22 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           createdByUserId: session?.sub || undefined
         }
       });
+      // Same external_id as the original POST — the user edited their details,
+      // so LeadHub updates the existing lead.
+      captureLead({
+        eventType: "proforma_request",
+        externalId: buildExternalId("proforma_request", quote.id),
+        createdAt: quote.createdAt,
+        name: quote.contactName,
+        email: quote.email,
+        phone: quote.phone,
+        institution: quote.institutionName || quote.organization,
+        country: quote.country,
+        designation: quote.designation,
+        currency: quote.currency,
+        sourceUrl: leadSourceUrl(req.headers, "/get-proforma-invoice-quote")
+      });
+
       return NextResponse.json({ ok: true, quoteId: quote.id, quoteCreatedAt: quote.createdAt });
     } catch (dbError) {
       if (!isMissingTableError(dbError)) throw dbError;

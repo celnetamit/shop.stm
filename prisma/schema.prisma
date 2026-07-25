@@ -243,6 +243,35 @@ model AgencyQuery {
   updatedAt     DateTime @updatedAt
 }
 
+enum LeadWebhookStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+/// Outbox for the LeadHub CRM lead webhook. One row per (source, external_id,
+/// event_type) so it doubles as the local de-duplication key and as the audit
+/// log of which leads reached the CRM. See lib/leadhub.ts.
+model LeadWebhookDelivery {
+  id             String            @id @default(cuid())
+  source         String
+  eventType      String
+  externalId     String
+  payload        Json
+  status         LeadWebhookStatus @default(PENDING)
+  attempts       Int               @default(0)
+  lastStatusCode Int?
+  lastError      String?           @db.Text
+  remoteLeadId   String?
+  nextAttemptAt  DateTime?
+  deliveredAt    DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@unique([source, externalId, eventType])
+  @@index([status, nextAttemptAt])
+}
+
 model EmailTemplate {
   id          String   @id @default(cuid())
   key         String   @unique // e.g., USER_WELCOME, ORDER_CONFIRMED_ADMIN

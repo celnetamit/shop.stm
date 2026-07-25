@@ -5,6 +5,7 @@ import { exchangeGoogleCode, exchangeGoogleCodeForOrigin, fetchGoogleProfile } f
 import { prisma } from "@/lib/prisma";
 import { AUTH_COOKIE_NAME, signSession } from "@/lib/auth/session";
 import { roleForEmail } from "@/lib/auth/admin-emails";
+import { buildExternalId, captureLead } from "@/lib/leadhub";
 
 function resolveGoogleAppBase(req: NextRequest) {
   const requestOrigin = new URL(req.url).origin;
@@ -50,6 +51,17 @@ export async function GET(req: NextRequest) {
         }
       });
       
+      captureLead({
+        eventType: "subscriber_signup",
+        externalId: buildExternalId("subscriber_signup", user.id),
+        createdAt: user.createdAt,
+        name: user.name,
+        email: user.email,
+        designation: user.role,
+        message: "New subscriber account created (Google sign-in).",
+        sourceUrl: `${appBase}/login`
+      });
+
       // Trigger transactional email workflows only for first-time Google registrations
       try {
         const { sendTemplatedEmail, sendAdminNotification } = await import("@/lib/email");

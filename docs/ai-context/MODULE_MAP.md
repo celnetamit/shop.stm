@@ -48,6 +48,7 @@ Provides Next.js Node.js routes consumed via Fetch inside frontend clients.
 | `lib/journal-data.ts` | Static Dataset Access | `loadJournals()`, `saveJournal()`, `deleteJournal()`. |
 | `lib/journal-catalog.ts` | Domain Modeling | Maps CSV metadata with price data to generate rich catalog payloads. |
 | `lib/auth/session.ts` | Authentication | `getCurrentSession()`, cookie validation routines. |
+| `lib/leadhub.ts` | CRM Lead Webhook | `captureLead()`, `deliverLead()`, `flushLeadQueue()`, `signLeadBody()`. Sole owner of outbound lead posting to LeadHub — see `docs/LEADHUB_WEBHOOK.md`. |
 
 ---
 

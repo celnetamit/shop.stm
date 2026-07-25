@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { buildExternalId, captureLead, leadSourceUrl } from "@/lib/leadhub";
 
 export async function POST(request: Request) {
   try {
@@ -26,6 +27,26 @@ export async function POST(request: Request) {
         specialization,
         message: message || null
       }
+    });
+
+    captureLead({
+      eventType: "contact_enquiry",
+      externalId: buildExternalId("contact_enquiry", query.id),
+      createdAt: query.createdAt,
+      name: query.contactPerson,
+      email: query.email,
+      phone: query.phone,
+      institution: query.agencyName,
+      country: query.country,
+      designation: "Subscription Agency",
+      message: [
+        `Agency enquiry — specialization: ${query.specialization}`,
+        query.website ? `Website: ${query.website}` : null,
+        query.message
+      ]
+        .filter(Boolean)
+        .join("\n"),
+      sourceUrl: leadSourceUrl(request.headers, "/for-agencies")
     });
 
     const { sendTemplatedEmail, sendAdminNotification } = await import("@/lib/email");

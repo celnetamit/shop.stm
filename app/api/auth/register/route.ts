@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth/password";
 import { roleForEmail } from "@/lib/auth/admin-emails";
+import { buildExternalId, captureLead, leadSourceUrl } from "@/lib/leadhub";
 
 export async function POST(req: NextRequest) {
   try {
@@ -31,6 +32,17 @@ export async function POST(req: NextRequest) {
     const role = roleForEmail(email) === "ADMIN" ? "ADMIN" : (requestedRole || "USER");
     const user = await prisma.user.create({
       data: { name, email, emailVerified: true, emailVerifiedAt: verification.verifiedAt, passwordHash, provider: "credentials", role }
+    });
+
+    captureLead({
+      eventType: "subscriber_signup",
+      externalId: buildExternalId("subscriber_signup", user.id),
+      createdAt: user.createdAt,
+      name: user.name,
+      email: user.email,
+      designation: role,
+      message: "New subscriber account created (email + password).",
+      sourceUrl: leadSourceUrl(req.headers, "/register")
     });
 
     // Dispatch emails silently, catching any error so as not to break overall HTTP stream
