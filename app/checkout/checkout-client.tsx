@@ -12,6 +12,12 @@ declare global {
   }
 }
 
+// TEMPORARY: online payments are switched off. Checkout collects a purchase
+// query for the management team instead of opening the Razorpay overlay.
+// Flip this back to `true` to restore the gateway — the payment code paths
+// below are intentionally left intact.
+const PAYMENT_GATEWAY_ENABLED: boolean = false;
+
 export default function CheckoutClient() {
   const params = useSearchParams();
   const { items, couponCode, discountPercent, clear } = useCart();
@@ -32,6 +38,8 @@ export default function CheckoutClient() {
   const [placingOrder, setPlacingOrder] = useState(false);
   const [orderMessage, setOrderMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
+  const [successKind, setSuccessKind] = useState<"ORDER" | "QUERY">("ORDER");
+  const [queryNote, setQueryNote] = useState("");
 
   const [quoteData, setQuoteData] = useState<any>(null);
   const [isLoadingQuote, setIsLoadingQuote] = useState(!!queryQuoteId);
@@ -95,6 +103,7 @@ export default function CheckoutClient() {
 
   // 2. Inject Razorpay Secure Protocol Layer
   useEffect(() => {
+    if (!PAYMENT_GATEWAY_ENABLED) return;
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;
@@ -192,6 +201,70 @@ export default function CheckoutClient() {
   const { subtotal, discount, taxable, cgst, sgst, total } = calculatedFinances;
 
   const money = (n: number) => `₹${n.toLocaleString("en-IN")}`;
+
+  // Payment-disabled path: forward the selection to the management team so they
+  // can respond with payment instructions / a proforma invoice offline.
+  async function handleQuerySubmission() {
+    setOrderMessage("");
+    const sourceItems = quoteData ? (quoteData.items || []) : items;
+
+    if (!name || !email) {
+      setOrderMessage("⚠️ Please provide at least your name and email address so we can respond.");
+      return;
+    }
+    if (sourceItems.length === 0) {
+      setOrderMessage("⚠️ Your selection is empty. Please add journals from the catalogue first.");
+      return;
+    }
+
+    setPlacingOrder(true);
+    try {
+      const res = await fetch("/api/purchase-query", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          name,
+          email,
+          organization: organization || null,
+          address: address || null,
+          state: state || null,
+          pincode: pincode || null,
+          gst: gst || null,
+          quoteId: queryQuoteId || null,
+          couponCode: couponCode || null,
+          note: queryNote || null,
+          subtotal,
+          discount,
+          total,
+          items: sourceItems.map((it: any) => ({
+            journalName: it.journalName,
+            issn: it.issn,
+            plan: it.plan || it.selectedPlan,
+            year: String(it.year || new Date().getFullYear()),
+            issue: it.issue || null,
+            unitPrice: it.unitPrice,
+            qty: it.qty || 1
+          }))
+        })
+      });
+
+      const json = await res.json();
+      if (!json.ok) {
+        throw new Error(json.error || "Could not register your query.");
+      }
+
+      setSuccessKind("QUERY");
+      setIsSuccess(true);
+      if (!quoteData) clear();
+      setOrderMessage(
+        "We have noted your query regarding the purchase of the journals you selected. Our management team will get back to you shortly."
+      );
+    } catch (err: any) {
+      setOrderMessage(err.message || "Query submission failed. Please try again or contact support.");
+    } finally {
+      setPlacingOrder(false);
+    }
+  }
 
   async function handlePaymentInitiation() {
     setOrderMessage("");
@@ -313,6 +386,7 @@ export default function CheckoutClient() {
         throw new Error(json.error || "Verification failed at registry server.");
       }
 
+      setSuccessKind("ORDER");
       setIsSuccess(true);
       clear();
       setOrderMessage(`🎉 Success! Order #${json.order?.id} has been paid & processed.`);
@@ -336,13 +410,18 @@ export default function CheckoutClient() {
   }
 
   if (isSuccess) {
+    const isQuery = successKind === "QUERY";
     return (
       <main className="checkout-page">
         <div style={{ maxWidth: "600px", margin: "60px auto", textAlign: "center", background: "#fff", padding: "40px", borderRadius: "12px", boxShadow: "0 4px 20px rgba(0,0,0,0.05)" }}>
-          <div style={{ fontSize: "60px", marginBottom: "15px" }}>✅</div>
-          <h1 style={{ color: "#16a34a" }}>Order Confirmed!</h1>
+          <div style={{ fontSize: "60px", marginBottom: "15px" }}>{isQuery ? "📩" : "✅"}</div>
+          <h1 style={{ color: "#16a34a" }}>{isQuery ? "Query Sent to Management" : "Order Confirmed!"}</h1>
           <p style={{ margin: "15px 0", fontSize: "16px", color: "#475569" }}>{orderMessage}</p>
-          <p style={{ color: "#64748b", fontSize: "14px" }}>A confirmation receipt with access instructions has been dispatched to your inbox ({email}).</p>
+          <p style={{ color: "#64748b", fontSize: "14px" }}>
+            {isQuery
+              ? `A copy of your enquiry has been sent to ${email}. Our subscriptions team will contact you with payment and delivery details.`
+              : `A confirmation receipt with access instructions has been dispatched to your inbox (${email}).`}
+          </p>
           <Link href="/" style={{ display: "inline-block", marginTop: "30px", padding: "12px 24px", background: "#0f2a57", color: "#fff", textDecoration: "none", borderRadius: "6px", fontWeight: "bold" }}>Return Home</Link>
         </div>
       </main>
@@ -378,8 +457,18 @@ export default function CheckoutClient() {
             <div><label>STATE *</label><input value={state} onChange={(e) => setState(e.target.value)} /></div>
             <div><label>PINCODE *</label><input value={pincode} onChange={(e) => setPincode(e.target.value)} /></div>
             <div><label>GST NUMBER (OPTIONAL)</label><input value={gst} onChange={(e) => setGst(e.target.value)} /></div>
+            {!PAYMENT_GATEWAY_ENABLED ? (
+              <div className="checkout-full">
+                <label>MESSAGE TO OUR MANAGEMENT (OPTIONAL)</label>
+                <textarea value={queryNote} onChange={(e) => setQueryNote(e.target.value)} rows={3} placeholder="Anything specific about this subscription request — preferred start year, purchase order process, delivery instructions..." />
+              </div>
+            ) : null}
           </div>
-          <div className="checkout-note">Payments secured & processed globally by Razorpay. SSL Encrypted.</div>
+          <div className="checkout-note">
+            {PAYMENT_GATEWAY_ENABLED
+              ? "Payments secured & processed globally by Razorpay. SSL Encrypted."
+              : "Online payment is temporarily unavailable. Submit your query and our subscriptions team will reach out with payment and delivery instructions."}
+          </div>
         </section>
 
         <aside className="checkout-summary">
@@ -426,10 +515,16 @@ export default function CheckoutClient() {
             <p className="checkout-total"><span>Grand Total</span><strong>{money(total)}</strong></p>
           </div>
 
-          <button 
-            type="button" 
+          {!PAYMENT_GATEWAY_ENABLED ? (
+            <div style={{ marginTop: "15px", padding: "12px 14px", borderRadius: "8px", background: "#eff6ff", border: "1px solid #bfdbfe", color: "#1e40af", fontSize: "13px", lineHeight: 1.5 }}>
+              🏦 Online payment is temporarily disabled. Send your selection to our management team and we will respond with a proforma invoice and payment options.
+            </div>
+          ) : null}
+
+          <button
+            type="button"
             className="razorpay-button"
-            onClick={handlePaymentInitiation} 
+            onClick={PAYMENT_GATEWAY_ENABLED ? handlePaymentInitiation : handleQuerySubmission}
             disabled={placingOrder}
             style={{
               width: "100%",
@@ -445,9 +540,11 @@ export default function CheckoutClient() {
               marginTop: "15px"
             }}
           >
-            {placingOrder ? "Processing securely..." : `🔒 Secure Pay ${money(total)}`}
+            {PAYMENT_GATEWAY_ENABLED
+              ? (placingOrder ? "Processing securely..." : `🔒 Secure Pay ${money(total)}`)
+              : (placingOrder ? "Sending your query..." : "📩 Send Query to Our Management")}
           </button>
-          
+
           {orderMessage ? <div style={{ marginTop: "15px", padding: "12px", borderRadius: "6px", background: "#fef2f2", color: "#b91c1c", fontSize: "14px", border: "1px solid #fee2e2" }}>{orderMessage}</div> : null}
         </aside>
       </div>

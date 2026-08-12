@@ -6,6 +6,7 @@ import { useCart } from "@/app/components/cart-store";
 import { useEffect, useState, useRef } from "react";
 import PublicChatbot from "@/app/components/public-chatbot";
 import CookieConsentBanner from "@/app/components/cookie-consent-banner";
+import IndependenceDayBanner from "@/app/components/independence-day-banner";
 
 type SessionUser = {
   id: string;
@@ -196,6 +197,8 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
 
   return (
     <>
+      <IndependenceDayBanner />
+
       {!hideChrome ? (
         <header className="site-header site-main-header" style={{ borderBottom: "1px solid var(--line)", position: "sticky", top: 0, zIndex: 50, background: "var(--glass-bg)", backdropFilter: "var(--glass-blur)", transition: "background 0.3s, border-color 0.3s" }}>
           <div className="site-topbar" style={{
